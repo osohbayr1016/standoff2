@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, MessageCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { useDarkMode } from "../contexts/DarkModeContext";
 import Image from "next/image";
 import { API_ENDPOINTS } from "../../config/api";
 
@@ -42,7 +41,6 @@ export default function ChatModal({
   playerAvatar,
 }: ChatModalProps) {
   const { user } = useAuth();
-  const { isDarkMode } = useDarkMode();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -58,13 +56,7 @@ export default function ChatModal({
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    if (isOpen && user) {
-      fetchMessages();
-    }
-  }, [isOpen, playerId, user]);
-
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -90,7 +82,13 @@ export default function ChatModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, playerId]);
+
+  useEffect(() => {
+    if (isOpen && user) {
+      fetchMessages();
+    }
+  }, [isOpen, user, fetchMessages]);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !user) return;

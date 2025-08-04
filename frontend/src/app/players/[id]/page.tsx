@@ -571,7 +571,7 @@ export default function PlayerDetailPage({
                   No Highlight Video
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  This player hasn't uploaded a highlight video yet.
+                  This player hasn&apos;t uploaded a highlight video yet.
                 </p>
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">

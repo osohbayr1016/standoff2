@@ -15,10 +15,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import Navigation from "../components/Navigation";
-import Footer from "../components/Footer";
 import ChatModal from "../components/ChatModal";
 import { useAuth } from "../contexts/AuthContext";
-import { API_ENDPOINTS } from "../../config/api";
 
 interface Player {
   id: string;
