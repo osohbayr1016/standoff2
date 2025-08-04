@@ -39,7 +39,7 @@ app.use(
   })
 );
 
-// Initialize Passport
+// Initialize passport
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -58,9 +58,9 @@ import userRoutes from "./routes/userRoutes";
 import messageRoutes from "./routes/messageRoutes";
 
 // API routes
-app.use("/api/auth", authRoutes as any);
-app.use("/api/users", userRoutes as any);
-app.use("/api", messageRoutes as any);
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api", messageRoutes);
 app.get("/api/v1", (req: Request, res: Response) => {
   res.json({ message: "E-Sport Connection API v1" });
 });
