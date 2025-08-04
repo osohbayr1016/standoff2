@@ -52,72 +52,72 @@ const userSchema = new mongoose_1.Schema({
         required: true,
         unique: true,
         lowercase: true,
-        trim: true
+        trim: true,
     },
     name: {
         type: String,
-        trim: true
+        trim: true,
     },
     avatar: {
-        type: String
+        type: String,
     },
     bio: {
-        type: String
+        type: String,
     },
     gameExpertise: {
-        type: String
+        type: String,
     },
     hourlyRate: {
         type: Number,
-        min: 0
+        min: 0,
     },
     rating: {
         type: Number,
         default: 0,
         min: 0,
-        max: 5
+        max: 5,
     },
     totalReviews: {
         type: Number,
         default: 0,
-        min: 0
+        min: 0,
     },
     isVerified: {
         type: Boolean,
-        default: false
+        default: false,
     },
     isOnline: {
         type: Boolean,
-        default: false
+        default: false,
     },
     lastSeen: {
         type: Date,
-        default: Date.now
+        default: Date.now,
     },
     googleId: {
         type: String,
         unique: true,
-        sparse: true
+        sparse: true,
     },
     facebookId: {
         type: String,
         unique: true,
-        sparse: true
+        sparse: true,
     },
     password: {
         type: String,
-        minlength: 6
+        minlength: 6,
     },
     role: {
         type: String,
         enum: Object.values(UserRole),
-        default: UserRole.PLAYER
-    }
+        default: UserRole.PLAYER,
+    },
 }, {
-    timestamps: true
+    timestamps: true,
 });
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password'))
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password"))
         return next();
     try {
         const salt = await bcryptjs_1.default.genSalt(12);
@@ -133,5 +133,5 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
         return false;
     return bcryptjs_1.default.compare(candidatePassword, this.password);
 };
-exports.default = mongoose_1.default.model('User', userSchema);
+exports.default = mongoose_1.default.model("User", userSchema);
 //# sourceMappingURL=User.js.map

@@ -1,4 +1,4 @@
-import mongoose, { Document } from 'mongoose';
+import mongoose, { Document } from "mongoose";
 export declare enum UserRole {
     PLAYER = "PLAYER",
     COACH = "COACH",

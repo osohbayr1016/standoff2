@@ -44,28 +44,28 @@ var MessageStatus;
 const messageSchema = new mongoose_1.Schema({
     senderId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+        ref: "User",
+        required: true,
     },
     receiverId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+        ref: "User",
+        required: true,
     },
     content: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
     },
     status: {
         type: String,
         enum: Object.values(MessageStatus),
-        default: MessageStatus.SENT
-    }
+        default: MessageStatus.SENT,
+    },
 }, {
-    timestamps: true
+    timestamps: true,
 });
 messageSchema.index({ senderId: 1, receiverId: 1 });
 messageSchema.index({ receiverId: 1, status: 1 });
-exports.default = mongoose_1.default.model('Message', messageSchema);
+exports.default = mongoose_1.default.model("Message", messageSchema);
 //# sourceMappingURL=Message.js.map

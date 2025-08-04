@@ -40,7 +40,7 @@ const router = (0, express_1.Router)();
 router.get("/players", async (req, res) => {
     try {
         const players = await User_1.default.find({ role: User_1.UserRole.PLAYER })
-            .select('id name email avatar role isVerified isOnline')
+            .select("id name email avatar role isVerified isOnline")
             .lean();
         const transformedPlayers = players.map((player) => ({
             id: player.id,
@@ -66,7 +66,7 @@ router.get("/profile", auth_1.authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
         const user = await User_1.default.findById(userId)
-            .select('id email name avatar bio gameExpertise hourlyRate rating totalReviews isVerified isOnline lastSeen role createdAt updatedAt')
+            .select("id email name avatar bio gameExpertise hourlyRate rating totalReviews isVerified isOnline lastSeen role createdAt updatedAt")
             .lean();
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -81,7 +81,7 @@ router.get("/profile", auth_1.authenticateToken, async (req, res) => {
 router.put("/profile", auth_1.authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { name, avatar, bio, gameExpertise, hourlyRate, } = req.body;
+        const { name, avatar, bio, gameExpertise, hourlyRate } = req.body;
         const updateData = {};
         if (name)
             updateData.name = name;
@@ -93,7 +93,10 @@ router.put("/profile", auth_1.authenticateToken, async (req, res) => {
             updateData.gameExpertise = gameExpertise;
         if (hourlyRate !== undefined)
             updateData.hourlyRate = hourlyRate;
-        const updatedUser = await User_1.default.findByIdAndUpdate(userId, updateData, { new: true, select: 'id email name avatar bio gameExpertise hourlyRate rating totalReviews isVerified isOnline lastSeen role createdAt updatedAt' });
+        const updatedUser = await User_1.default.findByIdAndUpdate(userId, updateData, {
+            new: true,
+            select: "id email name avatar bio gameExpertise hourlyRate rating totalReviews isVerified isOnline lastSeen role createdAt updatedAt",
+        });
         res.json({ user: updatedUser });
     }
     catch (error) {

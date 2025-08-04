@@ -141,7 +141,7 @@ router.put("/role", auth_1.authenticateToken, async (req, res) => {
         if (!Object.values(User_1.UserRole).includes(role)) {
             return res.status(400).json({ message: "Буруу үүрэг" });
         }
-        const updatedUser = await User_1.default.findByIdAndUpdate(userId, { role }, { new: true, select: 'id email name role isVerified' });
+        const updatedUser = await User_1.default.findByIdAndUpdate(userId, { role }, { new: true, select: "id email name role isVerified" });
         const token = generateToken(updatedUser);
         return res.json({
             message: "Үүрэг амжилттай шинэчлэгдлээ",

@@ -7,12 +7,17 @@ exports.connectDB = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const connectDB = async () => {
     try {
-        const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/e-sport-connection';
-        await mongoose_1.default.connect(mongoURI);
-        console.log('✅ MongoDB connected successfully');
+        const mongoURI = process.env.MONGODB_URI || "mongodb://localhost:27017/e-sport-connection";
+        await mongoose_1.default.connect(mongoURI, {
+            maxPoolSize: 10,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        });
+        console.log("✅ MongoDB connected successfully");
+        console.log(`📊 Database: ${mongoose_1.default.connection.name}`);
     }
     catch (error) {
-        console.error('❌ MongoDB connection failed:', error);
+        console.error("❌ MongoDB connection failed:", error);
         process.exit(1);
     }
 };

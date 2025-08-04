@@ -1,4 +1,4 @@
-import mongoose, { Document } from 'mongoose';
+import mongoose, { Document } from "mongoose";
 export declare enum MessageStatus {
     SENT = "SENT",
     DELIVERED = "DELIVERED",

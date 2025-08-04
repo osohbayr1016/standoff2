@@ -49,7 +49,7 @@ const authenticateToken = async (req, res, next) => {
         }
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         const user = await User_1.default.findById(decoded.id)
-            .select('_id email name avatar role isVerified isOnline')
+            .select("_id email name avatar role isVerified isOnline")
             .lean();
         if (!user) {
             res.status(401).json({ message: "Invalid token" });
@@ -89,7 +89,7 @@ const optionalAuth = async (req, res, next) => {
         if (token) {
             const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
             const user = await User_1.default.findById(decoded.id)
-                .select('_id email name avatar role isVerified')
+                .select("_id email name avatar role isVerified")
                 .lean();
             if (user) {
                 req.user = { ...user, id: user._id.toString() };
