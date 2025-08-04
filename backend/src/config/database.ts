@@ -1,15 +1,16 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import mongoose from "mongoose";
 
 export const connectDB = async (): Promise<void> => {
   try {
-    await prisma.$connect();
-    console.log('✅ Database connected successfully');
+    const mongoURI =
+      process.env.MONGODB_URI || "mongodb://localhost:27017/e-sport-connection";
+
+    await mongoose.connect(mongoURI);
+    console.log("✅ MongoDB connected successfully");
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    console.error("❌ MongoDB connection failed:", error);
     process.exit(1);
   }
 };
 
-export default prisma; 
+export default mongoose;

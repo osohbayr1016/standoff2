@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -6,10 +39,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const passport_1 = __importDefault(require("passport"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const database_1 = __importDefault(require("../config/database"));
+const User_1 = __importStar(require("../models/User"));
 const auth_1 = require("../middleware/auth");
-const client_1 = require("@prisma/client");
 const router = (0, express_1.Router)();
 const generateToken = (user) => {
     const payload = {
@@ -39,22 +70,16 @@ router.post("/register", async (req, res) => {
                 .status(400)
                 .json({ message: "И-мэйл, нууц үг болон нэр шаардлагатай" });
         }
-        const existingUser = await database_1.default.user.findUnique({
-            where: { email },
-        });
+        const existingUser = await User_1.default.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "User already exists" });
         }
-        const saltRounds = parseInt(process.env.BCRYPT_ROUNDS || "12");
-        const hashedPassword = await bcryptjs_1.default.hash(password, saltRounds);
-        const user = await database_1.default.user.create({
-            data: {
-                email,
-                password: hashedPassword,
-                name,
-                role: role,
-                isVerified: false,
-            },
+        const user = await User_1.default.create({
+            email,
+            password,
+            name,
+            role: role,
+            isVerified: false,
         });
         const token = generateToken(user);
         return res.status(201).json({
@@ -82,20 +107,15 @@ router.post("/login", async (req, res) => {
                 .status(400)
                 .json({ message: "И-мэйл болон нууц үг шаардлагатай" });
         }
-        const user = await database_1.default.user.findUnique({
-            where: { email },
-        });
+        const user = await User_1.default.findOne({ email });
         if (!user || !user.password) {
             return res.status(401).json({ message: "Буруу нэвтрэх мэдээлэл" });
         }
-        const isValidPassword = await bcryptjs_1.default.compare(password, user.password);
+        const isValidPassword = await user.comparePassword(password);
         if (!isValidPassword) {
             return res.status(401).json({ message: "Буруу нэвтрэх мэдээлэл" });
         }
-        await database_1.default.user.update({
-            where: { id: user.id },
-            data: { lastSeen: new Date() },
-        });
+        await User_1.default.findByIdAndUpdate(user._id, { lastSeen: new Date() });
         const token = generateToken(user);
         return res.json({
             message: "Амжилттай нэвтэрлээ",
@@ -118,20 +138,10 @@ router.put("/role", auth_1.authenticateToken, async (req, res) => {
     try {
         const { role } = req.body;
         const userId = req.user.id;
-        if (!Object.values(client_1.UserRole).includes(role)) {
+        if (!Object.values(User_1.UserRole).includes(role)) {
             return res.status(400).json({ message: "Буруу үүрэг" });
         }
-        const updatedUser = await database_1.default.user.update({
-            where: { id: userId },
-            data: { role },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                role: true,
-                isVerified: true,
-            },
-        });
+        const updatedUser = await User_1.default.findByIdAndUpdate(userId, { role }, { new: true, select: 'id email name role isVerified' });
         const token = generateToken(updatedUser);
         return res.json({
             message: "Үүрэг амжилттай шинэчлэгдлээ",

@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import session from "express-session";
 import passport from "./config/passport";
 import { connectDB } from "./config/database";
-import prisma from "./config/database";
+import mongoose from "./config/database";
 
 // Load environment variables
 dotenv.config();
@@ -58,12 +58,15 @@ import userRoutes from "./routes/userRoutes";
 import messageRoutes from "./routes/messageRoutes";
 
 // API routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api", messageRoutes);
-app.use("/api/v1", (req, res) => {
-  res.json({ message: "E-Sport Connection API v1" });
-});
+app.use("/api/auth", authRoutes as express.Router);
+app.use("/api/users", userRoutes as express.Router);
+app.use("/api", messageRoutes as express.Router);
+app.use(
+  "/api/v1",
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    res.json({ message: "E-Sport Connection API v1" });
+  }
+);
 
 // Error handling middleware
 app.use(
@@ -85,20 +88,23 @@ app.use(
 );
 
 // 404 handler
-app.use("*", (req, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
+app.use(
+  "*",
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    res.status(404).json({ error: "Route not found" });
+  }
+);
 
 // Graceful shutdown
 process.on("SIGINT", async () => {
   console.log("Shutting down gracefully...");
-  await prisma.$disconnect();
+  await mongoose.connection.close();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
   console.log("Shutting down gracefully...");
-  await prisma.$disconnect();
+  await mongoose.connection.close();
   process.exit(0);
 });
 

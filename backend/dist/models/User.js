@@ -36,72 +36,91 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = void 0;
+exports.UserRole = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+var UserRole;
+(function (UserRole) {
+    UserRole["PLAYER"] = "PLAYER";
+    UserRole["COACH"] = "COACH";
+    UserRole["ORGANIZATION"] = "ORGANIZATION";
+    UserRole["ADMIN"] = "ADMIN";
+})(UserRole || (exports.UserRole = UserRole = {}));
 const userSchema = new mongoose_1.Schema({
-    username: {
-        type: String,
-        required: [true, 'Username is required'],
-        unique: true,
-        trim: true,
-        minlength: [3, 'Username must be at least 3 characters long'],
-        maxlength: [30, 'Username cannot exceed 30 characters']
-    },
     email: {
         type: String,
-        required: [true, 'Email is required'],
+        required: true,
         unique: true,
         lowercase: true,
-        trim: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+        trim: true
     },
-    password: {
+    name: {
         type: String,
-        required: [true, 'Password is required'],
-        minlength: [6, 'Password must be at least 6 characters long']
-    },
-    firstName: {
-        type: String,
-        trim: true,
-        maxlength: [50, 'First name cannot exceed 50 characters']
-    },
-    lastName: {
-        type: String,
-        trim: true,
-        maxlength: [50, 'Last name cannot exceed 50 characters']
+        trim: true
     },
     avatar: {
-        type: String,
-        default: ''
+        type: String
     },
     bio: {
-        type: String,
-        maxlength: [500, 'Bio cannot exceed 500 characters']
+        type: String
+    },
+    gameExpertise: {
+        type: String
+    },
+    hourlyRate: {
+        type: Number,
+        min: 0
+    },
+    rating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
+    },
+    totalReviews: {
+        type: Number,
+        default: 0,
+        min: 0
     },
     isVerified: {
         type: Boolean,
         default: false
     },
+    isOnline: {
+        type: Boolean,
+        default: false
+    },
+    lastSeen: {
+        type: Date,
+        default: Date.now
+    },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+    facebookId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+    password: {
+        type: String,
+        minlength: 6
+    },
     role: {
         type: String,
-        enum: ['user', 'admin', 'moderator'],
-        default: 'user'
+        enum: Object.values(UserRole),
+        default: UserRole.PLAYER
     }
 }, {
-    timestamps: true,
-    toJSON: {
-        transform: function (doc, ret) {
-            const { password, ...userWithoutPassword } = ret;
-            return userWithoutPassword;
-        }
-    }
+    timestamps: true
 });
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password'))
         return next();
     try {
-        const salt = await bcryptjs_1.default.genSalt(parseInt(process.env.BCRYPT_ROUNDS || '12'));
+        const salt = await bcryptjs_1.default.genSalt(12);
         this.password = await bcryptjs_1.default.hash(this.password, salt);
         next();
     }
@@ -110,7 +129,9 @@ userSchema.pre('save', async function (next) {
     }
 });
 userSchema.methods.comparePassword = async function (candidatePassword) {
+    if (!this.password)
+        return false;
     return bcryptjs_1.default.compare(candidatePassword, this.password);
 };
-exports.User = mongoose_1.default.model('User', userSchema);
+exports.default = mongoose_1.default.model('User', userSchema);
 //# sourceMappingURL=User.js.map

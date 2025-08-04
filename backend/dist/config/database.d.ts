@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-declare const prisma: PrismaClient<import(".prisma/client").Prisma.PrismaClientOptions, import(".prisma/client").Prisma.LogLevel, import("@prisma/client/runtime/library").DefaultArgs>;
+import mongoose from 'mongoose';
 export declare const connectDB: () => Promise<void>;
-export default prisma;
+export default mongoose;
 //# sourceMappingURL=database.d.ts.map

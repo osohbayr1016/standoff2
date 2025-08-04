@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import prisma from "../config/database";
-import { UserRole } from "@prisma/client";
+import User, { UserRole } from "../models/User";
 
 export interface JWTPayload {
   id: string;
@@ -27,25 +26,16 @@ export const authenticateToken = async (
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
 
     // Get user from database
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        avatar: true,
-        role: true,
-        isVerified: true,
-        isOnline: true,
-      },
-    });
+    const user = await User.findById(decoded.id)
+      .select("_id email name avatar role isVerified isOnline")
+      .lean();
 
     if (!user) {
       res.status(401).json({ message: "Invalid token" });
       return;
     }
 
-    req.user = user;
+    req.user = { ...user, id: user._id.toString() } as any;
     next();
   } catch (error) {
     res.status(403).json({ message: "Invalid token" });
@@ -89,20 +79,12 @@ export const optionalAuth = async (
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
 
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          avatar: true,
-          role: true,
-          isVerified: true,
-        },
-      });
+      const user = await User.findById(decoded.id)
+        .select("_id email name avatar role isVerified")
+        .lean();
 
       if (user) {
-        req.user = user;
+        req.user = { ...user, id: user._id.toString() } as any;
       }
     }
 

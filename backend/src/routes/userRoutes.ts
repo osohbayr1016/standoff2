@@ -1,25 +1,15 @@
 import { Router, Request, Response } from "express";
-import prisma from "../config/database";
+import User, { UserRole } from "../models/User";
 import { authenticateToken, optionalAuth } from "../middleware/auth";
-import { UserRole } from "@prisma/client";
 
 const router = Router();
 
 // Get all players (public endpoint)
 router.get("/players", async (req: Request, res: Response) => {
   try {
-    const players = await prisma.user.findMany({
-      where: { role: UserRole.PLAYER },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        avatar: true,
-        role: true,
-        isVerified: true,
-        isOnline: true,
-      },
-    });
+    const players = await User.find({ role: UserRole.PLAYER })
+      .select("id name email avatar role isVerified isOnline")
+      .lean();
 
     // Transform data to match frontend expectations
     const transformedPlayers = players.map((player) => ({
@@ -53,26 +43,11 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          avatar: true,
-          bio: true,
-          gameExpertise: true,
-          hourlyRate: true,
-          rating: true,
-          totalReviews: true,
-          isVerified: true,
-          isOnline: true,
-          lastSeen: true,
-          role: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
+      const user = await User.findById(userId)
+        .select(
+          "id email name avatar bio gameExpertise hourlyRate rating totalReviews isVerified isOnline lastSeen role createdAt updatedAt"
+        )
+        .lean();
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -93,13 +68,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const {
-        name,
-        avatar,
-        bio,
-        gameExpertise,
-        hourlyRate,
-      } = req.body;
+      const { name, avatar, bio, gameExpertise, hourlyRate } = req.body;
 
       const updateData: any = {};
       if (name) updateData.name = name;
@@ -108,26 +77,10 @@ router.put(
       if (gameExpertise) updateData.gameExpertise = gameExpertise;
       if (hourlyRate !== undefined) updateData.hourlyRate = hourlyRate;
 
-      const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: updateData,
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          avatar: true,
-          bio: true,
-          gameExpertise: true,
-          hourlyRate: true,
-          rating: true,
-          totalReviews: true,
-          isVerified: true,
-          isOnline: true,
-          lastSeen: true,
-          role: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+      const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+        new: true,
+        select:
+          "id email name avatar bio gameExpertise hourlyRate rating totalReviews isVerified isOnline lastSeen role createdAt updatedAt",
       });
 
       res.json({ user: updatedUser });

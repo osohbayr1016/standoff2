@@ -1,8 +1,7 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as FacebookStrategy } from "passport-facebook";
-import prisma from "./database";
-import { UserRole } from "@prisma/client";
+import User, { UserRole } from "../models/User";
 
 // Serialize user for session
 passport.serializeUser((user: any, done) => {
@@ -12,18 +11,15 @@ passport.serializeUser((user: any, done) => {
 // Deserialize user from session
 passport.deserializeUser(async (id: string, done) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        avatar: true,
-        role: true,
-        isVerified: true,
-      },
-    });
-    done(null, user);
+    const user = await User.findById(id)
+      .select("_id email name avatar role isVerified")
+      .lean();
+
+    if (user) {
+      done(null, { ...user, id: user._id.toString() } as any);
+    } else {
+      done(null, null);
+    }
   } catch (error) {
     done(error, null);
   }

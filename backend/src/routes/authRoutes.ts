@@ -2,9 +2,8 @@ import { Router, Request, Response } from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import prisma from "../config/database";
+import User, { UserRole } from "../models/User";
 import { authenticateToken, JWTPayload } from "../middleware/auth";
-import { UserRole } from "@prisma/client";
 
 const router = Router();
 
@@ -64,27 +63,19 @@ router.post("/register", async (req: Request, res: Response) => {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Hash password
-    const saltRounds = parseInt(process.env.BCRYPT_ROUNDS || "12");
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        role: role as UserRole,
-        isVerified: false, // Local accounts need verification
-      },
+    // Create user (password will be hashed by the model pre-save hook)
+    const user = await User.create({
+      email,
+      password,
+      name,
+      role: role as UserRole,
+      isVerified: false, // Local accounts need verification
     });
 
     // Generate token
@@ -120,25 +111,20 @@ router.post("/login", async (req: Request, res: Response) => {
     }
 
     // Find user
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await User.findOne({ email });
 
     if (!user || !user.password) {
       return res.status(401).json({ message: "Буруу нэвтрэх мэдээлэл" });
     }
 
     // Check password
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
       return res.status(401).json({ message: "Буруу нэвтрэх мэдээлэл" });
     }
 
     // Update last seen
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastSeen: new Date() },
-    });
+    await User.findByIdAndUpdate(user._id, { lastSeen: new Date() });
 
     // Generate token
     const token = generateToken(user);
@@ -172,17 +158,11 @@ router.put("/role", authenticateToken, async (req: Request, res: Response) => {
     }
 
     // Update user role
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { role },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isVerified: true,
-      },
-    });
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { role },
+      { new: true, select: "id email name role isVerified" }
+    );
 
     // Generate new token with updated role
     const token = generateToken(updatedUser);

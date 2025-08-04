@@ -14,7 +14,7 @@ const database_1 = require("./config/database");
 const database_2 = __importDefault(require("./config/database"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3001;
 app.use((0, helmet_1.default)());
 app.use((0, cors_1.default)({
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
@@ -47,7 +47,7 @@ const messageRoutes_1 = __importDefault(require("./routes/messageRoutes"));
 app.use("/api/auth", authRoutes_1.default);
 app.use("/api/users", userRoutes_1.default);
 app.use("/api", messageRoutes_1.default);
-app.use("/api/v1", (req, res) => {
+app.use("/api/v1", (req, res, next) => {
     res.json({ message: "E-Sport Connection API v1" });
 });
 app.use((err, req, res, next) => {
@@ -59,17 +59,17 @@ app.use((err, req, res, next) => {
             : "Internal server error",
     });
 });
-app.use("*", (req, res) => {
+app.use("*", (req, res, next) => {
     res.status(404).json({ error: "Route not found" });
 });
 process.on("SIGINT", async () => {
     console.log("Shutting down gracefully...");
-    await database_2.default.$disconnect();
+    await database_2.default.connection.close();
     process.exit(0);
 });
 process.on("SIGTERM", async () => {
     console.log("Shutting down gracefully...");
-    await database_2.default.$disconnect();
+    await database_2.default.connection.close();
     process.exit(0);
 });
 const startServer = async () => {

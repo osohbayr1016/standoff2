@@ -1,27 +1,47 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const database_1 = __importDefault(require("../config/database"));
+const User_1 = __importStar(require("../models/User"));
 const auth_1 = require("../middleware/auth");
-const client_1 = require("@prisma/client");
 const router = (0, express_1.Router)();
 router.get("/players", async (req, res) => {
     try {
-        const players = await database_1.default.user.findMany({
-            where: { role: client_1.UserRole.PLAYER },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                role: true,
-                isVerified: true,
-                isOnline: true,
-            },
-        });
+        const players = await User_1.default.find({ role: User_1.UserRole.PLAYER })
+            .select('id name email avatar role isVerified isOnline')
+            .lean();
         const transformedPlayers = players.map((player) => ({
             id: player.id,
             name: player.name,
@@ -45,26 +65,9 @@ router.get("/players", async (req, res) => {
 router.get("/profile", auth_1.authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const user = await database_1.default.user.findUnique({
-            where: { id: userId },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                avatar: true,
-                bio: true,
-                gameExpertise: true,
-                hourlyRate: true,
-                rating: true,
-                totalReviews: true,
-                isVerified: true,
-                isOnline: true,
-                lastSeen: true,
-                role: true,
-                createdAt: true,
-                updatedAt: true,
-            },
-        });
+        const user = await User_1.default.findById(userId)
+            .select('id email name avatar bio gameExpertise hourlyRate rating totalReviews isVerified isOnline lastSeen role createdAt updatedAt')
+            .lean();
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -90,27 +93,7 @@ router.put("/profile", auth_1.authenticateToken, async (req, res) => {
             updateData.gameExpertise = gameExpertise;
         if (hourlyRate !== undefined)
             updateData.hourlyRate = hourlyRate;
-        const updatedUser = await database_1.default.user.update({
-            where: { id: userId },
-            data: updateData,
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                avatar: true,
-                bio: true,
-                gameExpertise: true,
-                hourlyRate: true,
-                rating: true,
-                totalReviews: true,
-                isVerified: true,
-                isOnline: true,
-                lastSeen: true,
-                role: true,
-                createdAt: true,
-                updatedAt: true,
-            },
-        });
+        const updatedUser = await User_1.default.findByIdAndUpdate(userId, updateData, { new: true, select: 'id email name avatar bio gameExpertise hourlyRate rating totalReviews isVerified isOnline lastSeen role createdAt updatedAt' });
         res.json({ user: updatedUser });
     }
     catch (error) {
