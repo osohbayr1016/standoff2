@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import User, { UserRole } from "../models/User";
 import { authenticateToken, optionalAuth } from "../middleware/auth";
 
