@@ -31,28 +31,33 @@ src/
 ## 🛠️ Installation
 
 1. **Navigate to frontend directory**
+
    ```bash
    cd frontend
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env.local
    ```
-   
+
    Edit `.env.local` file with your configuration:
+
    ```env
-   NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+   NEXT_PUBLIC_API_URL=https://e-sport-connection.onrender.com/api/v1
    ```
 
 ## 🚀 Running the Application
 
 ### Development Mode
+
 ```bash
 npm run dev
 ```
@@ -60,6 +65,7 @@ npm run dev
 The application will be available at `http://localhost:3000`
 
 ### Production Mode
+
 ```bash
 npm run build
 npm start
@@ -68,18 +74,21 @@ npm start
 ## 📱 Pages
 
 ### Homepage (`/`)
+
 - Beautiful landing page with hero section
 - Feature highlights
 - Call-to-action sections
 - Responsive navigation
 
 ### Login (`/auth/login`)
+
 - User authentication form
 - Social login options (Google, Twitter)
 - Form validation
 - Loading states
 
 ### Registration (`/auth/register`)
+
 - User registration form
 - Password confirmation
 - Terms and conditions
@@ -88,17 +97,20 @@ npm start
 ## 🎨 Design System
 
 ### Colors
+
 - **Primary**: Purple gradient (`from-purple-500 to-pink-500`)
 - **Background**: Dark slate gradient (`from-slate-900 via-purple-900 to-slate-900`)
 - **Text**: White and gray variations
 - **Accent**: Purple and pink for highlights
 
 ### Typography
+
 - **Headings**: Bold, large text with gradient effects
 - **Body**: Clean, readable text
 - **Font**: System fonts with fallbacks
 
 ### Components
+
 - **Glassmorphism Cards**: Semi-transparent backgrounds with blur effects
 - **Gradient Buttons**: Purple to pink gradients with hover effects
 - **Form Inputs**: Styled with focus states and validation
@@ -115,18 +127,21 @@ npm start
 ## 🛡️ Features
 
 ### Authentication
+
 - Form validation
 - Loading states
 - Error handling
 - Social login integration (ready for implementation)
 
 ### Responsive Design
+
 - Mobile-first approach
 - Tablet and desktop optimizations
 - Flexible grid layouts
 - Touch-friendly interactions
 
 ### Performance
+
 - Next.js Image optimization
 - Code splitting
 - Lazy loading
@@ -135,16 +150,19 @@ npm start
 ## 🎯 Custom Animations
 
 ### Blob Animation
+
 - Floating background elements
 - Smooth color transitions
 - Staggered animation delays
 
 ### Hover Effects
+
 - Scale transformations
 - Color transitions
 - Focus states
 
 ### Loading States
+
 - Spinner animations
 - Button state changes
 - Form submission feedback
@@ -153,18 +171,20 @@ npm start
 
 The frontend is designed to integrate with the Express.js backend API:
 
-- **Base URL**: `http://localhost:5000/api/v1`
+- **Base URL**: `https://e-sport-connection.onrender.com/api/v1`
 - **Authentication**: JWT token-based
 - **Endpoints**: User registration, login, profile management
 
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 1. Connect your GitHub repository
 2. Configure environment variables
 3. Deploy automatically on push
 
 ### Other Platforms
+
 - **Netlify**: Configure build settings
 - **AWS Amplify**: Connect repository and deploy
 - **Docker**: Build and deploy containers
@@ -184,6 +204,7 @@ This project is licensed under the MIT License.
 ## 🎮 E-Sport Connection
 
 This frontend is part of the E-Sport Connection platform, designed to help gamers:
+
 - Connect with other players
 - Form competitive teams
 - Join tournaments

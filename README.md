@@ -81,8 +81,8 @@ npm run dev
 ### 4. Access the Application
 
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:5000
-- **API Health Check**: http://localhost:5000/health
+- **Backend API**: https://e-sport-connection.onrender.com
+- **API Health Check**: https://e-sport-connection.onrender.com/health
 
 ## 🎨 Features
 
@@ -275,4 +275,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Made with ❤️ for the gaming community**
+
 # e-sport-connection

@@ -58,34 +58,27 @@ import userRoutes from "./routes/userRoutes";
 import messageRoutes from "./routes/messageRoutes";
 
 // API routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api", messageRoutes);
-app.use("/api/v1", (req: Request, res: Response) => {
+app.use("/api/auth", authRoutes as express.Router);
+app.use("/api/users", userRoutes as express.Router);
+app.use("/api", messageRoutes as express.Router);
+app.get("/api/v1", (req: Request, res: Response) => {
   res.json({ message: "E-Sport Connection API v1" });
 });
 
 // Error handling middleware
-app.use(
-  (
-    err: any,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    console.error(err.stack);
-    res.status(500).json({
-      error: "Something went wrong!",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Internal server error",
-    });
-  }
-);
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: "Something went wrong!",
+    message:
+      process.env.NODE_ENV === "development"
+        ? err.message
+        : "Internal server error",
+  });
+});
 
 // 404 handler
-app.use("*", (req: Request, res: Response) => {
+app.all("*", (req: Request, res: Response) => {
   res.status(404).json({ error: "Route not found" });
 });
 
