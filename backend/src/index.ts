@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -61,7 +61,7 @@ import messageRoutes from "./routes/messageRoutes";
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api", messageRoutes);
-app.use("/api/v1", (req, res) => {
+app.use("/api/v1", (req: Request, res: Response) => {
   res.json({ message: "E-Sport Connection API v1" });
 });
 
@@ -85,7 +85,7 @@ app.use(
 );
 
 // 404 handler
-app.use("*", (req, res) => {
+app.use("*", (req: Request, res: Response) => {
   res.status(404).json({ error: "Route not found" });
 });
 
