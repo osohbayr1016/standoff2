@@ -133,9 +133,7 @@ export default function PlayersPage() {
     const fetchPlayers = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          "https://e-sport-connection.onrender.com/api/users/players"
-        );
+        const response = await fetch("http://localhost:5001/api/users/players");
 
         if (!response.ok) {
           throw new Error("Failed to fetch players");

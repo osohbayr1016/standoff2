@@ -51,7 +51,7 @@ src/
    Edit `.env.local` file with your configuration:
 
    ```env
-   NEXT_PUBLIC_API_URL=https://e-sport-connection.onrender.com/api/v1
+   NEXT_PUBLIC_API_URL=http://localhost:5001/api/v1
    ```
 
 ## 🚀 Running the Application
@@ -171,7 +171,7 @@ npm start
 
 The frontend is designed to integrate with the Express.js backend API:
 
-- **Base URL**: `https://e-sport-connection.onrender.com/api/v1`
+- **Base URL**: `http://localhost:5001/api/v1`
 - **Authentication**: JWT token-based
 - **Endpoints**: User registration, login, profile management
 

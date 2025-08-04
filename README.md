@@ -81,8 +81,8 @@ npm run dev
 ### 4. Access the Application
 
 - **Frontend**: http://localhost:3000
-- **Backend API**: https://e-sport-connection.onrender.com
-- **API Health Check**: https://e-sport-connection.onrender.com/health
+- **Backend API**: http://localhost:5001
+- **API Health Check**: http://localhost:5001/health
 
 ## 🎨 Features
 
