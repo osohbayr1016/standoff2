@@ -58,15 +58,12 @@ import userRoutes from "./routes/userRoutes";
 import messageRoutes from "./routes/messageRoutes";
 
 // API routes
-app.use("/api/auth", authRoutes as express.Router);
-app.use("/api/users", userRoutes as express.Router);
-app.use("/api", messageRoutes as express.Router);
-app.use(
-  "/api/v1",
-  (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    res.json({ message: "E-Sport Connection API v1" });
-  }
-);
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api", messageRoutes);
+app.use("/api/v1", (req, res) => {
+  res.json({ message: "E-Sport Connection API v1" });
+});
 
 // Error handling middleware
 app.use(
@@ -88,12 +85,9 @@ app.use(
 );
 
 // 404 handler
-app.use(
-  "*",
-  (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    res.status(404).json({ error: "Route not found" });
-  }
-);
+app.use("*", (req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
 
 // Graceful shutdown
 process.on("SIGINT", async () => {

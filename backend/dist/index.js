@@ -47,7 +47,7 @@ const messageRoutes_1 = __importDefault(require("./routes/messageRoutes"));
 app.use("/api/auth", authRoutes_1.default);
 app.use("/api/users", userRoutes_1.default);
 app.use("/api", messageRoutes_1.default);
-app.use("/api/v1", (req, res, next) => {
+app.use("/api/v1", (req, res) => {
     res.json({ message: "E-Sport Connection API v1" });
 });
 app.use((err, req, res, next) => {
@@ -59,7 +59,7 @@ app.use((err, req, res, next) => {
             : "Internal server error",
     });
 });
-app.use("*", (req, res, next) => {
+app.use("*", (req, res) => {
     res.status(404).json({ error: "Route not found" });
 });
 process.on("SIGINT", async () => {
