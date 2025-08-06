@@ -15,4 +15,12 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://e-sport-connection.vercel.app 
+        value: https://e-sport-connection.vercel.app
+      - key: GOOGLE_CLIENT_ID
+        value: your-google-client-id
+      - key: GOOGLE_CLIENT_SECRET
+        value: your-google-client-secret
+      - key: FACEBOOK_APP_ID
+        value: your-facebook-app-id
+      - key: FACEBOOK_APP_SECRET
+        value: your-facebook-app-secret
