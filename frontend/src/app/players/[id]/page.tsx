@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -61,9 +61,9 @@ interface Player {
 export default function PlayerDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = params;
+  const { id } = use(params);
   const { user } = useAuth();
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
@@ -353,7 +353,7 @@ export default function PlayerDetailPage({
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {player.socialLinks &&
                 Object.entries(player.socialLinks)
-                  .filter(([platform, link]) => link)
+                  .filter(([, link]) => link)
                   .map(([platform, link]) => (
                     <motion.a
                       key={platform}

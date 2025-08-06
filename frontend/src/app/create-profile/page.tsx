@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Navigation from "../components/Navigation";
-import Footer from "../components/Footer";
 import ImageUploader from "../components/ImageUploader";
 import YouTubeVideoInput from "../components/YouTubeVideoInput";
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -137,7 +136,6 @@ export default function CreateProfilePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
   const [selectedGame, setSelectedGame] = useState<GameOption | null>(null);
 
   const [formData, setFormData] = useState<ProfileFormData>({

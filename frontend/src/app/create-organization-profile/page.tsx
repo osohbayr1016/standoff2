@@ -8,19 +8,8 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import ImageUploader from "../components/ImageUploader";
 import {
   Building,
-  Globe,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Users,
   Gamepad2,
   Trophy,
-  Facebook,
-  Twitter,
-  Instagram,
-  Youtube,
-  Twitch,
   ArrowLeft,
   Loader2,
 } from "lucide-react";

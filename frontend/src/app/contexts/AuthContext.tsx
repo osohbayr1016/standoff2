@@ -163,7 +163,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
-  // Set up automatic token refresh
   useEffect(() => {
     if (!user) return;
 
@@ -175,7 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // If refresh fails, logout the user
         await logout();
       }
-    }, 6 * 24 * 60 * 60 * 1000); // Refresh every 6 days (before 7-day expiration)
+    }, 6 * 24 * 60 * 60 * 1000);
 
     return () => clearInterval(refreshInterval);
   }, [user]);

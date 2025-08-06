@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { API_ENDPOINTS } from "@/config/api";
 
 export default function TestPlayerDetailPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<{ profile?: { name?: string } } | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playerId, setPlayerId] = useState("6893639943aecce8b3e0c69c");
@@ -42,7 +44,7 @@ export default function TestPlayerDetailPage() {
 
   useEffect(() => {
     testPlayerDetail();
-  }, []);
+  }, [testPlayerDetail]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">

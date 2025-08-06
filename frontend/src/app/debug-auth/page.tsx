@@ -6,9 +6,16 @@ import { API_ENDPOINTS } from "@/config/api";
 
 export default function DebugAuthPage() {
   const { user, loading, getToken, isAuthenticated } = useAuth();
-  const [localStorageData, setLocalStorageData] = useState<any>({});
-  const [authTest, setAuthTest] = useState<any>(null);
-  const [profileTest, setProfileTest] = useState<any>(null);
+  const [localStorageData, setLocalStorageData] = useState<
+    Record<string, string | number | boolean | null>
+  >({});
+  const [authTest, setAuthTest] = useState<Record<string, unknown> | null>(
+    null
+  );
+  const [profileTest, setProfileTest] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
 
   useEffect(() => {
     // Get localStorage data

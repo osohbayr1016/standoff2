@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { API_ENDPOINTS } from "@/config/api";
 
 export default function TestPlayersPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<{ profiles?: Array<{ name: string; id: string }> } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

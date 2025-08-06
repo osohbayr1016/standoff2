@@ -2,14 +2,7 @@
 
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import {
-  Upload,
-  X,
-  Camera,
-  Loader2,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
+import { Upload, X, Camera, Loader2, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { API_ENDPOINTS } from "../../config/api";
 

@@ -13,7 +13,6 @@ import {
   Shield,
 } from "lucide-react";
 import Navigation from "../components/Navigation";
-import Footer from "../components/Footer";
 import PageTransition from "../components/PageTransition";
 
 export default function AboutPage() {
