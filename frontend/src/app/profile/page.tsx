@@ -59,7 +59,7 @@ interface PlayerProfile {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,18 +69,34 @@ export default function ProfilePage() {
 
   useEffect(() => {
     console.log("🔍 Debug - User state:", { user });
-    fetchProfile();
+    if (user) {
+      fetchProfile();
+    }
   }, [user]);
 
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      const token = getToken();
+
+      if (!token) {
+        console.error("No token available");
+        setError("Authentication required");
+        return;
+      }
+
+      console.log(
+        "🔍 Debug - Fetching profile with token:",
+        token ? "Token exists" : "No token"
+      );
+
       const response = await fetch(API_ENDPOINTS.PLAYER_PROFILES.MY_PROFILE, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      console.log("🔍 Debug - Profile response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
@@ -88,7 +104,12 @@ export default function ProfilePage() {
         setEditData(data.profile);
       } else if (response.status === 404) {
         router.push("/create-profile");
+      } else if (response.status === 401) {
+        console.error("Authentication error - invalid token");
+        setError("Authentication error: Invalid token");
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Profile fetch error:", errorData);
         setError("Failed to load profile");
       }
     } catch (error) {

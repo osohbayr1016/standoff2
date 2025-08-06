@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -23,6 +23,7 @@ import Navigation from "../../components/Navigation";
 import Footer from "../../components/Footer";
 import ChatModal from "../../components/ChatModal";
 import { useAuth } from "../../contexts/AuthContext";
+import { API_ENDPOINTS } from "../../../config/api";
 
 interface Player {
   id: string;
@@ -60,38 +61,43 @@ interface Player {
 export default function PlayerDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = use(params);
+  const { id } = params;
   const { user } = useAuth();
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
+    console.log("🔍 PlayerDetailPage: useEffect triggered with id:", id);
+
     // Fetch player from API
     const fetchPlayer = async () => {
       try {
         setLoading(true);
 
-        // First try to fetch all profiles and find the one with matching ID
-        const response = await fetch(
-          `${
-            process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-          }/api/player-profiles/profiles`
-        );
+        // Use the specific player endpoint
+        const response = await fetch(API_ENDPOINTS.PLAYER_PROFILES.GET(id));
 
         if (response.ok) {
           const data = await response.json();
-          const foundPlayer = data.profiles.find((p: Player) => p.id === id);
+          console.log("🔍 Player data received:", data);
 
-          if (foundPlayer) {
-            setPlayer(foundPlayer);
+          if (data.profile) {
+            setPlayer(data.profile);
           } else {
+            console.error("🔍 No profile data in response");
             setPlayer(null);
           }
+        } else if (response.status === 404) {
+          console.log("🔍 Player not found");
+          setPlayer(null);
         } else {
-          throw new Error("Failed to fetch players");
+          console.error("🔍 Failed to fetch player, status:", response.status);
+          const errorData = await response.json().catch(() => ({}));
+          console.error("🔍 Error response:", errorData);
+          throw new Error("Failed to fetch player");
         }
       } catch (error) {
         console.error("Failed to fetch player:", error);

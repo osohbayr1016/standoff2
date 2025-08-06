@@ -17,6 +17,7 @@ import Link from "next/link";
 import Navigation from "../components/Navigation";
 import ChatModal from "../components/ChatModal";
 import { useAuth } from "../contexts/AuthContext";
+import { API_ENDPOINTS } from "@/config/api";
 
 interface Player {
   id: string;
@@ -98,7 +99,7 @@ export default function PlayersPage() {
   const [selectedCategory, setSelectedCategory] = useState<"PC" | "Mobile">(
     "PC"
   );
-  const [selectedGame, setSelectedGame] = useState("Бүх PC Тоглоомууд");
+  const [selectedGame, setSelectedGame] = useState("Бүх Mobile Тоглоомууд");
   const [selectedRole, setSelectedRole] = useState("Бүх Үүргүүд");
   const [loading, setLoading] = useState(true);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
@@ -145,20 +146,21 @@ export default function PlayersPage() {
     const fetchPlayers = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `${
-            process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-          }/api/player-profiles/profiles`
-        );
+        const response = await fetch(API_ENDPOINTS.PLAYER_PROFILES.ALL);
 
         if (!response.ok) {
           throw new Error("Failed to fetch players");
         }
 
         const data = await response.json();
+        console.log("API Response:", data);
         setPlayers(data.profiles || []);
       } catch (error) {
         console.error("Error fetching players:", error);
+        console.error("Error details:", {
+          message: error instanceof Error ? error.message : "Unknown error",
+          stack: error instanceof Error ? error.stack : undefined,
+        });
         setPlayers([]);
       } finally {
         setLoading(false);
@@ -170,6 +172,14 @@ export default function PlayersPage() {
 
   useEffect(() => {
     let filtered = players;
+
+    console.log("Filtering players:", {
+      totalPlayers: players.length,
+      selectedCategory,
+      selectedGame,
+      selectedRole,
+      searchTerm,
+    });
 
     // Filter by search term
     if (searchTerm) {
@@ -196,6 +206,15 @@ export default function PlayersPage() {
     if (selectedRole !== "Бүх Үүргүүд") {
       filtered = filtered.filter((player) => player.role === selectedRole);
     }
+
+    console.log("Filtered results:", {
+      filteredCount: filtered.length,
+      filteredPlayers: filtered.map((p) => ({
+        name: p.name,
+        category: p.category,
+        game: p.game,
+      })),
+    });
 
     setFilteredPlayers(filtered);
   }, [players, searchTerm, selectedCategory, selectedGame, selectedRole]);

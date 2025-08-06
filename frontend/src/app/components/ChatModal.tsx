@@ -7,7 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useSocket } from "../contexts/SocketContext";
 import Image from "next/image";
 import { API_ENDPOINTS } from "../../config/api";
-import notificationService from "../utils/notificationService";
+
 
 interface Message {
   id: string;
@@ -141,14 +141,7 @@ export default function ChatModal({
 
         setMessages((prev) => [...prev, newMessage]);
 
-        // Show notification if chat is not focused
-        if (!document.hasFocus()) {
-          notificationService.showMessageNotification(
-            playerName,
-            content,
-            senderId
-          );
-        }
+
       }
     };
 

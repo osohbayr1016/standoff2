@@ -27,6 +27,7 @@ interface AuthContextType {
   updateUser: (userData: Partial<User>) => void;
   refreshToken: () => Promise<void>;
   checkProfileStatus: () => Promise<void>;
+  getToken: () => string | null;
   isAuthenticated: boolean;
 }
 
@@ -97,12 +98,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if user is already logged in on mount
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log("🔍 AuthContext: Initializing authentication...");
       const token = getStoredToken();
       const userData = getStoredUser();
       const storedHasProfile = getStoredHasProfile();
 
+      console.log("🔍 AuthContext: Stored data:", {
+        hasToken: !!token,
+        hasUserData: !!userData,
+        storedHasProfile,
+        tokenLength: token?.length || 0,
+      });
+
       if (token && userData) {
         try {
+          console.log("🔍 AuthContext: Validating token with server...");
           // Validate token with server
           const response = await fetch(API_ENDPOINTS.AUTH.ME, {
             headers: {
@@ -110,8 +120,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             },
           });
 
+          console.log(
+            "🔍 AuthContext: Token validation response:",
+            response.status
+          );
+
           if (response.ok) {
             const data = await response.json();
+            console.log(
+              "🔍 AuthContext: Token valid, setting user:",
+              data.user
+            );
             setUser(data.user);
             setHasProfile(storedHasProfile);
 
@@ -123,17 +142,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               await checkProfileStatus();
             }
           } else {
+            console.log("🔍 AuthContext: Token invalid, clearing storage");
             // Token is invalid, clear storage
             removeStoredToken();
             setUser(null);
             setHasProfile(false);
           }
         } catch (error) {
-          console.error("Error validating token:", error);
+          console.error("🔍 AuthContext: Error validating token:", error);
           removeStoredToken();
           setUser(null);
           setHasProfile(false);
         }
+      } else {
+        console.log("🔍 AuthContext: No stored token or user data");
       }
       setLoading(false);
     };
@@ -223,12 +245,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(data.message || "Нэвтрэхэд алдаа гарлаа");
       }
 
+      console.log(
+        "🔍 AuthContext: Login successful, storing token and user data"
+      );
+      console.log("🔍 AuthContext: Token length:", data.token?.length || 0);
+      console.log("🔍 AuthContext: User data:", data.user);
+
       setStoredToken(data.token);
       setStoredUser(data.user);
       setUser(data.user);
 
       // Check profile status for players and organizations
       if (data.user.role === "PLAYER" || data.user.role === "ORGANIZATION") {
+        console.log("🔍 AuthContext: Checking profile status...");
         await checkProfileStatus();
       }
     } catch (error: unknown) {
@@ -352,6 +381,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getToken = (): string | null => {
+    const token = getStoredToken();
+    console.log(
+      "🔍 AuthContext: getToken called, token exists:",
+      !!token,
+      "length:",
+      token?.length || 0
+    );
+    return token;
+  };
+
   const value = {
     user,
     loading,
@@ -362,6 +402,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     updateUser,
     refreshToken,
     checkProfileStatus,
+    getToken,
     isAuthenticated: !!user,
   };
 

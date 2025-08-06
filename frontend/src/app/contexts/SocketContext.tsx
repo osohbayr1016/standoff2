@@ -128,12 +128,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       window.dispatchEvent(new CustomEvent("user_offline", { detail: data }));
     });
 
-    // Notification events
-    socket.on("notification", (data) => {
-      console.log("🔔 Notification received:", data);
-      window.dispatchEvent(new CustomEvent("notification", { detail: data }));
-    });
-
     return () => {
       socket.disconnect();
       socketRef.current = null;
