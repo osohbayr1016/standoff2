@@ -98,18 +98,6 @@ class NotificationService {
         senderId: senderId,
         url: `/chat/${senderId}`,
       },
-      actions: [
-        {
-          action: "reply",
-          title: "Reply",
-          icon: "/reply-icon.png",
-        },
-        {
-          action: "view",
-          title: "View",
-          icon: "/view-icon.png",
-        },
-      ],
     });
   }
 

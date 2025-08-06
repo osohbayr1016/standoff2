@@ -36,11 +36,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.setSocketManager = void 0;
 const express_1 = require("express");
 const Message_1 = __importStar(require("../models/Message"));
 const User_1 = __importDefault(require("../models/User"));
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
+let socketManager = null;
+const setSocketManager = (manager) => {
+    socketManager = manager;
+};
+exports.setSocketManager = setSocketManager;
 router.post("/messages", auth_1.authenticateToken, async (req, res) => {
     try {
         const { receiverId, content } = req.body;
@@ -69,6 +75,16 @@ router.post("/messages", auth_1.authenticateToken, async (req, res) => {
             { path: "senderId", select: "id name avatar" },
             { path: "receiverId", select: "id name avatar" },
         ]);
+        if (socketManager) {
+            socketManager.sendNotification(receiverId, {
+                type: "new_message",
+                senderId: senderId,
+                senderName: message.senderId.name,
+                content: content,
+                messageId: message._id,
+                timestamp: new Date().toISOString(),
+            });
+        }
         return res.status(201).json({
             message: "Message sent successfully",
             data: message,

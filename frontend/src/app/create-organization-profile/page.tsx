@@ -100,7 +100,7 @@ export default function CreateOrganizationProfilePage() {
       setFormData((prev) => ({
         ...prev,
         [section]: {
-          ...prev[section as keyof FormData],
+          ...(prev[section as keyof FormData] as Record<string, unknown>),
           [field]: value,
         },
       }));
@@ -117,6 +117,14 @@ export default function CreateOrganizationProfilePage() {
       ...prev,
       logo: url,
       logoPublicId: publicId,
+    }));
+  };
+
+  const handleImageRemove = () => {
+    setFormData((prev) => ({
+      ...prev,
+      logo: "",
+      logoPublicId: "",
     }));
   };
 
@@ -361,8 +369,8 @@ export default function CreateOrganizationProfilePage() {
               </h2>
               <ImageUploader
                 onImageUpload={handleImageUpload}
+                onImageRemove={handleImageRemove}
                 currentImage={formData.logo}
-                placeholder="Лого оруулах"
               />
             </div>
 

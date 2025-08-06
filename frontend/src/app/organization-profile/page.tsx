@@ -170,7 +170,10 @@ export default function OrganizationProfilePage() {
       setFormData((prev) => ({
         ...prev,
         [section]: {
-          ...prev[section as keyof typeof formData],
+          ...(prev[section as keyof typeof formData] as Record<
+            string,
+            unknown
+          >),
           [field]: value,
         },
       }));
@@ -187,6 +190,14 @@ export default function OrganizationProfilePage() {
       ...prev,
       logo: url,
       logoPublicId: publicId,
+    }));
+  };
+
+  const handleImageRemove = () => {
+    setFormData((prev) => ({
+      ...prev,
+      logo: "",
+      logoPublicId: "",
     }));
   };
 
@@ -562,8 +573,8 @@ export default function OrganizationProfilePage() {
               {isEditing ? (
                 <ImageUploader
                   onImageUpload={handleImageUpload}
+                  onImageRemove={handleImageRemove}
                   currentImage={formData.logo}
-                  placeholder="Лого оруулах"
                 />
               ) : (
                 <div className="flex items-center space-x-4">

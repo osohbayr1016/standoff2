@@ -193,7 +193,7 @@ export default function CreateProfilePage() {
     }));
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: unknown) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -573,7 +573,7 @@ export default function CreateProfilePage() {
                         className="w-4 h-4 text-purple-600 dark:text-green-600 border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500 dark:focus:ring-green-500"
                       />
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        I'm looking for a team
+                        I&apos;m looking for a team
                       </span>
                     </label>
                   </div>

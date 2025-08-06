@@ -103,7 +103,8 @@ export default function YouTubeVideoInput({
         >
           <CheckCircle className="w-5 h-5 text-green-500" />
           <span className="text-green-700 dark:text-green-300 text-sm">
-            ✅ YouTube URL saved! Click "Save Changes" to update your profile.
+            ✅ YouTube URL saved! Click &quot;Save Changes&quot; to update your
+            profile.
           </span>
         </motion.div>
       )}

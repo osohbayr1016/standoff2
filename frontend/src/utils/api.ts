@@ -1,6 +1,6 @@
 import { API_ENDPOINTS } from "../config/api";
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
@@ -138,7 +138,7 @@ class ApiClient {
     return this.makeRequest(API_ENDPOINTS.USERS.PROFILE(id));
   }
 
-  async updateProfile(profileData: any): Promise<ApiResponse> {
+  async updateProfile(profileData: unknown): Promise<ApiResponse> {
     return this.makeRequest(API_ENDPOINTS.USERS.UPDATE_PROFILE, {
       method: "PUT",
       body: JSON.stringify(profileData),
