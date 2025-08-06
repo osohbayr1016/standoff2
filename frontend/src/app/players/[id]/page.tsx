@@ -27,7 +27,8 @@ import { useAuth } from "../../contexts/AuthContext";
 interface Player {
   id: string;
   name: string;
-  avatar: string;
+  avatar?: string;
+  avatarPublicId?: string;
   category: "PC" | "Mobile";
   game: string;
   role: string;
@@ -45,6 +46,15 @@ interface Player {
   };
   highlightVideo?: string;
   isLookingForTeam: boolean;
+  achievements?: string[];
+  preferredRoles?: string[];
+  availability?: {
+    weekdays: boolean;
+    weekends: boolean;
+    timezone: string;
+    preferredHours: string;
+  };
+  languages?: string[];
 }
 
 // Mock data for player details
@@ -235,18 +245,35 @@ export default function PlayerDetailPage({
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
-    // Simulate API call
+    // Fetch player from API
     const fetchPlayer = async () => {
       try {
         setLoading(true);
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        const foundPlayer = mockPlayers.find((p) => p.id === id);
-        setPlayer(foundPlayer || null);
+        // First try to fetch all profiles and find the one with matching ID
+        const response = await fetch(
+          `http://localhost:5001/api/player-profiles/profiles`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const foundPlayer = data.profiles.find((p: Player) => p.id === id);
+
+          if (foundPlayer) {
+            setPlayer(foundPlayer);
+          } else {
+            // Player not found, try mock data as fallback
+            const mockPlayer = mockPlayers.find((p) => p.id === id);
+            setPlayer(mockPlayer || null);
+          }
+        } else {
+          throw new Error("Failed to fetch players");
+        }
       } catch (error) {
         console.error("Failed to fetch player:", error);
-        setPlayer(null);
+        // Fallback to mock data
+        const foundPlayer = mockPlayers.find((p) => p.id === id);
+        setPlayer(foundPlayer || null);
       } finally {
         setLoading(false);
       }
@@ -386,7 +413,7 @@ export default function PlayerDetailPage({
               {/* Player Image */}
               <div className="relative">
                 <Image
-                  src={player.avatar}
+                  src={player.avatar || "/default-avatar.png"}
                   alt={player.name}
                   width={200}
                   height={200}
@@ -496,28 +523,60 @@ export default function PlayerDetailPage({
               Social Links
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {Object.entries(player.socialLinks).map(([platform, link]) => (
-                <motion.a
-                  key={platform}
-                  href={
-                    platform === "discord"
-                      ? `https://discord.com/users/${link}`
-                      : link
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col items-center space-y-2 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 group"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div className="text-gray-600 dark:text-gray-400 group-hover:text-purple-600 dark:group-hover:text-green-400 transition-colors duration-200">
-                    {getSocialIcon(platform)}
+              {player.socialLinks &&
+                Object.entries(player.socialLinks)
+                  .filter(([platform, link]) => link)
+                  .map(([platform, link]) => (
+                    <motion.a
+                      key={platform}
+                      href={
+                        platform === "discord"
+                          ? `https://discord.com/users/${link}`
+                          : link
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col items-center space-y-2 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 group"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <div className="text-gray-600 dark:text-gray-400 group-hover:text-purple-600 dark:group-hover:text-green-400 transition-colors duration-200">
+                        {getSocialIcon(platform)}
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
+                        {platform}
+                      </span>
+                    </motion.a>
+                  ))}
+              {(!player.socialLinks ||
+                Object.keys(player.socialLinks || {}).length === 0 ||
+                Object.values(player.socialLinks || {}).every(
+                  (link) => !link
+                )) && (
+                <div className="col-span-full text-center py-8">
+                  <div className="text-gray-400 mb-4">
+                    <svg
+                      className="w-12 h-12 mx-auto"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
                   </div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
-                    {platform}
-                  </span>
-                </motion.a>
-              ))}
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    No Social Links
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    This player hasn&apos;t added any social media links yet.
+                  </p>
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -539,9 +598,9 @@ export default function PlayerDetailPage({
                   style={{ paddingBottom: "56.25%" }}
                 >
                   <iframe
-                    src={`https://www.youtube.com/embed/${getYouTubeVideoId(
-                      player.highlightVideo
-                    )}`}
+                    src={`https://www.youtube.com/embed/${
+                      getYouTubeVideoId(player.highlightVideo) || ""
+                    }`}
                     title={`${player.name} Highlight Video`}
                     className="absolute top-0 left-0 w-full h-full rounded-lg"
                     frameBorder="0"

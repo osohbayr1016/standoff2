@@ -4,27 +4,68 @@ import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import session from "express-session";
+import { createServer } from "http";
 import passport from "./config/passport";
 import { connectDB } from "./config/database";
 import mongoose from "./config/database";
+import SocketManager from "./config/socket";
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const server = createServer(app);
+const PORT = process.env.PORT || 5001;
+
+// Initialize Socket.IO
+const socketManager = new SocketManager(server);
 
 // Middleware
 app.use(helmet());
+
+// CORS configuration
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "http://localhost:3000",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
+];
+
+console.log("🔧 CORS Configuration:");
+console.log("Allowed origins:", allowedOrigins);
+console.log("Frontend URL from env:", process.env.FRONTEND_URL);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: function (origin, callback) {
+      console.log("🌐 CORS request from origin:", origin);
+
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) {
+        console.log("✅ Allowing request with no origin");
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        console.log("✅ CORS allowed for origin:", origin);
+        callback(null, true);
+      } else {
+        console.log("❌ CORS blocked origin:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
 app.use(morgan("combined"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Handle preflight requests
+app.options("*", cors());
 
 // Session configuration
 app.use(
@@ -52,14 +93,32 @@ app.get("/health", (req, res) => {
   });
 });
 
+// CORS test endpoint
+app.get("/api/test-cors", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "CORS is working!",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Import routes
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
-import messageRoutes from "./routes/messageRoutes";
+import playerProfileRoutes from "./routes/playerProfileRoutes";
+import organizationProfileRoutes from "./routes/organizationProfileRoutes";
+import uploadRoutes from "./routes/uploadRoutes";
 
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/player-profiles", playerProfileRoutes);
+app.use("/api/organization-profiles", organizationProfileRoutes);
+app.use("/api/upload", uploadRoutes);
+
+// Import and set up message routes after socket manager is initialized
+import messageRoutes, { setSocketManager } from "./routes/messageRoutes";
+setSocketManager(socketManager);
 app.use("/api", messageRoutes);
 app.get("/api/v1", (req: Request, res: Response) => {
   res.json({ message: "E-Sport Connection API v1" });
@@ -100,11 +159,12 @@ const startServer = async () => {
     // Connect to database
     await connectDB();
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(`🔐 OAuth: Google & Facebook enabled`);
+      console.log(`🔌 WebSocket: Real-time chat enabled`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);

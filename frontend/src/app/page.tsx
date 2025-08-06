@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import PageTransition from "./components/PageTransition";
 
 export default function Home() {
@@ -75,21 +76,25 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
               >
-                <motion.button
-                  className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Тоглогчид
-                </motion.button>
+                <Link href="/players">
+                  <motion.button
+                    className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Тоглогчид
+                  </motion.button>
+                </Link>
 
-                <motion.button
-                  className="px-8 py-4 bg-transparent border-2 border-white text-white font-semibold rounded-lg text-lg hover:bg-white hover:text-black transition-all duration-200 shadow-lg hover:shadow-xl"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Нэвтрэх
-                </motion.button>
+                <Link href="/about">
+                  <motion.button
+                    className="px-8 py-4 bg-transparent border-2 border-white text-white font-semibold rounded-lg text-lg hover:bg-white hover:text-black transition-all duration-200 shadow-lg hover:shadow-xl"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    About Us
+                  </motion.button>
+                </Link>
               </motion.div>
             </div>
           </div>

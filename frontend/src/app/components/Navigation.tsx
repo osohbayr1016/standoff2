@@ -4,13 +4,15 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDarkMode } from "../contexts/DarkModeContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useSocket } from "../contexts/SocketContext";
 import { Sun, Moon, Menu, X, Search, Bell, User, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function Navigation() {
   const { isDarkMode, toggleDarkMode, isLoaded } = useDarkMode();
-  const { user, logout } = useAuth();
+  const { user, logout, hasProfile } = useAuth();
+  const { isConnected } = useSocket();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -65,6 +67,20 @@ export default function Navigation() {
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
             </motion.button>
 
+            {/* Connection Status Indicator */}
+            {user && (
+              <div className="flex items-center space-x-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    isConnected ? "bg-green-500" : "bg-red-500"
+                  }`}
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {isConnected ? "Connected" : "Disconnected"}
+                </span>
+              </div>
+            )}
+
             <AnimatePresence mode="wait">
               {isLoaded && (
                 <motion.button
@@ -91,23 +107,44 @@ export default function Navigation() {
 
             {user ? (
               <div className="flex items-center space-x-2">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+                <Link
+                  href={
+                    user.role === "PLAYER" && hasProfile
+                      ? "/profile"
+                      : user.role === "ORGANIZATION" && hasProfile
+                      ? "/organization-profile"
+                      : user.role === "PLAYER"
+                      ? "/create-profile"
+                      : "/create-organization-profile"
+                  }
                 >
-                  {user.avatar ? (
-                    <Image
-                      src={user.avatar}
-                      alt={user.name}
-                      width={20}
-                      height={20}
-                      className="rounded-full"
-                    />
-                  ) : (
-                    <User className="w-5 h-5" />
-                  )}
-                </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    title={
+                      user.role === "PLAYER" && hasProfile
+                        ? "Profile"
+                        : user.role === "ORGANIZATION" && hasProfile
+                        ? "Organization Profile"
+                        : user.role === "PLAYER"
+                        ? "Create Profile"
+                        : "Create Organization Profile"
+                    }
+                  >
+                    {user.avatar ? (
+                      <Image
+                        src={user.avatar}
+                        alt={user.name}
+                        width={20}
+                        height={20}
+                        className="rounded-full"
+                      />
+                    ) : (
+                      <User className="w-5 h-5" />
+                    )}
+                  </motion.button>
+                </Link>
                 <motion.button
                   onClick={logout}
                   whileHover={{ scale: 1.05 }}
@@ -205,6 +242,48 @@ export default function Navigation() {
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* Mobile User Actions */}
+                {user ? (
+                  <div className="flex items-center space-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <Link
+                      href={
+                        user.role === "PLAYER" && hasProfile
+                          ? "/profile"
+                          : "/create-profile"
+                      }
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                    >
+                      <User className="w-5 h-5" />
+                      <span>
+                        {user.role === "PLAYER" && hasProfile
+                          ? "Profile"
+                          : "Create Profile"}
+                      </span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Гарах</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <Link
+                      href="/auth/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium"
+                    >
+                      Нэвтрэх
+                    </Link>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

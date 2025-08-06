@@ -2,8 +2,16 @@ import { Router, Request, Response, NextFunction } from "express";
 import Message, { MessageStatus } from "../models/Message";
 import User from "../models/User";
 import { authenticateToken } from "../middleware/auth";
+import { SocketManager } from "../config/socket";
 
 const router = Router();
+
+// Socket manager instance (will be set from main server)
+let socketManager: SocketManager | null = null;
+
+export const setSocketManager = (manager: SocketManager) => {
+  socketManager = manager;
+};
 
 // Send message
 router.post(
@@ -48,6 +56,18 @@ router.post(
         { path: "senderId", select: "id name avatar" },
         { path: "receiverId", select: "id name avatar" },
       ]);
+
+      // Send real-time notification if socket manager is available
+      if (socketManager) {
+        socketManager.sendNotification(receiverId, {
+          type: "new_message",
+          senderId: senderId,
+          senderName: (message.senderId as any).name,
+          content: content,
+          messageId: message._id,
+          timestamp: new Date().toISOString(),
+        });
+      }
 
       return res.status(201).json({
         message: "Message sent successfully",

@@ -4,7 +4,9 @@ import "./globals.css";
 import Footer from "./components/Footer";
 import { DarkModeProvider } from "./contexts/DarkModeContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { SocketProvider } from "./contexts/SocketContext";
 import Navigation from "./components/Navigation";
+import GlobalNotificationHandler from "./components/GlobalNotificationHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,11 +36,16 @@ export default function RootLayout({
       >
         <DarkModeProvider>
           <AuthProvider>
-            <div className="min-h-screen flex flex-col theme-transition">
-              <Navigation />
-              <main className="flex-1 pt-16 theme-transition">{children}</main>
-              <Footer />
-            </div>
+            <SocketProvider>
+              <div className="min-h-screen flex flex-col theme-transition">
+                <Navigation />
+                <main className="flex-1 pt-16 theme-transition">
+                  {children}
+                </main>
+                <Footer />
+                <GlobalNotificationHandler />
+              </div>
+            </SocketProvider>
           </AuthProvider>
         </DarkModeProvider>
       </body>

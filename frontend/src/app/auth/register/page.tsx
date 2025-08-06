@@ -2,10 +2,18 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, User, Building, Gamepad2 } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  User,
+  Building,
+  Gamepad2,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { API_ENDPOINTS } from "../../../config/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 type UserRole = "PLAYER" | "ORGANIZATION";
 
@@ -36,6 +44,7 @@ const roleOptions: RoleOption[] = [
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -56,57 +65,79 @@ export default function RegisterPage() {
     setError("");
   };
 
+  const validateForm = () => {
+    // Check if role is selected
+    if (!selectedRole) {
+      setError("Үүрэг сонгоно уу");
+      return false;
+    }
+
+    // Check if name is provided
+    if (!formData.name.trim()) {
+      setError("Нэр оруулна уу");
+      return false;
+    }
+
+    if (formData.name.trim().length < 2) {
+      setError("Нэр хамгийн багадаа 2 тэмдэгт байх ёстой");
+      return false;
+    }
+
+    // Check if email is provided and valid
+    if (!formData.email.trim()) {
+      setError("И-мэйл хаяг оруулна уу");
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setError("И-мэйл хаяг буруу форматтай байна");
+      return false;
+    }
+
+    // Check if password is provided
+    if (!formData.password) {
+      setError("Нууц үг оруулна уу");
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой");
+      return false;
+    }
+
+    // Check if passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Нууц үгнүүд таарахгүй байна");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    // Validation
-    if (!selectedRole) {
-      setError("Үүрэг сонгоно уу");
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await fetch(API_ENDPOINTS.AUTH.REGISTER, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: selectedRole,
-        }),
-      });
+      await register(
+        formData.name.trim(),
+        formData.email.trim(),
+        formData.password,
+        selectedRole!
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
-      }
-
-      // Store token
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      // Redirect to home page after registration
+      // Redirect to home page after successful registration
       router.push("/");
     } catch (err: unknown) {
       const errorMessage =
-        err instanceof Error ? err.message : "Registration failed";
+        err instanceof Error ? err.message : "Бүртгүүлэхэд алдаа гарлаа";
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -132,7 +163,7 @@ export default function RegisterPage() {
             </motion.h1>
           </Link>
           <p className="text-gray-600 dark:text-gray-300">
-            Дансаа үүсгээд нийгэмд нэгдээрэй
+            Бүртгэлээ үүсгээд бидэнтэй нэгдээрэй
           </p>
         </div>
 
@@ -154,10 +185,11 @@ export default function RegisterPage() {
                   <motion.button
                     key={role.id}
                     type="button"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    disabled={isLoading}
+                    whileHover={{ scale: isLoading ? 1 : 1.02 }}
+                    whileTap={{ scale: isLoading ? 1 : 0.98 }}
                     onClick={() => setSelectedRole(role.id)}
-                    className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                    className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed ${
                       selectedRole === role.id
                         ? `border-transparent bg-gradient-to-r ${role.color} text-white shadow-lg`
                         : "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500"
@@ -190,7 +222,8 @@ export default function RegisterPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                  disabled={isLoading}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Бүтэн нэрээ оруулна уу"
                 />
               </div>
@@ -207,7 +240,8 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                disabled={isLoading}
+                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="И-мэйл хаягаа оруулна уу"
               />
             </div>
@@ -224,13 +258,15 @@ export default function RegisterPage() {
                   value={formData.password}
                   onChange={handleInputChange}
                   required
-                  className="w-full pr-12 px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                  disabled={isLoading}
+                  className="w-full pr-12 px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Нууц үг үүсгэнэ үү"
                 />
                 <button
                   type="button"
+                  disabled={isLoading}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50"
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -239,6 +275,18 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
+              {formData.password && (
+                <div className="mt-2 flex items-center space-x-2">
+                  {formData.password.length >= 6 ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-yellow-500" />
+                  )}
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Хамгийн багадаа 6 тэмдэгт
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Confirm Password Input */}
@@ -253,13 +301,15 @@ export default function RegisterPage() {
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   required
-                  className="w-full pr-12 px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                  disabled={isLoading}
+                  className="w-full pr-12 px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Нууц үгээ баталгаажуулна уу"
                 />
                 <button
                   type="button"
+                  disabled={isLoading}
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -268,6 +318,20 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
+              {formData.confirmPassword && (
+                <div className="mt-2 flex items-center space-x-2">
+                  {formData.password === formData.confirmPassword ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-red-500" />
+                  )}
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {formData.password === formData.confirmPassword
+                      ? "Нууц үгнүүд таарч байна"
+                      : "Нууц үгнүүд таарахгүй байна"}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Error Message */}
@@ -275,9 +339,10 @@ export default function RegisterPage() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm"
+                className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-center space-x-2"
               >
-                {error}
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{error}</span>
               </motion.div>
             )}
 
@@ -285,11 +350,18 @@ export default function RegisterPage() {
             <motion.button
               type="submit"
               disabled={isLoading}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: isLoading ? 1 : 1.02 }}
+              whileTap={{ scale: isLoading ? 1 : 0.98 }}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white py-3 px-4 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Хэрэглэгч үүсгэж байна..." : "Хэрэглэгч Үүсгэх"}
+              {isLoading ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Хэрэглэгч үүсгэж байна...</span>
+                </div>
+              ) : (
+                "Хэрэглэгч Үүсгэх"
+              )}
             </motion.button>
           </form>
 

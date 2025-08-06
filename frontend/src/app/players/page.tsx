@@ -21,14 +21,26 @@ import { useAuth } from "../contexts/AuthContext";
 interface Player {
   id: string;
   name: string;
-  avatar: string;
+  avatar?: string;
+  avatarPublicId?: string;
   category: "PC" | "Mobile";
   game: string;
   role: string;
+  inGameName?: string;
   rank: string;
   experience: string;
-  description: string;
+  bio?: string;
+  description?: string;
   isLookingForTeam: boolean;
+  socialLinks?: {
+    twitter?: string;
+    instagram?: string;
+    youtube?: string;
+    twitch?: string;
+    discord?: string;
+    website?: string;
+  };
+  highlightVideo?: string;
 }
 
 // Game categories and their respective games
@@ -133,14 +145,16 @@ export default function PlayersPage() {
     const fetchPlayers = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:5001/api/users/players");
+        const response = await fetch(
+          "http://localhost:5001/api/player-profiles/profiles"
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch players");
         }
 
         const data = await response.json();
-        setPlayers(data.players || []);
+        setPlayers(data.profiles || []);
       } catch {
         // Fallback to mock data if API fails
         setPlayers([
@@ -278,7 +292,9 @@ export default function PlayersPage() {
       filtered = filtered.filter(
         (player) =>
           player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          player.description.toLowerCase().includes(searchTerm.toLowerCase())
+          (player.bio || player.description || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
       );
     }
 
@@ -468,7 +484,7 @@ export default function PlayersPage() {
                   <div className="flex items-center space-x-4">
                     <div className="relative">
                       <Image
-                        src={player.avatar}
+                        src={player.avatar || "/default-avatar.png"}
                         alt={player.name}
                         width={64}
                         height={64}
@@ -517,7 +533,9 @@ export default function PlayersPage() {
                 {/* Player Details */}
                 <div className="px-6 pb-6">
                   <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-                    {player.description}
+                    {player.bio ||
+                      player.description ||
+                      "No description available"}
                   </p>
 
                   <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">

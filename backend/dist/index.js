@@ -14,15 +14,42 @@ const database_1 = require("./config/database");
 const database_2 = __importDefault(require("./config/database"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5001;
 app.use((0, helmet_1.default)());
+const allowedOrigins = [
+    process.env.FRONTEND_URL || "http://localhost:3000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+];
+console.log("🔧 CORS Configuration:");
+console.log("Allowed origins:", allowedOrigins);
+console.log("Frontend URL from env:", process.env.FRONTEND_URL);
 app.use((0, cors_1.default)({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: function (origin, callback) {
+        console.log("🌐 CORS request from origin:", origin);
+        if (!origin) {
+            console.log("✅ Allowing request with no origin");
+            return callback(null, true);
+        }
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            console.log("✅ CORS allowed for origin:", origin);
+            callback(null, true);
+        }
+        else {
+            console.log("❌ CORS blocked origin:", origin);
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 }));
 app.use((0, morgan_1.default)("combined"));
 app.use(express_1.default.json({ limit: "10mb" }));
 app.use(express_1.default.urlencoded({ extended: true }));
+app.options("*", (0, cors_1.default)());
 app.use((0, express_session_1.default)({
     secret: process.env.SESSION_SECRET || "fallback-secret",
     resave: false,
@@ -41,12 +68,21 @@ app.get("/health", (req, res) => {
         timestamp: new Date().toISOString(),
     });
 });
+app.get("/api/test-cors", (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "CORS is working!",
+        timestamp: new Date().toISOString(),
+    });
+});
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const messageRoutes_1 = __importDefault(require("./routes/messageRoutes"));
+const playerProfileRoutes_1 = __importDefault(require("./routes/playerProfileRoutes"));
 app.use("/api/auth", authRoutes_1.default);
 app.use("/api/users", userRoutes_1.default);
 app.use("/api", messageRoutes_1.default);
+app.use("/api/player-profiles", playerProfileRoutes_1.default);
 app.get("/api/v1", (req, res) => {
     res.json({ message: "E-Sport Connection API v1" });
 });

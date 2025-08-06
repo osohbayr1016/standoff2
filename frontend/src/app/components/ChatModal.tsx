@@ -4,8 +4,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, MessageCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useSocket } from "../contexts/SocketContext";
 import Image from "next/image";
 import { API_ENDPOINTS } from "../../config/api";
+import notificationService from "../utils/notificationService";
 
 interface Message {
   id: string;
@@ -41,11 +43,21 @@ export default function ChatModal({
   playerAvatar,
 }: ChatModalProps) {
   const { user } = useAuth();
+  const {
+    sendMessage: socketSendMessage,
+    sendTypingStart,
+    sendTypingStop,
+    markMessageAsRead,
+    isConnected,
+  } = useSocket();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [error, setError] = useState("");
 
   const scrollToBottom = () => {
@@ -64,21 +76,31 @@ export default function ChatModal({
       setError("");
       const token = localStorage.getItem("token");
 
+      console.log("🔍 Debug - Fetching messages for player:", playerId);
+      console.log("🔍 Debug - Token:", token ? "Present" : "Missing");
+
       const response = await fetch(API_ENDPOINTS.MESSAGES.LIST(playerId), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
+      console.log("🔍 Debug - Fetch response status:", response.status);
+
       if (!response.ok) {
-        throw new Error("Failed to fetch messages");
+        const errorData = await response.json().catch(() => ({}));
+        console.log("🔍 Debug - Fetch error response:", errorData);
+        throw new Error(`Failed to fetch messages (${response.status})`);
       }
 
       const data = await response.json();
+      console.log("🔍 Debug - Fetch success response:", data);
       setMessages(data.messages || []);
     } catch (error) {
       console.error("Error fetching messages:", error);
-      setError("Failed to load messages");
+      setError(
+        error instanceof Error ? error.message : "Failed to load messages"
+      );
     } finally {
       setLoading(false);
     }
@@ -87,8 +109,95 @@ export default function ChatModal({
   useEffect(() => {
     if (isOpen && user) {
       fetchMessages();
+      // Mark messages as read when chat is opened
+      markMessageAsRead(playerId);
     }
-  }, [isOpen, user, fetchMessages]);
+  }, [isOpen, user, fetchMessages, markMessageAsRead, playerId]);
+
+  // Real-time message handling
+  useEffect(() => {
+    const handleNewMessage = (event: CustomEvent) => {
+      const { senderId, content, timestamp } = event.detail;
+
+      // Only add message if it's from the current chat partner
+      if (senderId === playerId) {
+        const newMessage: Message = {
+          id: Date.now().toString(), // Temporary ID
+          content,
+          senderId,
+          receiverId: user?.id || "",
+          createdAt: timestamp,
+          sender: {
+            id: senderId,
+            name: playerName,
+            avatar: playerAvatar,
+          },
+          receiver: {
+            id: user?.id || "",
+            name: user?.name || "",
+            avatar: user?.avatar,
+          },
+        };
+
+        setMessages((prev) => [...prev, newMessage]);
+
+        // Show notification if chat is not focused
+        if (!document.hasFocus()) {
+          notificationService.showMessageNotification(
+            playerName,
+            content,
+            senderId
+          );
+        }
+      }
+    };
+
+    const handleUserTyping = (event: CustomEvent) => {
+      const { userId } = event.detail;
+      if (userId === playerId) {
+        setOtherUserTyping(true);
+        setTimeout(() => setOtherUserTyping(false), 3000);
+      }
+    };
+
+    const handleUserStoppedTyping = (event: CustomEvent) => {
+      const { userId } = event.detail;
+      if (userId === playerId) {
+        setOtherUserTyping(false);
+      }
+    };
+
+    window.addEventListener("new_message", handleNewMessage as EventListener);
+    window.addEventListener("user_typing", handleUserTyping as EventListener);
+    window.addEventListener(
+      "user_stopped_typing",
+      handleUserStoppedTyping as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "new_message",
+        handleNewMessage as EventListener
+      );
+      window.removeEventListener(
+        "user_typing",
+        handleUserTyping as EventListener
+      );
+      window.removeEventListener(
+        "user_stopped_typing",
+        handleUserStoppedTyping as EventListener
+      );
+    };
+  }, [playerId, playerName, playerAvatar, user]);
+
+  // Cleanup typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !user) return;
@@ -96,8 +205,38 @@ export default function ChatModal({
     try {
       setSending(true);
       setError("");
-      const token = localStorage.getItem("token");
 
+      // Send via WebSocket if connected
+      if (isConnected) {
+        socketSendMessage(playerId, newMessage.trim());
+
+        // Add message to local state immediately for instant feedback
+        const tempMessage: Message = {
+          id: Date.now().toString(),
+          content: newMessage.trim(),
+          senderId: user.id,
+          receiverId: playerId,
+          createdAt: new Date().toISOString(),
+          sender: {
+            id: user.id,
+            name: user.name,
+            avatar: user.avatar,
+          },
+          receiver: {
+            id: playerId,
+            name: playerName,
+            avatar: playerAvatar,
+          },
+        };
+
+        setMessages((prev) => [...prev, tempMessage]);
+        setNewMessage("");
+        setSending(false);
+        return;
+      }
+
+      // Fallback to REST API if WebSocket is not connected
+      const token = localStorage.getItem("token");
       const response = await fetch(API_ENDPOINTS.MESSAGES.SEND, {
         method: "POST",
         headers: {
@@ -111,7 +250,10 @@ export default function ChatModal({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to send message");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `Failed to send message (${response.status})`
+        );
       }
 
       const data = await response.json();
@@ -119,7 +261,9 @@ export default function ChatModal({
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
-      setError("Failed to send message");
+      setError(
+        error instanceof Error ? error.message : "Failed to send message"
+      );
     } finally {
       setSending(false);
     }
@@ -129,6 +273,35 @@ export default function ChatModal({
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewMessage(value);
+
+    // Handle typing indicators
+    if (isConnected) {
+      if (value && !isTyping) {
+        setIsTyping(true);
+        sendTypingStart(playerId);
+      } else if (!value && isTyping) {
+        setIsTyping(false);
+        sendTypingStop(playerId);
+      }
+
+      // Clear typing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      // Set timeout to stop typing indicator
+      if (value) {
+        typingTimeoutRef.current = setTimeout(() => {
+          setIsTyping(false);
+          sendTypingStop(playerId);
+        }, 2000);
+      }
     }
   };
 
@@ -169,14 +342,18 @@ export default function ChatModal({
                     height={40}
                     className="rounded-full object-cover"
                   />
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                  <div
+                    className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${
+                      isConnected ? "bg-green-500" : "bg-gray-400"
+                    }`}
+                  ></div>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white theme-transition">
                     {playerName}
                   </h3>
                   <p className="text-sm text-green-600 dark:text-green-400 theme-transition">
-                    Online
+                    {isConnected ? "Online" : "Connecting..."}
                   </p>
                 </div>
               </div>
@@ -237,6 +414,35 @@ export default function ChatModal({
                   );
                 })
               )}
+
+              {/* Typing indicator */}
+              {otherUserTyping && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-2xl">
+                    <div className="flex items-center space-x-1">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                        {playerName} is typing...
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
 
@@ -246,7 +452,7 @@ export default function ChatModal({
                 <input
                   type="text"
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={handleInputChange}
                   onKeyPress={handleKeyPress}
                   placeholder="Type a message..."
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white theme-transition placeholder-gray-500 dark:placeholder-gray-400"

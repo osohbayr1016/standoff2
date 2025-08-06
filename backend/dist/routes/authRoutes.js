@@ -42,6 +42,22 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = __importStar(require("../models/User"));
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
+const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+};
+const validatePassword = (password) => {
+    if (password.length < 6) {
+        return {
+            isValid: false,
+            message: "Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой",
+        };
+    }
+    if (password.length > 128) {
+        return { isValid: false, message: "Нууц үг хэт урт байна" };
+    }
+    return { isValid: true, message: "" };
+};
 const generateToken = (user) => {
     const payload = {
         id: user.id,
@@ -66,23 +82,61 @@ router.post("/register", async (req, res) => {
     try {
         const { email, password, name, role = "PLAYER" } = req.body;
         if (!email || !password || !name) {
-            return res
-                .status(400)
-                .json({ message: "И-мэйл, нууц үг болон нэр шаардлагатай" });
+            return res.status(400).json({
+                success: false,
+                message: "И-мэйл, нууц үг болон нэр шаардлагатай",
+            });
         }
-        const existingUser = await User_1.default.findOne({ email });
+        if (!validateEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "И-мэйл хаяг буруу форматтай байна",
+            });
+        }
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: passwordValidation.message,
+            });
+        }
+        if (name.trim().length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: "Нэр хамгийн багадаа 2 тэмдэгт байх ёстой",
+            });
+        }
+        if (name.trim().length > 50) {
+            return res.status(400).json({
+                success: false,
+                message: "Нэр хэт урт байна",
+            });
+        }
+        if (!Object.values(User_1.UserRole).includes(role)) {
+            return res.status(400).json({
+                success: false,
+                message: "Буруу үүрэг сонгосон",
+            });
+        }
+        const existingUser = await User_1.default.findOne({ email: email.toLowerCase() });
         if (existingUser) {
-            return res.status(400).json({ message: "User already exists" });
+            return res.status(409).json({
+                success: false,
+                message: "Энэ и-мэйл хаягтай хэрэглэгч аль хэдийн бүртгэлтэй байна",
+            });
         }
         const user = await User_1.default.create({
-            email,
+            email: email.toLowerCase().trim(),
             password,
-            name,
+            name: name.trim(),
             role: role,
             isVerified: false,
+            isOnline: true,
+            lastSeen: new Date(),
         });
         const token = generateToken(user);
         return res.status(201).json({
+            success: true,
             message: "Хэрэглэгч амжилттай бүртгэгдлээ",
             user: {
                 id: user.id,
@@ -90,34 +144,55 @@ router.post("/register", async (req, res) => {
                 name: user.name,
                 role: user.role,
                 isVerified: user.isVerified,
+                avatar: user.avatar,
             },
             token,
         });
     }
     catch (error) {
         console.error("Registration error:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({
+            success: false,
+            message: "Серверийн алдаа гарлаа. Дахин оролдоно уу.",
+        });
     }
 });
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
-            return res
-                .status(400)
-                .json({ message: "И-мэйл болон нууц үг шаардлагатай" });
+            return res.status(400).json({
+                success: false,
+                message: "И-мэйл болон нууц үг шаардлагатай",
+            });
         }
-        const user = await User_1.default.findOne({ email });
+        if (!validateEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "И-мэйл хаяг буруу форматтай байна",
+            });
+        }
+        const user = await User_1.default.findOne({ email: email.toLowerCase() });
         if (!user || !user.password) {
-            return res.status(401).json({ message: "Буруу нэвтрэх мэдээлэл" });
+            return res.status(401).json({
+                success: false,
+                message: "И-мэйл эсвэл нууц үг буруу байна",
+            });
         }
         const isValidPassword = await user.comparePassword(password);
         if (!isValidPassword) {
-            return res.status(401).json({ message: "Буруу нэвтрэх мэдээлэл" });
+            return res.status(401).json({
+                success: false,
+                message: "И-мэйл эсвэл нууц үг буруу байна",
+            });
         }
-        await User_1.default.findByIdAndUpdate(user._id, { lastSeen: new Date() });
+        await User_1.default.findByIdAndUpdate(user._id, {
+            lastSeen: new Date(),
+            isOnline: true,
+        });
         const token = generateToken(user);
         return res.json({
+            success: true,
             message: "Амжилттай нэвтэрлээ",
             user: {
                 id: user.id,
@@ -125,13 +200,17 @@ router.post("/login", async (req, res) => {
                 name: user.name,
                 role: user.role,
                 isVerified: user.isVerified,
+                avatar: user.avatar,
             },
             token,
         });
     }
     catch (error) {
         console.error("Login error:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({
+            success: false,
+            message: "Серверийн алдаа гарлаа. Дахин оролдоно уу.",
+        });
     }
 });
 router.put("/role", auth_1.authenticateToken, async (req, res) => {
@@ -139,11 +218,21 @@ router.put("/role", auth_1.authenticateToken, async (req, res) => {
         const { role } = req.body;
         const userId = req.user.id;
         if (!Object.values(User_1.UserRole).includes(role)) {
-            return res.status(400).json({ message: "Буруу үүрэг" });
+            return res.status(400).json({
+                success: false,
+                message: "Буруу үүрэг",
+            });
         }
-        const updatedUser = await User_1.default.findByIdAndUpdate(userId, { role }, { new: true, select: "id email name role isVerified" });
+        const updatedUser = await User_1.default.findByIdAndUpdate(userId, { role }, { new: true, select: "id email name role isVerified avatar" });
+        if (!updatedUser) {
+            return res.status(404).json({
+                success: false,
+                message: "Хэрэглэгч олдсонгүй",
+            });
+        }
         const token = generateToken(updatedUser);
         return res.json({
+            success: true,
             message: "Үүрэг амжилттай шинэчлэгдлээ",
             user: updatedUser,
             token,
@@ -151,16 +240,62 @@ router.put("/role", auth_1.authenticateToken, async (req, res) => {
     }
     catch (error) {
         console.error("Role update error:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({
+            success: false,
+            message: "Серверийн алдаа гарлаа. Дахин оролдоно уу.",
+        });
     }
 });
 router.get("/me", auth_1.authenticateToken, (req, res) => {
     res.json({
+        success: true,
         user: req.user,
     });
 });
-router.post("/logout", (req, res) => {
-    res.json({ message: "Амжилттай гарлаа" });
+router.post("/logout", auth_1.authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        await User_1.default.findByIdAndUpdate(userId, {
+            isOnline: false,
+            lastSeen: new Date(),
+        });
+        res.json({
+            success: true,
+            message: "Амжилттай гарлаа",
+        });
+    }
+    catch (error) {
+        console.error("Logout error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Серверийн алдаа гарлаа",
+        });
+    }
+});
+router.post("/refresh", auth_1.authenticateToken, (req, res) => {
+    try {
+        const user = req.user;
+        const newToken = generateToken(user);
+        res.json({
+            success: true,
+            token: newToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                isVerified: user.isVerified,
+                avatar: user.avatar,
+            },
+        });
+    }
+    catch (error) {
+        console.error("Token refresh error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Токен шинэчлэхэд алдаа гарлаа",
+        });
+    }
 });
 exports.default = router;
 //# sourceMappingURL=authRoutes.js.map
