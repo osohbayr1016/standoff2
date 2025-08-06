@@ -42,7 +42,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Create socket connection
     const socket = io(
-      process.env.NEXT_PUBLIC_WS_URL || "http://localhost:5001",
+      process.env.NEXT_PUBLIC_WS_URL || "http://localhost:8000",
       {
         auth: {
           token: token,

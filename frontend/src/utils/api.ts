@@ -11,7 +11,7 @@ class ApiClient {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = "http://localhost:5001";
+    this.baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   }
 
   private getAuthHeaders(): HeadersInit {

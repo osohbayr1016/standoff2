@@ -169,13 +169,7 @@ export class SocketManager {
     });
   }
 
-  // Method to send notification to specific user
-  public sendNotification(userId: string, notification: any) {
-    const socketId = this.userSockets.get(userId);
-    if (socketId) {
-      this.io.to(socketId).emit("notification", notification);
-    }
-  }
+
 
   // Method to broadcast to all connected users
   public broadcast(event: string, data: any) {

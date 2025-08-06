@@ -75,16 +75,6 @@ router.post("/messages", auth_1.authenticateToken, async (req, res) => {
             { path: "senderId", select: "id name avatar" },
             { path: "receiverId", select: "id name avatar" },
         ]);
-        if (socketManager) {
-            socketManager.sendNotification(receiverId, {
-                type: "new_message",
-                senderId: senderId,
-                senderName: message.senderId.name,
-                content: content,
-                messageId: message._id,
-                timestamp: new Date().toISOString(),
-            });
-        }
         return res.status(201).json({
             message: "Message sent successfully",
             data: message,

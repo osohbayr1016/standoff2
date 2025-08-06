@@ -146,7 +146,9 @@ export default function PlayersPage() {
       try {
         setLoading(true);
         const response = await fetch(
-          "http://localhost:5001/api/player-profiles/profiles"
+          `${
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+          }/api/player-profiles/profiles`
         );
 
         if (!response.ok) {

@@ -6,7 +6,6 @@ import { DarkModeProvider } from "./contexts/DarkModeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SocketProvider } from "./contexts/SocketContext";
 import Navigation from "./components/Navigation";
-import GlobalNotificationHandler from "./components/GlobalNotificationHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +42,6 @@ export default function RootLayout({
                   {children}
                 </main>
                 <Footer />
-                <GlobalNotificationHandler />
               </div>
             </SocketProvider>
           </AuthProvider>

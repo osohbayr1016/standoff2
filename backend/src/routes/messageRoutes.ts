@@ -57,17 +57,7 @@ router.post(
         { path: "receiverId", select: "id name avatar" },
       ]);
 
-      // Send real-time notification if socket manager is available
-      if (socketManager) {
-        socketManager.sendNotification(receiverId, {
-          type: "new_message",
-          senderId: senderId,
-          senderName: (message.senderId as any).name,
-          content: content,
-          messageId: message._id,
-          timestamp: new Date().toISOString(),
-        });
-      }
+
 
       return res.status(201).json({
         message: "Message sent successfully",
