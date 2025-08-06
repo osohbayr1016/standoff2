@@ -57,182 +57,6 @@ interface Player {
   languages?: string[];
 }
 
-// Mock data for player details
-const mockPlayers: Player[] = [
-  {
-    id: "1",
-    name: "Баттулга",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
-    category: "PC",
-    game: "Dota 2",
-    role: "Carry",
-    inGameName: "BatTulga_Carry",
-    rank: "Divine",
-    experience: "5+ жил",
-    bio: "Мэргэжлийн carry тоглогч, өрсөлдөөнт баг хайж байна. Dota 2-т 5+ жил туршлагатай, Divine rank-тай. Хүчтэй farming болон team fight-д сайн. Хамтран ажиллах чадвартай, багийн стратегийг ойлгож, дагаж ажилладаг.",
-    socialLinks: {
-      twitter: "https://twitter.com/battulga_carry",
-      instagram: "https://instagram.com/battulga_gaming",
-      twitch: "https://twitch.tv/battulga_carry",
-      discord: "BatTulga#1234",
-    },
-    highlightVideo: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    isLookingForTeam: true,
-  },
-  {
-    id: "2",
-    name: "Төмөөлэн",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
-    category: "PC",
-    game: "CS2",
-    role: "AWPer",
-    inGameName: "Tumee_AWP",
-    rank: "Global Elite",
-    experience: "3+ жил",
-    bio: "Сайн game sense-тэй чадвартай AWPer. CS2-т 3+ жил туршлагатай, Global Elite rank-тай. Хүчтэй aim болон positioning-тэй. Team communication-д сайн, IGL-тэй сайн ажилладаг.",
-    socialLinks: {
-      youtube: "https://youtube.com/@tumee_awp",
-      twitch: "https://twitch.tv/tumee_awp",
-      discord: "TumeeAWP#5678",
-    },
-    isLookingForTeam: true,
-  },
-  {
-    id: "3",
-    name: "Ананд",
-    avatar:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=face",
-    category: "PC",
-    game: "Valorant",
-    role: "Duelist",
-    inGameName: "Anand_Entry",
-    rank: "Immortal",
-    experience: "4+ жил",
-    bio: "Хүчтэй roaming боломжтой агрессив entry fragger. Valorant-т 4+ жил туршлагатай, Immortal rank-тай. Хүчтэй aim болон game sense-тэй. Entry fragging-д сайн, team coordination-д сайн.",
-    socialLinks: {
-      twitter: "https://twitter.com/anand_entry",
-      instagram: "https://instagram.com/anand_gaming",
-      discord: "AnandEntry#9012",
-    },
-    isLookingForTeam: false,
-  },
-  {
-    id: "4",
-    name: "Болд",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face",
-    category: "PC",
-    game: "Apex Legends",
-    role: "Assault",
-    inGameName: "Bold_Assault",
-    rank: "Diamond",
-    experience: "2+ жил",
-    bio: "Сайн aim болон game sense-тэй assault legend. Apex Legends-т 2+ жил туршлагатай, Diamond rank-тай. Хүчтэй movement болон positioning-тэй. Team play-д сайн, communication-д сайн.",
-    socialLinks: {
-      youtube: "https://youtube.com/@bold_assault",
-      twitch: "https://twitch.tv/bold_assault",
-      discord: "BoldAssault#3456",
-    },
-    isLookingForTeam: true,
-  },
-  {
-    id: "5",
-    name: "Сарнай",
-    avatar:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face",
-    category: "PC",
-    game: "Dota 2",
-    role: "Support",
-    inGameName: "Sarnai_Support",
-    rank: "Ancient",
-    experience: "6+ жил",
-    bio: "Хүчтэй map awareness-тэй туршлагатай support тоглогч. Dota 2-т 6+ жил туршлагатай, Ancient rank-тай. Warding, stacking, pulling-д сайн. Team coordination-д сайн, carry-г сайн support хийдэг.",
-    socialLinks: {
-      instagram: "https://instagram.com/sarnai_support",
-      discord: "SarnaiSupport#7890",
-    },
-    isLookingForTeam: true,
-  },
-  {
-    id: "6",
-    name: "Мөнх",
-    avatar:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop&crop=face",
-    category: "PC",
-    game: "CS2",
-    role: "IGL",
-    inGameName: "Munkh_IGL",
-    rank: "Legendary Eagle",
-    experience: "7+ жил",
-    bio: "Сайн удирдлагын ур чадвартай стратеги IGL. CS2-т 7+ жил туршлагатай, Legendary Eagle rank-тай. Strategy making, team leading-д сайн. Communication-д сайн, team motivation-д сайн.",
-    socialLinks: {
-      twitter: "https://twitter.com/munkh_igl",
-      youtube: "https://youtube.com/@munkh_igl",
-      discord: "MunkhIGL#1234",
-    },
-    isLookingForTeam: false,
-  },
-  {
-    id: "7",
-    name: "Энхжаргал",
-    avatar:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=face",
-    category: "Mobile",
-    game: "Mobile Legends",
-    role: "Mage",
-    inGameName: "Enkhjargal_Mage",
-    rank: "Mythic",
-    experience: "3+ жил",
-    bio: "Хүчтэй burst damage-тэй mage тоглогч. Mobile Legends-т 3+ жил туршлагатай, Mythic rank-тай. Burst damage, crowd control-д сайн. Team fight-д сайн, positioning-д сайн.",
-    socialLinks: {
-      instagram: "https://instagram.com/enkhjargal_mage",
-      youtube: "https://youtube.com/@enkhjargal_mage",
-      discord: "EnkhjargalMage#5678",
-    },
-    isLookingForTeam: true,
-  },
-  {
-    id: "8",
-    name: "Батбаяр",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
-    category: "Mobile",
-    game: "Standoff 2",
-    role: "AWPer",
-    inGameName: "Batbayar_AWP",
-    rank: "Legend",
-    experience: "2+ жил",
-    bio: "Сайн aim-тэй mobile AWPer. Standoff 2-т 2+ жил туршлагатай, Legend rank-тай. Хүчтэй aim болон reaction time-тэй. Mobile gaming-д сайн, team coordination-д сайн.",
-    socialLinks: {
-      youtube: "https://youtube.com/@batbayar_awp",
-      discord: "BatbayarAWP#9012",
-    },
-    isLookingForTeam: true,
-  },
-  {
-    id: "9",
-    name: "Ганбаатар",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
-    category: "Mobile",
-    game: "PUBG Mobile",
-    role: "IGL",
-    inGameName: "Ganbaatar_IGL",
-    rank: "Conqueror",
-    experience: "4+ жил",
-    bio: "Сайн удирдлагын ур чадвартай mobile IGL. PUBG Mobile-т 4+ жил туршлагатай, Conqueror rank-тай. Strategy making, team leading-д сайн. Mobile gaming-д сайн, communication-д сайн.",
-    socialLinks: {
-      twitter: "https://twitter.com/ganbaatar_igl",
-      instagram: "https://instagram.com/ganbaatar_gaming",
-      youtube: "https://youtube.com/@ganbaatar_igl",
-      discord: "GanbaatarIGL#3456",
-    },
-    isLookingForTeam: false,
-  },
-];
-
 export default function PlayerDetailPage({
   params,
 }: {
@@ -262,18 +86,14 @@ export default function PlayerDetailPage({
           if (foundPlayer) {
             setPlayer(foundPlayer);
           } else {
-            // Player not found, try mock data as fallback
-            const mockPlayer = mockPlayers.find((p) => p.id === id);
-            setPlayer(mockPlayer || null);
+            setPlayer(null);
           }
         } else {
           throw new Error("Failed to fetch players");
         }
       } catch (error) {
         console.error("Failed to fetch player:", error);
-        // Fallback to mock data
-        const foundPlayer = mockPlayers.find((p) => p.id === id);
-        setPlayer(foundPlayer || null);
+        setPlayer(null);
       } finally {
         setLoading(false);
       }
