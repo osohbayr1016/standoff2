@@ -1,4 +1,9 @@
-import express, { Request, Response, NextFunction } from "express";
+import express, {
+  Request,
+  Response,
+  NextFunction,
+  RequestHandler,
+} from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -15,7 +20,7 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 8000;
 
 // Initialize Socket.IO
 const socketManager = new SocketManager(server);
@@ -85,7 +90,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Health check endpoint
-app.get("/health", (req, res) => {
+app.get("/health", (req: any, res: any) => {
   res.status(200).json({
     status: "OK",
     message: "E-Sport Connection API is running",
@@ -94,7 +99,7 @@ app.get("/health", (req, res) => {
 });
 
 // CORS test endpoint
-app.get("/api/test-cors", (req, res) => {
+app.get("/api/test-cors", (req: any, res: any) => {
   res.status(200).json({
     success: true,
     message: "CORS is working!",
@@ -120,12 +125,12 @@ app.use("/api/upload", uploadRoutes);
 import messageRoutes, { setSocketManager } from "./routes/messageRoutes";
 setSocketManager(socketManager);
 app.use("/api", messageRoutes);
-app.get("/api/v1", (req: Request, res: Response) => {
+app.get("/api/v1", (req: any, res: any) => {
   res.json({ message: "E-Sport Connection API v1" });
 });
 
 // Error handling middleware
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, req: any, res: any, next: any) => {
   console.error(err.stack);
   res.status(500).json({
     error: "Something went wrong!",
@@ -136,7 +141,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-app.all("*", (req: Request, res: Response) => {
+app.all("*", (req: any, res: any) => {
   res.status(404).json({ error: "Route not found" });
 });
 

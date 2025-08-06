@@ -50,7 +50,7 @@ const socket_1 = __importDefault(require("./config/socket"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const server = (0, http_1.createServer)(app);
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 8000;
 const socketManager = new socket_1.default(server);
 app.use((0, helmet_1.default)());
 const allowedOrigins = [
