@@ -121,8 +121,7 @@ const playerProfileSchema = new Schema<IPlayerProfile>(
   }
 );
 
-// Index for efficient queries
-playerProfileSchema.index({ userId: 1 });
+// Index for efficient queries (userId already has unique index from schema)
 playerProfileSchema.index({ game: 1 });
 playerProfileSchema.index({ category: 1 });
 playerProfileSchema.index({ isLookingForTeam: 1 });

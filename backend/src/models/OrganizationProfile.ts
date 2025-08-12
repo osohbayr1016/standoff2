@@ -141,8 +141,7 @@ const organizationProfileSchema = new Schema<IOrganizationProfile>(
   }
 );
 
-// Index for better query performance
-organizationProfileSchema.index({ userId: 1 });
+// Index for better query performance (userId already has unique index from schema)
 organizationProfileSchema.index({ organizationName: 1 });
 organizationProfileSchema.index({ isActive: 1, isVerified: 1 });
 

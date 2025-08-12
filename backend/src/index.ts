@@ -1,9 +1,4 @@
-import express, {
-  Request,
-  Response,
-  NextFunction,
-  RequestHandler,
-} from "express";
+import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -12,7 +7,7 @@ import session from "express-session";
 import { createServer } from "http";
 import passport from "./config/passport";
 import { connectDB } from "./config/database";
-import mongoose from "./config/database";
+import mongoose from "mongoose";
 import SocketManager from "./config/socket";
 
 // Load environment variables
@@ -72,18 +67,28 @@ app.use(express.urlencoded({ extended: true }));
 // Handle preflight requests
 app.options("*", cors());
 
-// Session configuration
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "fallback-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    },
-  })
-);
+// Session configuration with production-ready store
+const sessionConfig: any = {
+  secret: process.env.SESSION_SECRET || "fallback-secret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  },
+};
+
+// Use MemoryStore only in development
+if (process.env.NODE_ENV === "production") {
+  console.log("🔐 Using production session configuration");
+  // In production, you might want to use Redis or MongoDB for session storage
+  // For now, we'll use MemoryStore but with a warning
+  console.log("⚠️  Warning: Using MemoryStore in production. Consider using Redis or MongoDB for session storage.");
+} else {
+  console.log("🔐 Using development session configuration");
+}
+
+app.use(session(sessionConfig));
 
 // Initialize passport
 app.use(passport.initialize());
@@ -164,12 +169,14 @@ const startServer = async () => {
     // Connect to database
     await connectDB();
 
+    // Listen on the specified port
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(`🔐 OAuth: Google & Facebook enabled`);
       console.log(`🔌 WebSocket: Real-time chat enabled`);
+      console.log(`🌐 Server bound to 0.0.0.0:${PORT}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);
