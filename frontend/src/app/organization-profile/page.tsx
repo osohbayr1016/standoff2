@@ -17,6 +17,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface OrganizationProfile {
   _id: string;
@@ -568,9 +569,11 @@ export default function OrganizationProfilePage() {
               ) : (
                 <div className="flex items-center space-x-4">
                   {profile.logo ? (
-                    <img
+                    <Image
                       src={profile.logo}
                       alt="Organization Logo"
+                      width={80}
+                      height={80}
                       className="w-20 h-20 rounded-lg object-cover"
                     />
                   ) : (

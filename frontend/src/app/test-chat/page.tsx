@@ -5,13 +5,31 @@ import { useAuth } from "../contexts/AuthContext";
 import { useSocket } from "../contexts/SocketContext";
 import { useNotifications } from "../hooks/useNotifications";
 
+interface DebugInfo {
+  user: {
+    id: string;
+    name: string;
+    role: string;
+  } | null;
+  socketConnected: boolean;
+  unreadCount: number;
+  notificationsCount: number;
+  timestamp: string;
+}
+
 export default function TestChatPage() {
   const { getToken, user } = useAuth();
   const { isConnected, socket } = useSocket();
   const { unreadCount, notifications } = useNotifications();
   const [testMessage, setTestMessage] = useState("");
   const [targetUserId, setTargetUserId] = useState("");
-  const [debugInfo, setDebugInfo] = useState<any>({});
+  const [debugInfo, setDebugInfo] = useState<DebugInfo>({
+    user: null,
+    socketConnected: false,
+    unreadCount: 0,
+    notificationsCount: 0,
+    timestamp: new Date().toISOString(),
+  });
 
   useEffect(() => {
     // Update debug info

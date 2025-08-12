@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import { API_ENDPOINTS } from "../../config/api";
 
 interface User {
@@ -162,56 +168,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeAuth();
   }, []);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const refreshInterval = setInterval(async () => {
-      try {
-        await refreshToken();
-      } catch (error) {
-        console.error("Automatic token refresh failed:", error);
-        // If refresh fails, logout the user
-        await logout();
-      }
-    }, 6 * 24 * 60 * 60 * 1000);
-
-    return () => clearInterval(refreshInterval);
-  }, [user]);
-
-  const checkProfileStatus = async () => {
-    if (!user || (user.role !== "PLAYER" && user.role !== "ORGANIZATION")) {
-      setHasProfile(false);
-      setStoredHasProfile(false);
-      return;
-    }
-
-    try {
-      const token = getStoredToken();
-      if (!token) return;
-
-      const endpoint =
-        user.role === "PLAYER"
-          ? API_ENDPOINTS.PLAYER_PROFILES.HAS_PROFILE
-          : API_ENDPOINTS.ORGANIZATION_PROFILES.HAS_PROFILE;
-
-      const response = await fetch(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setHasProfile(data.hasProfile);
-        setStoredHasProfile(data.hasProfile);
-      }
-    } catch (error) {
-      console.error("Error checking profile status:", error);
-      setHasProfile(false);
-      setStoredHasProfile(false);
-    }
-  };
 
   const login = async (email: string, password: string) => {
     try {
@@ -390,6 +346,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
     return token;
   };
+
+  useEffect(() => {
+    if (!user) return;
+
+    const refreshInterval = setInterval(async () => {
+      try {
+        await refreshToken();
+      } catch (error) {
+        console.error("Automatic token refresh failed:", error);
+        // If refresh fails, logout the user
+        await logout();
+      }
+    }, 6 * 24 * 60 * 60 * 1000);
+
+    return () => clearInterval(refreshInterval);
+  }, [user, refreshToken, logout]);
+
+  const checkProfileStatus = useCallback(async () => {
+    if (!user || (user.role !== "PLAYER" && user.role !== "ORGANIZATION")) {
+      setHasProfile(false);
+      setStoredHasProfile(false);
+      return;
+    }
+
+    try {
+      const token = getStoredToken();
+      if (!token) return;
+
+      const endpoint =
+        user.role === "PLAYER"
+          ? API_ENDPOINTS.PLAYER_PROFILES.HAS_PROFILE
+          : API_ENDPOINTS.ORGANIZATION_PROFILES.HAS_PROFILE;
+
+      const response = await fetch(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHasProfile(data.hasProfile);
+        setStoredHasProfile(data.hasProfile);
+      }
+    } catch (error) {
+      console.error("Error checking profile status:", error);
+      setHasProfile(false);
+      setStoredHasProfile(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    checkProfileStatus();
+  }, [checkProfileStatus]);
 
   const value = {
     user,

@@ -67,13 +67,6 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [editData, setEditData] = useState<Partial<PlayerProfile>>({});
 
-  useEffect(() => {
-    console.log("🔍 Debug - User state:", { user });
-    if (user) {
-      fetchProfile();
-    }
-  }, [user]);
-
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
@@ -118,7 +111,14 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, router]);
+
+  useEffect(() => {
+    console.log("🔍 Debug - User state:", { user });
+    if (user) {
+      fetchProfile();
+    }
+  }, [user, fetchProfile]);
 
   const handleEdit = () => {
     setIsEditing(true);

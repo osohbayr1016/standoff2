@@ -47,7 +47,7 @@ interface Conversation {
 
 const InstagramChat: React.FC = () => {
   const { user, getToken } = useAuth();
-  const { socket, isConnected } = useSocket();
+  const { socket } = useSocket();
   const { unreadCount, fetchUnreadCount } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
