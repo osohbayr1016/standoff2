@@ -8,7 +8,6 @@ import { useSocket } from "../contexts/SocketContext";
 import Image from "next/image";
 import { API_ENDPOINTS } from "../../config/api";
 
-
 interface Message {
   id: string;
   content: string;
@@ -140,8 +139,6 @@ export default function ChatModal({
         };
 
         setMessages((prev) => [...prev, newMessage]);
-
-
       }
     };
 

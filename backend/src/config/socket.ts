@@ -3,6 +3,8 @@ import { Server as HTTPServer } from "http";
 import jwt from "jsonwebtoken";
 import { JWTPayload } from "../middleware/auth";
 import { NotificationService } from "../utils/notificationService";
+import Message from "../models/Message";
+import User from "../models/User";
 
 interface AuthenticatedSocket {
   userId: string;
@@ -80,14 +82,37 @@ export class SocketManager {
               `📨 Message from ${userName} to ${data.receiverId}: ${data.content}`
             );
 
+            // Get sender details
+            const sender = await User.findById(userId).select("name avatar");
+            if (!sender) {
+              throw new Error("Sender not found");
+            }
+
+            // Create message in database
+            const message = await Message.create({
+              senderId: userId,
+              receiverId: data.receiverId,
+              content: data.content,
+              status: "SENT",
+            });
+
+            // Populate message with sender and receiver details
+            await message.populate([
+              { path: "senderId", select: "id name avatar" },
+              { path: "receiverId", select: "id name avatar" },
+            ]);
+
             // Emit to receiver if online
             const receiverSocketId = this.userSockets.get(data.receiverId);
             if (receiverSocketId) {
               this.io.to(receiverSocketId).emit("new_message", {
+                id: message._id.toString(),
                 senderId: userId,
-                senderName: userName,
+                senderName: sender.name,
+                senderAvatar: sender.avatar,
                 content: data.content,
-                timestamp: new Date().toISOString(),
+                receiverId: data.receiverId,
+                timestamp: message.createdAt.toISOString(),
               });
 
               // Send delivery confirmation to sender
@@ -96,7 +121,15 @@ export class SocketManager {
                 timestamp: new Date().toISOString(),
               });
             } else {
-              // Receiver is offline, send offline notification
+              // Receiver is offline, create notification
+              await NotificationService.createMessageNotification(
+                userId,
+                data.receiverId,
+                message._id.toString(),
+                data.content
+              );
+
+              // Send offline notification to sender
               socket.emit("message_sent_offline", {
                 receiverId: data.receiverId,
                 timestamp: new Date().toISOString(),
@@ -134,14 +167,24 @@ export class SocketManager {
       });
 
       // Handle read receipts
-      socket.on("mark_read", (data: { senderId: string }) => {
-        const senderSocketId = this.userSockets.get(data.senderId);
-        if (senderSocketId) {
-          this.io.to(senderSocketId).emit("message_read", {
-            readerId: userId,
-            readerName: userName,
-            timestamp: new Date().toISOString(),
-          });
+      socket.on("mark_read", async (data: { senderId: string }) => {
+        try {
+          const senderSocketId = this.userSockets.get(data.senderId);
+          if (senderSocketId) {
+            this.io.to(senderSocketId).emit("message_read", {
+              readerId: userId,
+              readerName: userName,
+              timestamp: new Date().toISOString(),
+            });
+          }
+
+          // Mark notifications as seen
+          await NotificationService.markNotificationsAsSeen(
+            userId,
+            data.senderId
+          );
+        } catch (error) {
+          console.error("Error marking messages as read:", error);
         }
       });
 

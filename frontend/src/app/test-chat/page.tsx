@@ -1,18 +1,39 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useSocket } from "../contexts/SocketContext";
+import { useNotifications } from "../hooks/useNotifications";
 
 export default function TestChatPage() {
-  const { getToken } = useAuth();
+  const { getToken, user } = useAuth();
+  const { isConnected, socket } = useSocket();
+  const { unreadCount, notifications } = useNotifications();
   const [testMessage, setTestMessage] = useState("");
   const [targetUserId, setTargetUserId] = useState("");
+  const [debugInfo, setDebugInfo] = useState<any>({});
+
+  useEffect(() => {
+    // Update debug info
+    setDebugInfo({
+      user: user ? { id: user.id, name: user.name, role: user.role } : null,
+      socketConnected: isConnected,
+      unreadCount,
+      notificationsCount: notifications.length,
+      timestamp: new Date().toISOString(),
+    });
+  }, [user, isConnected, unreadCount, notifications]);
 
   const sendTestMessage = async () => {
     const token = getToken();
     if (!token || !testMessage.trim() || !targetUserId.trim()) return;
 
     try {
+      console.log("🚀 Sending test message...");
+      console.log("Target User ID:", targetUserId);
+      console.log("Message:", testMessage);
+      console.log("Token:", token ? "Present" : "Missing");
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/messages`,
         {
@@ -28,23 +49,87 @@ export default function TestChatPage() {
         }
       );
 
+      console.log("📡 Response status:", response.status);
+
       if (response.ok) {
+        const data = await response.json();
+        console.log("✅ Message sent successfully:", data);
         alert(
-          "Test message sent! Check the Instagram-style chat in the bottom-right corner."
+          "Test message sent! Check the Instagram-style chat in the bottom-right corner and notifications in the top-right corner."
         );
         setTestMessage("");
       } else {
-        alert("Failed to send test message");
+        const errorData = await response.json().catch(() => ({}));
+        console.error("❌ Failed to send message:", errorData);
+        alert(
+          `Failed to send test message: ${
+            errorData.message || response.statusText
+          }`
+        );
       }
     } catch (error) {
-      console.error("Error sending test message:", error);
+      console.error("❌ Error sending test message:", error);
       alert("Error sending test message");
     }
+  };
+
+  const sendSocketMessage = () => {
+    if (
+      !socket ||
+      !isConnected ||
+      !testMessage.trim() ||
+      !targetUserId.trim()
+    ) {
+      alert("Socket not connected or missing data");
+      return;
+    }
+
+    console.log("🔌 Sending message via socket...");
+    socket.emit("send_message", {
+      receiverId: targetUserId,
+      content: testMessage,
+    });
+
+    alert("Message sent via socket! Check for notifications.");
+    setTestMessage("");
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Chat System Test</h1>
+
+      {/* Debug Information */}
+      <div className="mb-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+        <h2 className="text-xl font-semibold mb-4">Debug Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div>
+            <p>
+              <strong>User:</strong>{" "}
+              {debugInfo.user
+                ? `${debugInfo.user.name} (${debugInfo.user.id})`
+                : "Not logged in"}
+            </p>
+            <p>
+              <strong>Socket Connected:</strong>{" "}
+              {debugInfo.socketConnected ? "✅ Yes" : "❌ No"}
+            </p>
+            <p>
+              <strong>Unread Count:</strong> {debugInfo.unreadCount}
+            </p>
+            <p>
+              <strong>Notifications:</strong> {debugInfo.notificationsCount}
+            </p>
+          </div>
+          <div>
+            <p>
+              <strong>API URL:</strong> {process.env.NEXT_PUBLIC_API_URL}
+            </p>
+            <p>
+              <strong>Last Update:</strong> {debugInfo.timestamp}
+            </p>
+          </div>
+        </div>
+      </div>
 
       <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <h2 className="text-xl font-semibold mb-4">Test Chat Features</h2>
@@ -76,13 +161,24 @@ export default function TestChatPage() {
             />
           </div>
 
-          <button
-            onClick={sendTestMessage}
-            disabled={!testMessage.trim() || !targetUserId.trim()}
-            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            Send Test Message
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={sendTestMessage}
+              disabled={!testMessage.trim() || !targetUserId.trim()}
+              className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              Send via API
+            </button>
+            <button
+              onClick={sendSocketMessage}
+              disabled={
+                !testMessage.trim() || !targetUserId.trim() || !isConnected
+              }
+              className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              Send via Socket
+            </button>
+          </div>
 
           <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
             <p>• Look for the purple chat button in the bottom-right corner</p>
@@ -92,6 +188,9 @@ export default function TestChatPage() {
             <p>
               • Notifications will appear as toasts: &quot;username чам руу чат
               бичсэн байна&quot;
+            </p>
+            <p>
+              • Check the notification bell in the navigation for unread counts
             </p>
           </div>
         </div>

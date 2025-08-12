@@ -175,22 +175,43 @@ export const useNotifications = () => {
     if (!socket) return;
 
     // Listen for pending notifications when user comes online
-    socket.on(
-      "pending_notifications",
-      (data: { notifications: Notification[]; count: number }) => {
-        setNotifications((prev) => {
-          const existingIds = new Set(prev.map((n) => n._id));
-          const newNotifications = data.notifications.filter(
-            (n) => !existingIds.has(n._id)
-          );
-          return [...newNotifications, ...prev];
-        });
-        setUnreadCount((prev) => prev + data.count);
-      }
-    );
+    const handlePendingNotifications = (data: {
+      notifications: Notification[];
+      count: number;
+    }) => {
+      console.log("📬 Pending notifications received in hook:", data);
+
+      setNotifications((prev) => {
+        const existingIds = new Set(prev.map((n) => n._id));
+        const newNotifications = data.notifications.filter(
+          (n) => !existingIds.has(n._id)
+        );
+        return [...newNotifications, ...prev];
+      });
+      setUnreadCount((prev) => prev + data.count);
+    };
+
+    // Listen for new messages to update unread count
+    const handleNewMessage = (data: {
+      id?: string;
+      content: string;
+      senderId: string;
+      receiverId?: string;
+      timestamp?: string;
+      senderName: string;
+      senderAvatar?: string;
+    }) => {
+      console.log("📨 New message received in notifications hook:", data);
+      // Update unread count when new message is received
+      setUnreadCount((prev) => prev + 1);
+    };
+
+    socket.on("pending_notifications", handlePendingNotifications);
+    socket.on("new_message", handleNewMessage);
 
     return () => {
-      socket.off("pending_notifications");
+      socket.off("pending_notifications", handlePendingNotifications);
+      socket.off("new_message", handleNewMessage);
     };
   }, [socket]);
 

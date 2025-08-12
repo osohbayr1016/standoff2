@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, MessageCircle } from "lucide-react";
 import { useSocket } from "../contexts/SocketContext";
+import { useAuth } from "../contexts/AuthContext";
 
 interface NotificationToastProps {
   onNotificationClick?: (notification: {
@@ -23,6 +24,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   onNotificationClick,
 }) => {
   const { socket } = useSocket();
+  const { user } = useAuth();
   const [toasts, setToasts] = useState<
     Array<{
       id: string;
@@ -34,46 +36,83 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   >([]);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !user) return;
 
-    // Listen for new notifications
-    socket.on(
-      "pending_notifications",
-      (data: {
-        notifications: Array<{
-          _id: string;
-          title: string;
-          content: string;
-          senderId?: {
-            name: string;
-          };
-        }>;
-        count: number;
-      }) => {
-        // Show toast for each new notification
-        data.notifications.forEach((notification) => {
-          const toast = {
-            id: notification._id,
-            title: notification.title,
-            content: notification.content,
-            senderName: notification.senderId?.name || "Unknown",
-            timestamp: new Date().toISOString(),
-          };
+    // Listen for new notifications from the notification system
+    const handlePendingNotifications = (data: {
+      notifications: Array<{
+        _id: string;
+        title: string;
+        content: string;
+        senderId?: {
+          name: string;
+        };
+      }>;
+      count: number;
+    }) => {
+      console.log("📬 Pending notifications received:", data);
 
-          setToasts((prev) => [...prev, toast]);
+      // Show toast for each new notification
+      data.notifications.forEach((notification) => {
+        const toast = {
+          id: notification._id,
+          title: notification.title,
+          content: notification.content,
+          senderName: notification.senderId?.name || "Unknown",
+          timestamp: new Date().toISOString(),
+        };
 
-          // Auto-remove toast after 5 seconds
-          setTimeout(() => {
-            setToasts((prev) => prev.filter((t) => t.id !== toast.id));
-          }, 5000);
-        });
+        setToasts((prev) => [...prev, toast]);
+
+        // Auto-remove toast after 5 seconds
+        setTimeout(() => {
+          setToasts((prev) => prev.filter((t) => t.id !== toast.id));
+        }, 5000);
+      });
+    };
+
+    // Listen for new messages (for real-time chat notifications)
+    const handleNewMessage = (data: {
+      id?: string;
+      content: string;
+      senderId: string;
+      receiverId?: string;
+      timestamp?: string;
+      senderName: string;
+      senderAvatar?: string;
+    }) => {
+      console.log("📨 New message notification received:", data);
+
+      // Only show notification if the message is for the current user
+      if (data.receiverId === user?.id || data.receiverId === undefined) {
+        const toast = {
+          id: data.id || Date.now().toString(),
+          title: `${data.senderName} чам руу чат бичсэн байна`,
+          content:
+            data.content.length > 50
+              ? data.content.substring(0, 50) + "..."
+              : data.content,
+          senderName: data.senderName,
+          timestamp: data.timestamp || new Date().toISOString(),
+        };
+
+        setToasts((prev) => [...prev, toast]);
+
+        // Auto-remove toast after 5 seconds
+        setTimeout(() => {
+          setToasts((prev) => prev.filter((t) => t.id !== toast.id));
+        }, 5000);
       }
-    );
+    };
+
+    socket.on("pending_notifications", handlePendingNotifications);
+    socket.on("new_message", handleNewMessage);
 
     return () => {
-      socket.off("pending_notifications");
+      socket.off("pending_notifications", handlePendingNotifications);
+      socket.off("new_message", handleNewMessage);
     };
-  }, [socket]);
+  }, [socket, user]);
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -101,6 +140,11 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
     }
     removeToast(toast.id);
   };
+
+  // Don't render if user is not authenticated
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="fixed top-20 right-4 z-50 space-y-2">

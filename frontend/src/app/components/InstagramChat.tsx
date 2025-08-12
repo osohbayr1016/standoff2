@@ -45,26 +45,10 @@ interface Conversation {
   unreadCount: number;
 }
 
-interface InstagramChatProps {
-  onNotificationClick?: (notification: {
-    _id: string;
-    title: string;
-    content: string;
-    senderId: {
-      _id: string;
-      name: string;
-      avatar?: string;
-    };
-    createdAt: string;
-  }) => void;
-}
-
-const InstagramChat: React.FC<InstagramChatProps> = ({
-  onNotificationClick,
-}) => {
+const InstagramChat: React.FC = () => {
   const { user, getToken } = useAuth();
-  const { socket } = useSocket();
-  const { unreadCount } = useNotifications();
+  const { socket, isConnected } = useSocket();
+  const { unreadCount, fetchUnreadCount } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -182,63 +166,49 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
     if (!socket) return;
 
     // Listen for new messages
-    socket.on(
-      "new_message",
-      (data: {
-        id?: string;
-        content: string;
-        senderId: string;
-        receiverId?: string;
-        timestamp?: string;
-        senderName: string;
-        senderAvatar?: string;
-      }) => {
-        const newMessage: Message = {
-          _id: data.id || Date.now().toString(),
-          content: data.content,
-          senderId: data.senderId,
-          receiverId: data.receiverId || user?.id || "",
-          createdAt: data.timestamp || new Date().toISOString(),
-          status: "SENT",
-          sender: {
-            _id: data.senderId,
-            name: data.senderName,
-            avatar: data.senderAvatar,
-          },
-          receiver: {
-            _id: data.receiverId || user?.id || "",
-            name: user?.name || "",
-            avatar: user?.avatar,
-          },
-        };
+    const handleNewMessage = (data: {
+      id?: string;
+      content: string;
+      senderId: string;
+      receiverId?: string;
+      timestamp?: string;
+      senderName: string;
+      senderAvatar?: string;
+    }) => {
+      console.log("📨 New message received in InstagramChat:", data);
 
-        setMessages((prev) => [...prev, newMessage]);
+      const newMessage: Message = {
+        _id: data.id || Date.now().toString(),
+        content: data.content,
+        senderId: data.senderId,
+        receiverId: data.receiverId || user?.id || "",
+        createdAt: data.timestamp || new Date().toISOString(),
+        status: "SENT",
+        sender: {
+          _id: data.senderId,
+          name: data.senderName,
+          avatar: data.senderAvatar,
+        },
+        receiver: {
+          _id: data.receiverId || user?.id || "",
+          name: user?.name || "",
+          avatar: user?.avatar,
+        },
+      };
 
-        // Update conversation list
-        fetchConversations();
+      setMessages((prev) => [...prev, newMessage]);
 
-        // Show notification toast
-        if (onNotificationClick) {
-          onNotificationClick({
-            _id: newMessage._id,
-            title: `${data.senderName} чам руу чат бичсэн байна`,
-            content:
-              data.content.length > 50
-                ? data.content.substring(0, 50) + "..."
-                : data.content,
-            senderId: {
-              _id: data.senderId,
-              name: data.senderName,
-              avatar: data.senderAvatar,
-            },
-            createdAt: new Date().toISOString(),
-          });
-        }
-      }
-    );
+      // Update conversation list
+      fetchConversations();
+
+      // Update unread count
+      fetchUnreadCount();
+    };
+
+    socket.on("new_message", handleNewMessage);
 
     return () => {
-      socket.off("new_message");
+      socket.off("new_message", handleNewMessage);
     };
   }, [
     socket,
@@ -246,7 +216,7 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
     user?.name,
     user?.avatar,
     fetchConversations,
-    onNotificationClick,
+    fetchUnreadCount,
   ]);
 
   // Initial fetch
@@ -254,8 +224,9 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
     const token = getToken();
     if (token) {
       fetchConversations();
+      fetchUnreadCount();
     }
-  }, [getToken, fetchConversations]);
+  }, [getToken, fetchConversations, fetchUnreadCount]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -266,6 +237,11 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
   const filteredConversations = conversations.filter((conv) =>
     conv.partner.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Don't render if user is not authenticated
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
