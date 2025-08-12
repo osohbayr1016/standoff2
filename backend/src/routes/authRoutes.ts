@@ -4,8 +4,48 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User, { UserRole } from "../models/User";
 import { authenticateToken, JWTPayload } from "../middleware/auth";
+import mongoose from "mongoose";
 
 const router = Router();
+
+// Debug endpoint to test database connection
+router.get("/debug", async (req: Request, res: Response) => {
+  try {
+    // Test database connection
+    const dbState = mongoose.connection.readyState;
+    const dbStates = {
+      0: "disconnected",
+      1: "connected",
+      2: "connecting",
+      3: "disconnecting"
+    };
+
+    // Test User model
+    const userCount = await User.countDocuments();
+    
+    res.json({
+      success: true,
+      database: {
+        state: dbStates[dbState as keyof typeof dbStates],
+        readyState: dbState,
+        userCount
+      },
+      environment: {
+        nodeEnv: process.env.NODE_ENV,
+        hasJwtSecret: !!process.env.JWT_SECRET,
+        hasSessionSecret: !!process.env.SESSION_SECRET,
+        frontendUrl: process.env.FRONTEND_URL
+      }
+    });
+  } catch (error) {
+    console.error("Debug endpoint error:", error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+      stack: process.env.NODE_ENV === "development" ? error instanceof Error ? error.stack : undefined : undefined
+    });
+  }
+});
 
 // Input validation middleware
 const validateEmail = (email: string): boolean => {
