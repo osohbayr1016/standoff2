@@ -45,7 +45,7 @@ const express_session_1 = __importDefault(require("express-session"));
 const http_1 = require("http");
 const passport_1 = __importDefault(require("./config/passport"));
 const database_1 = require("./config/database");
-const database_2 = __importDefault(require("./config/database"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const socket_1 = __importDefault(require("./config/socket"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -87,7 +87,7 @@ app.use((0, morgan_1.default)("combined"));
 app.use(express_1.default.json({ limit: "10mb" }));
 app.use(express_1.default.urlencoded({ extended: true }));
 app.options("*", (0, cors_1.default)());
-app.use((0, express_session_1.default)({
+const sessionConfig = {
     secret: process.env.SESSION_SECRET || "fallback-secret",
     resave: false,
     saveUninitialized: false,
@@ -95,7 +95,15 @@ app.use((0, express_session_1.default)({
         secure: process.env.NODE_ENV === "production",
         maxAge: 24 * 60 * 60 * 1000,
     },
-}));
+};
+if (process.env.NODE_ENV === "production") {
+    console.log("🔐 Using production session configuration");
+    console.log("⚠️  Warning: Using MemoryStore in production. Consider using Redis or MongoDB for session storage.");
+}
+else {
+    console.log("🔐 Using development session configuration");
+}
+app.use((0, express_session_1.default)(sessionConfig));
 app.use(passport_1.default.initialize());
 app.use(passport_1.default.session());
 app.get("/health", (req, res) => {
@@ -142,12 +150,12 @@ app.all("*", (req, res) => {
 });
 process.on("SIGINT", async () => {
     console.log("Shutting down gracefully...");
-    await database_2.default.connection.close();
+    await mongoose_1.default.connection.close();
     process.exit(0);
 });
 process.on("SIGTERM", async () => {
     console.log("Shutting down gracefully...");
-    await database_2.default.connection.close();
+    await mongoose_1.default.connection.close();
     process.exit(0);
 });
 const startServer = async () => {
@@ -159,6 +167,7 @@ const startServer = async () => {
             console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
             console.log(`🔐 OAuth: Google & Facebook enabled`);
             console.log(`🔌 WebSocket: Real-time chat enabled`);
+            console.log(`🌐 Server bound to 0.0.0.0:${PORT}`);
         });
     }
     catch (error) {

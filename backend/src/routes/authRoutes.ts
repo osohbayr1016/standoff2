@@ -17,32 +17,37 @@ router.get("/debug", async (req: Request, res: Response) => {
       0: "disconnected",
       1: "connected",
       2: "connecting",
-      3: "disconnecting"
+      3: "disconnecting",
     };
 
     // Test User model
     const userCount = await User.countDocuments();
-    
+
     res.json({
       success: true,
       database: {
         state: dbStates[dbState as keyof typeof dbStates],
         readyState: dbState,
-        userCount
+        userCount,
       },
       environment: {
         nodeEnv: process.env.NODE_ENV,
         hasJwtSecret: !!process.env.JWT_SECRET,
         hasSessionSecret: !!process.env.SESSION_SECRET,
-        frontendUrl: process.env.FRONTEND_URL
-      }
+        frontendUrl: process.env.FRONTEND_URL,
+      },
     });
   } catch (error) {
     console.error("Debug endpoint error:", error);
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
-      stack: process.env.NODE_ENV === "development" ? error instanceof Error ? error.stack : undefined : undefined
+      stack:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.stack
+            : undefined
+          : undefined,
     });
   }
 });
@@ -112,8 +117,15 @@ router.get(
 );
 
 // Local registration
-router.post("/register", async (req: Request, res: Response) => {
+router.post("/auth/register", async (req: Request, res: Response) => {
   try {
+    console.log("🔍 Registration request received:", {
+      email: req.body.email,
+      name: req.body.name,
+      role: req.body.role,
+      hasPassword: !!req.body.password,
+    });
+
     const { email, password, name, role = "PLAYER" } = req.body;
 
     // Validate required fields
@@ -121,6 +133,21 @@ router.post("/register", async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         message: "И-мэйл, нууц үг болон нэр шаардлагатай",
+      });
+    }
+
+    // Additional validation to prevent null/undefined values
+    if (
+      email === null ||
+      email === undefined ||
+      password === null ||
+      password === undefined ||
+      name === null ||
+      name === undefined
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "И-мэйл, нууц үг болон нэр хоосон байж болохгүй",
       });
     }
 
