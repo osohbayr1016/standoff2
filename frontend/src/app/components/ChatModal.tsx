@@ -59,13 +59,18 @@ export default function ChatModal({
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [error, setError] = useState("");
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior });
+    }
+  }, []);
 
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (messages.length > 0) {
+      scrollToBottom("smooth");
+    }
+  }, [messages, scrollToBottom]);
 
   const fetchMessages = useCallback(async () => {
     if (!user) return;
@@ -95,6 +100,8 @@ export default function ChatModal({
       const data = await response.json();
       console.log("🔍 Debug - Fetch success response:", data);
       setMessages(data.messages || []);
+      // Scroll to bottom after loading messages
+      setTimeout(() => scrollToBottom("auto"), 100);
     } catch (error) {
       console.error("Error fetching messages:", error);
       setError(
@@ -103,7 +110,7 @@ export default function ChatModal({
     } finally {
       setLoading(false);
     }
-  }, [user, playerId]);
+  }, [user, playerId, scrollToBottom]);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -222,6 +229,8 @@ export default function ChatModal({
         setMessages((prev) => [...prev, tempMessage]);
         setNewMessage("");
         setSending(false);
+        // Scroll to bottom immediately after sending
+        setTimeout(() => scrollToBottom("smooth"), 50);
         return;
       }
 
@@ -249,6 +258,8 @@ export default function ChatModal({
       const data = await response.json();
       setMessages((prev) => [...prev, data.data]);
       setNewMessage("");
+      // Scroll to bottom immediately after sending
+      setTimeout(() => scrollToBottom("smooth"), 50);
     } catch (error) {
       console.error("Error sending message:", error);
       setError(
@@ -356,7 +367,13 @@ export default function ChatModal({
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 theme-transition">
+            <div
+              className="flex-1 overflow-y-auto p-4 space-y-4 theme-transition scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
+              style={{
+                scrollBehavior: "smooth",
+                scrollbarWidth: "thin",
+              }}
+            >
               {loading ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-green-400"></div>

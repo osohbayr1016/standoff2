@@ -60,6 +60,22 @@ const InstagramChat: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Enhanced scroll to bottom function
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior });
+    }
+  }, []);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Use immediate scroll for new messages to ensure they're visible
+      scrollToBottom("smooth");
+    }
+  }, [messages, scrollToBottom]);
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
@@ -108,6 +124,8 @@ const InstagramChat: React.FC = () => {
         if (response.ok) {
           const data = await response.json();
           setMessages(data.messages || []);
+          // Scroll to bottom after loading messages
+          setTimeout(() => scrollToBottom("auto"), 100);
         }
       } catch (error) {
         console.error("Error fetching messages:", error);
@@ -115,7 +133,7 @@ const InstagramChat: React.FC = () => {
         setLoading(false);
       }
     },
-    [getToken]
+    [getToken, scrollToBottom]
   );
 
   // Send message
@@ -147,6 +165,9 @@ const InstagramChat: React.FC = () => {
 
         // Update conversation list
         fetchConversations();
+
+        // Scroll to bottom immediately after sending
+        setTimeout(() => scrollToBottom("smooth"), 50);
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -227,11 +248,6 @@ const InstagramChat: React.FC = () => {
       fetchUnreadCount();
     }
   }, [getToken, fetchConversations, fetchUnreadCount]);
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   // Filter conversations based on search
   const filteredConversations = conversations.filter((conv) =>
@@ -426,8 +442,15 @@ const InstagramChat: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                    {/* Messages Container with Enhanced Scrolling */}
+                    <div
+                      ref={messagesContainerRef}
+                      className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
+                      style={{
+                        scrollBehavior: "smooth",
+                        scrollbarWidth: "thin",
+                      }}
+                    >
                       {loading ? (
                         <div className="text-center text-gray-500 dark:text-gray-400">
                           Уншиж байна...
@@ -437,35 +460,99 @@ const InstagramChat: React.FC = () => {
                           Мессеж байхгүй байна
                         </div>
                       ) : (
-                        messages.map((message) => (
-                          <div
-                            key={message._id}
-                            className={`flex ${
-                              message.senderId === user?.id
-                                ? "justify-end"
-                                : "justify-start"
-                            }`}
-                          >
-                            <div
-                              className={`max-w-xs px-3 py-2 rounded-lg ${
-                                message.senderId === user?.id
-                                  ? "bg-purple-600 text-white"
-                                  : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
+                        messages.map((message) => {
+                          const isOwnMessage = message.senderId === user?.id;
+                          return (
+                            <motion.div
+                              key={message._id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className={`flex ${
+                                isOwnMessage ? "justify-end" : "justify-start"
                               }`}
                             >
-                              <p className="text-sm">{message.content}</p>
-                              <p className="text-xs opacity-70 mt-1">
-                                {new Date(message.createdAt).toLocaleTimeString(
-                                  "mn-MN",
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  }
+                              <div
+                                className={`flex ${
+                                  isOwnMessage ? "flex-row-reverse" : "flex-row"
+                                } items-end space-x-2 max-w-[85%]`}
+                              >
+                                {/* Avatar for other user's messages */}
+                                {!isOwnMessage && (
+                                  <div className="flex-shrink-0">
+                                    {selectedConversation.partner.avatar ? (
+                                      <Image
+                                        src={
+                                          selectedConversation.partner.avatar
+                                        }
+                                        alt={selectedConversation.partner.name}
+                                        width={24}
+                                        height={24}
+                                        className="rounded-full"
+                                      />
+                                    ) : (
+                                      <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                                        <span className="text-gray-600 dark:text-gray-300 font-medium text-xs">
+                                          {selectedConversation.partner.name
+                                            .charAt(0)
+                                            .toUpperCase()}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
                                 )}
-                              </p>
-                            </div>
-                          </div>
-                        ))
+
+                                {/* Message bubble */}
+                                <div
+                                  className={`px-3 py-2 rounded-lg shadow-sm ${
+                                    isOwnMessage
+                                      ? "bg-purple-600 text-white rounded-br-md"
+                                      : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-md"
+                                  }`}
+                                >
+                                  <p className="text-sm leading-relaxed break-words">
+                                    {message.content}
+                                  </p>
+                                  <p
+                                    className={`text-xs mt-1 ${
+                                      isOwnMessage
+                                        ? "text-purple-200 text-right"
+                                        : "text-gray-500 dark:text-gray-400 text-left"
+                                    }`}
+                                  >
+                                    {new Date(
+                                      message.createdAt
+                                    ).toLocaleTimeString("mn-MN", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </p>
+                                </div>
+
+                                {/* Avatar for own messages */}
+                                {isOwnMessage && (
+                                  <div className="flex-shrink-0">
+                                    {user.avatar ? (
+                                      <Image
+                                        src={user.avatar}
+                                        alt={user.name}
+                                        width={24}
+                                        height={24}
+                                        className="rounded-full"
+                                      />
+                                    ) : (
+                                      <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                                        <span className="text-gray-600 dark:text-gray-300 font-medium text-xs">
+                                          {user.name.charAt(0).toUpperCase()}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        })
                       )}
                       <div ref={messagesEndRef} />
                     </div>
