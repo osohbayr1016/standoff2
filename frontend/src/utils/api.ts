@@ -1,4 +1,4 @@
-import { API_ENDPOINTS } from "../config/api";
+import { API_ENDPOINTS, API_BASE_URL } from "../config/api";
 
 interface ApiResponse<T = unknown> {
   success: boolean;
@@ -11,7 +11,7 @@ class ApiClient {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    this.baseURL = API_BASE_URL;
   }
 
   private getAuthHeaders(): HeadersInit {
