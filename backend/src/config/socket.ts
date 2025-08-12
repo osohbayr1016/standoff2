@@ -169,8 +169,6 @@ export class SocketManager {
     });
   }
 
-
-
   // Method to broadcast to all connected users
   public broadcast(event: string, data: any) {
     this.io.emit(event, data);

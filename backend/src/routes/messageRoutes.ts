@@ -57,8 +57,6 @@ router.post(
         { path: "receiverId", select: "id name avatar" },
       ]);
 
-
-
       return res.status(201).json({
         message: "Message sent successfully",
         data: message,

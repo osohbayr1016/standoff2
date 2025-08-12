@@ -83,7 +83,9 @@ if (process.env.NODE_ENV === "production") {
   console.log("🔐 Using production session configuration");
   // In production, you might want to use Redis or MongoDB for session storage
   // For now, we'll use MemoryStore but with a warning
-  console.log("⚠️  Warning: Using MemoryStore in production. Consider using Redis or MongoDB for session storage.");
+  console.log(
+    "⚠️  Warning: Using MemoryStore in production. Consider using Redis or MongoDB for session storage."
+  );
 } else {
   console.log("🔐 Using development session configuration");
 }
