@@ -117,7 +117,7 @@ router.get(
 );
 
 // Local registration
-router.post("/auth/register", async (req: Request, res: Response) => {
+router.post("/register", async (req: Request, res: Response) => {
   try {
     console.log("🔍 Registration request received:", {
       email: req.body.email,

@@ -117,7 +117,7 @@ router.get("/facebook/callback", passport_1.default.authenticate("facebook", { f
     const token = generateToken(req.user);
     res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
 });
-router.post("/auth/register", async (req, res) => {
+router.post("/register", async (req, res) => {
     try {
         console.log("🔍 Registration request received:", {
             email: req.body.email,
