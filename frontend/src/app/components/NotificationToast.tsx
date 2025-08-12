@@ -6,14 +6,32 @@ import { X, MessageCircle } from "lucide-react";
 import { useSocket } from "../contexts/SocketContext";
 
 interface NotificationToastProps {
-  onNotificationClick?: (notification: any) => void;
+  onNotificationClick?: (notification: {
+    _id: string;
+    title: string;
+    content: string;
+    senderId: {
+      _id: string;
+      name: string;
+      avatar?: string;
+    };
+    createdAt: string;
+  }) => void;
 }
 
 const NotificationToast: React.FC<NotificationToastProps> = ({
   onNotificationClick,
 }) => {
   const { socket } = useSocket();
-  const [toasts, setToasts] = useState<any[]>([]);
+  const [toasts, setToasts] = useState<
+    Array<{
+      id: string;
+      title: string;
+      content: string;
+      senderName: string;
+      timestamp: string;
+    }>
+  >([]);
 
   useEffect(() => {
     if (!socket) return;
@@ -21,7 +39,17 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
     // Listen for new notifications
     socket.on(
       "pending_notifications",
-      (data: { notifications: any[]; count: number }) => {
+      (data: {
+        notifications: Array<{
+          _id: string;
+          title: string;
+          content: string;
+          senderId?: {
+            name: string;
+          };
+        }>;
+        count: number;
+      }) => {
         // Show toast for each new notification
         data.notifications.forEach((notification) => {
           const toast = {
@@ -51,9 +79,25 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
-  const handleToastClick = (toast: any) => {
+  const handleToastClick = (toast: {
+    id: string;
+    title: string;
+    content: string;
+    senderName: string;
+    timestamp: string;
+  }) => {
     if (onNotificationClick) {
-      onNotificationClick(toast);
+      onNotificationClick({
+        _id: toast.id,
+        title: toast.title,
+        content: toast.content,
+        senderId: {
+          _id: toast.id,
+          name: toast.senderName,
+          avatar: undefined,
+        },
+        createdAt: toast.timestamp,
+      });
     }
     removeToast(toast.id);
   };

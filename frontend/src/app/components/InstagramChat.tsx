@@ -46,13 +46,23 @@ interface Conversation {
 }
 
 interface InstagramChatProps {
-  onNotificationClick?: (notification: any) => void;
+  onNotificationClick?: (notification: {
+    _id: string;
+    title: string;
+    content: string;
+    senderId: {
+      _id: string;
+      name: string;
+      avatar?: string;
+    };
+    createdAt: string;
+  }) => void;
 }
 
 const InstagramChat: React.FC<InstagramChatProps> = ({
   onNotificationClick,
 }) => {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const { socket } = useSocket();
   const { unreadCount } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
@@ -66,11 +76,11 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [error, setError] = useState("");
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
-    if (!user?.token) return;
+    const token = getToken();
+    if (!token) return;
 
     try {
       setLoading(true);
@@ -78,7 +88,7 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
         `${process.env.NEXT_PUBLIC_API_URL}/api/conversations`,
         {
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -92,12 +102,13 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [user?.token]);
+  }, [getToken]);
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(
     async (partnerId: string) => {
-      if (!user?.token) return;
+      const token = getToken();
+      if (!token) return;
 
       try {
         setLoading(true);
@@ -105,7 +116,7 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
           `${process.env.NEXT_PUBLIC_API_URL}/api/messages/${partnerId}`,
           {
             headers: {
-              Authorization: `Bearer ${user.token}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -120,12 +131,13 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
         setLoading(false);
       }
     },
-    [user?.token]
+    [getToken]
   );
 
   // Send message
   const sendMessage = async () => {
-    if (!user?.token || !selectedConversation || !newMessage.trim()) return;
+    const token = getToken();
+    if (!token || !selectedConversation || !newMessage.trim()) return;
 
     try {
       setSending(true);
@@ -135,7 +147,7 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             receiverId: selectedConversation.partner._id,
@@ -170,49 +182,60 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
     if (!socket) return;
 
     // Listen for new messages
-    socket.on("new_message", (data: any) => {
-      const newMessage: Message = {
-        _id: data.id || Date.now().toString(),
-        content: data.content,
-        senderId: data.senderId,
-        receiverId: data.receiverId || user?.id,
-        createdAt: data.timestamp || new Date().toISOString(),
-        status: "SENT",
-        sender: {
-          _id: data.senderId,
-          name: data.senderName,
-          avatar: data.senderAvatar,
-        },
-        receiver: {
-          _id: data.receiverId || user?.id,
-          name: user?.name || "",
-          avatar: user?.avatar,
-        },
-      };
-
-      setMessages((prev) => [...prev, newMessage]);
-
-      // Update conversation list
-      fetchConversations();
-
-      // Show notification toast
-      if (onNotificationClick) {
-        onNotificationClick({
-          _id: newMessage._id,
-          title: `${data.senderName} чам руу чат бичсэн байна`,
-          content:
-            data.content.length > 50
-              ? data.content.substring(0, 50) + "..."
-              : data.content,
-          senderId: {
+    socket.on(
+      "new_message",
+      (data: {
+        id?: string;
+        content: string;
+        senderId: string;
+        receiverId?: string;
+        timestamp?: string;
+        senderName: string;
+        senderAvatar?: string;
+      }) => {
+        const newMessage: Message = {
+          _id: data.id || Date.now().toString(),
+          content: data.content,
+          senderId: data.senderId,
+          receiverId: data.receiverId || user?.id || "",
+          createdAt: data.timestamp || new Date().toISOString(),
+          status: "SENT",
+          sender: {
             _id: data.senderId,
             name: data.senderName,
             avatar: data.senderAvatar,
           },
-          createdAt: new Date().toISOString(),
-        });
+          receiver: {
+            _id: data.receiverId || user?.id || "",
+            name: user?.name || "",
+            avatar: user?.avatar,
+          },
+        };
+
+        setMessages((prev) => [...prev, newMessage]);
+
+        // Update conversation list
+        fetchConversations();
+
+        // Show notification toast
+        if (onNotificationClick) {
+          onNotificationClick({
+            _id: newMessage._id,
+            title: `${data.senderName} чам руу чат бичсэн байна`,
+            content:
+              data.content.length > 50
+                ? data.content.substring(0, 50) + "..."
+                : data.content,
+            senderId: {
+              _id: data.senderId,
+              name: data.senderName,
+              avatar: data.senderAvatar,
+            },
+            createdAt: new Date().toISOString(),
+          });
+        }
       }
-    });
+    );
 
     return () => {
       socket.off("new_message");
@@ -228,10 +251,11 @@ const InstagramChat: React.FC<InstagramChatProps> = ({
 
   // Initial fetch
   useEffect(() => {
-    if (user?.token) {
+    const token = getToken();
+    if (token) {
       fetchConversations();
     }
-  }, [user?.token, fetchConversations]);
+  }, [getToken, fetchConversations]);
 
   // Auto-scroll to bottom
   useEffect(() => {

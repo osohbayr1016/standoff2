@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useSocket } from "../contexts/SocketContext";
 
@@ -18,15 +18,16 @@ interface Notification {
 }
 
 export const useNotifications = () => {
-  const { user } = useAuth();
+  const { getToken } = useAuth();
   const { socket } = useSocket();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   // Fetch notifications from API
-  const fetchNotifications = async () => {
-    if (!user?.token) return;
+  const fetchNotifications = useCallback(async () => {
+    const token = getToken();
+    if (!token) return;
 
     try {
       setLoading(true);
@@ -34,7 +35,7 @@ export const useNotifications = () => {
         `${process.env.NEXT_PUBLIC_API_URL}/api/notifications`,
         {
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -53,18 +54,19 @@ export const useNotifications = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
 
   // Fetch unread count
-  const fetchUnreadCount = async () => {
-    if (!user?.token) return;
+  const fetchUnreadCount = useCallback(async () => {
+    const token = getToken();
+    if (!token) return;
 
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/notifications/unread/count`,
         {
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -76,11 +78,12 @@ export const useNotifications = () => {
     } catch (error) {
       console.error("Error fetching unread count:", error);
     }
-  };
+  }, [getToken]);
 
   // Mark notification as seen
   const markAsSeen = async (notificationId: string) => {
-    if (!user?.token) return;
+    const token = getToken();
+    if (!token) return;
 
     try {
       const response = await fetch(
@@ -88,7 +91,7 @@ export const useNotifications = () => {
         {
           method: "PATCH",
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -108,7 +111,8 @@ export const useNotifications = () => {
 
   // Mark all notifications as seen
   const markAllAsSeen = async () => {
-    if (!user?.token) return;
+    const token = getToken();
+    if (!token) return;
 
     try {
       const response = await fetch(
@@ -116,7 +120,7 @@ export const useNotifications = () => {
         {
           method: "PATCH",
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -134,7 +138,8 @@ export const useNotifications = () => {
 
   // Delete notification
   const deleteNotification = async (notificationId: string) => {
-    if (!user?.token) return;
+    const token = getToken();
+    if (!token) return;
 
     try {
       const response = await fetch(
@@ -142,7 +147,7 @@ export const useNotifications = () => {
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -191,18 +196,20 @@ export const useNotifications = () => {
 
   // Initial fetch
   useEffect(() => {
-    if (user?.token) {
+    const token = getToken();
+    if (token) {
       fetchNotifications();
     }
-  }, [user?.token]);
+  }, [getToken, fetchNotifications]);
 
   // Auto-refresh unread count every 30 seconds
   useEffect(() => {
-    if (!user?.token) return;
+    const token = getToken();
+    if (!token) return;
 
     const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
-  }, [user?.token]);
+  }, [getToken, fetchUnreadCount]);
 
   return {
     notifications,

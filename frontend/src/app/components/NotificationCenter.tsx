@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, X, Check, Trash2, MessageCircle } from "lucide-react";
+import { Bell, X, Trash2, MessageCircle } from "lucide-react";
 import { useNotifications } from "../hooks/useNotifications";
 import { useAuth } from "../contexts/AuthContext";
 import Image from "next/image";
 
 const NotificationCenter: React.FC = () => {
-  const { user } = useAuth();
+  const { getToken } = useAuth();
   const {
     notifications,
     unreadCount,
@@ -22,12 +22,16 @@ const NotificationCenter: React.FC = () => {
 
   // Fetch notifications when component mounts
   useEffect(() => {
-    if (isOpen && user?.token) {
+    const token = getToken();
+    if (isOpen && token) {
       fetchNotifications();
     }
-  }, [isOpen, user?.token, fetchNotifications]);
+  }, [isOpen, getToken, fetchNotifications]);
 
-  const handleNotificationClick = async (notification: any) => {
+  const handleNotificationClick = async (notification: {
+    _id: string;
+    status: string;
+  }) => {
     if (notification.status === "PENDING") {
       await markAsSeen(notification._id);
     }

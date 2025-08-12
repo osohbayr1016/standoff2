@@ -4,12 +4,13 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function TestChatPage() {
-  const { user } = useAuth();
+  const { getToken } = useAuth();
   const [testMessage, setTestMessage] = useState("");
   const [targetUserId, setTargetUserId] = useState("");
 
   const sendTestMessage = async () => {
-    if (!user?.token || !testMessage.trim() || !targetUserId.trim()) return;
+    const token = getToken();
+    if (!token || !testMessage.trim() || !targetUserId.trim()) return;
 
     try {
       const response = await fetch(
@@ -18,7 +19,7 @@ export default function TestChatPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             receiverId: targetUserId,
@@ -86,11 +87,11 @@ export default function TestChatPage() {
           <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
             <p>• Look for the purple chat button in the bottom-right corner</p>
             <p>• Click it to open the Instagram-style chat interface</p>
-            <p>• You'll see all your conversations listed</p>
+            <p>• You&apos;ll see all your conversations listed</p>
             <p>• Click on a conversation to start chatting</p>
             <p>
-              • Notifications will appear as toasts: "${username} чам руу чат
-              бичсэн байна"
+              • Notifications will appear as toasts: &quot;username чам руу чат
+              бичсэн байна&quot;
             </p>
           </div>
         </div>
@@ -114,7 +115,7 @@ export default function TestChatPage() {
             <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
               <li>• Toast notifications</li>
               <li>• Unread message count</li>
-              <li>• "${username} чам руу чат бичсэн байна" format</li>
+              <li>• &quot;username чам руу чат бичсэн байна&quot; format</li>
               <li>• Offline message storage</li>
               <li>• Auto-delete after 7 days</li>
             </ul>
