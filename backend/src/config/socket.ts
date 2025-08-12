@@ -2,6 +2,7 @@ import { Server as SocketIOServer } from "socket.io";
 import { Server as HTTPServer } from "http";
 import jwt from "jsonwebtoken";
 import { JWTPayload } from "../middleware/auth";
+import { NotificationService } from "../utils/notificationService";
 
 interface AuthenticatedSocket {
   userId: string;
@@ -66,6 +67,9 @@ export class SocketManager {
 
       // Join user to their personal room
       socket.join(`user:${userId}`);
+
+      // Send pending notifications to user
+      this.sendPendingNotifications(userId, socket);
 
       // Handle private message
       socket.on(
@@ -187,6 +191,27 @@ export class SocketManager {
   // Method to get all online users
   public getOnlineUsers(): string[] {
     return Array.from(this.userSockets.keys());
+  }
+
+  // Method to send pending notifications to user
+  private async sendPendingNotifications(userId: string, socket: any) {
+    try {
+      const pendingNotifications =
+        await NotificationService.getPendingNotifications(userId, 10);
+
+      if (pendingNotifications.length > 0) {
+        socket.emit("pending_notifications", {
+          notifications: pendingNotifications,
+          count: pendingNotifications.length,
+        });
+
+        console.log(
+          `📬 Sent ${pendingNotifications.length} pending notifications to user ${userId}`
+        );
+      }
+    } catch (error) {
+      console.error("Error sending pending notifications:", error);
+    }
   }
 }
 

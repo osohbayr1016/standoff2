@@ -8,6 +8,7 @@ import { useSocket } from "../contexts/SocketContext";
 import { Sun, Moon, Menu, X, Search, Bell, User, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import NotificationCenter from "./NotificationCenter";
 
 export default function Navigation() {
   const { isDarkMode, toggleDarkMode, isLoaded } = useDarkMode();
@@ -58,14 +59,7 @@ export default function Navigation() {
               <Search className="w-5 h-5" />
             </motion.button>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 relative"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            </motion.button>
+            <NotificationCenter />
 
             {/* Connection Status Indicator */}
             {user && (

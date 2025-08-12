@@ -6,6 +6,8 @@ import { DarkModeProvider } from "./contexts/DarkModeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SocketProvider } from "./contexts/SocketContext";
 import Navigation from "./components/Navigation";
+import InstagramChat from "./components/InstagramChat";
+import NotificationToast from "./components/NotificationToast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +44,8 @@ export default function RootLayout({
                   {children}
                 </main>
                 <Footer />
+                <InstagramChat />
+                <NotificationToast />
               </div>
             </SocketProvider>
           </AuthProvider>
