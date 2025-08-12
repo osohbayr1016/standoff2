@@ -380,25 +380,60 @@ export default function ChatModal({
                       animate={{ opacity: 1, y: 0 }}
                       className={`flex ${
                         isOwnMessage ? "justify-end" : "justify-start"
-                      }`}
+                      } mb-4`}
                     >
                       <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl theme-transition ${
-                          isOwnMessage
-                            ? "bg-purple-600 dark:bg-green-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                        }`}
+                        className={`flex ${
+                          isOwnMessage ? "flex-row-reverse" : "flex-row"
+                        } items-end space-x-2 max-w-xs lg:max-w-md`}
                       >
-                        <p className="text-sm">{message.content}</p>
-                        <p
-                          className={`text-xs mt-1 theme-transition ${
+                        {/* Avatar for other user's messages */}
+                        {!isOwnMessage && (
+                          <div className="flex-shrink-0">
+                            <Image
+                              src={playerAvatar || "/default-avatar.png"}
+                              alt={playerName}
+                              width={32}
+                              height={32}
+                              className="rounded-full object-cover"
+                            />
+                          </div>
+                        )}
+
+                        {/* Message bubble */}
+                        <div
+                          className={`px-4 py-3 rounded-2xl theme-transition shadow-sm ${
                             isOwnMessage
-                              ? "text-purple-200 dark:text-green-200"
-                              : "text-gray-500 dark:text-gray-400"
+                              ? "bg-purple-600 dark:bg-green-600 text-white rounded-br-md"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-md"
                           }`}
                         >
-                          {formatTime(message.createdAt)}
-                        </p>
+                          <p className="text-sm leading-relaxed">
+                            {message.content}
+                          </p>
+                          <p
+                            className={`text-xs mt-1 theme-transition ${
+                              isOwnMessage
+                                ? "text-purple-200 dark:text-green-200 text-right"
+                                : "text-gray-500 dark:text-gray-400 text-left"
+                            }`}
+                          >
+                            {formatTime(message.createdAt)}
+                          </p>
+                        </div>
+
+                        {/* Avatar for own messages */}
+                        {isOwnMessage && (
+                          <div className="flex-shrink-0">
+                            <Image
+                              src={user.avatar || "/default-avatar.png"}
+                              alt={user.name}
+                              width={32}
+                              height={32}
+                              className="rounded-full object-cover"
+                            />
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   );
@@ -410,24 +445,38 @@ export default function ChatModal({
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex justify-start"
+                  className="flex justify-start mb-4"
                 >
-                  <div className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-2xl">
-                    <div className="flex items-center space-x-1">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div
-                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        ></div>
-                        <div
-                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></div>
+                  <div className="flex items-end space-x-2 max-w-xs lg:max-w-md">
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                      <Image
+                        src={playerAvatar || "/default-avatar.png"}
+                        alt={playerName}
+                        width={32}
+                        height={32}
+                        className="rounded-full object-cover"
+                      />
+                    </div>
+
+                    {/* Typing bubble */}
+                    <div className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
+                      <div className="flex items-center space-x-1">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div
+                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                          {playerName} is typing...
+                        </span>
                       </div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                        {playerName} is typing...
-                      </span>
                     </div>
                   </div>
                 </motion.div>
