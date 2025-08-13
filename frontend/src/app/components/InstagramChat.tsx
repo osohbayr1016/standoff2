@@ -44,7 +44,6 @@ interface Conversation {
   lastMessage: Message;
   unreadCount: number;
 }
-
 const InstagramChat: React.FC = () => {
   const { user, getToken } = useAuth();
   const { socket } = useSocket();
