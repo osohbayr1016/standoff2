@@ -125,11 +125,14 @@ const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const playerProfileRoutes_1 = __importDefault(require("./routes/playerProfileRoutes"));
 const organizationProfileRoutes_1 = __importDefault(require("./routes/organizationProfileRoutes"));
 const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
+const notificationRoutes_1 = __importDefault(require("./routes/notificationRoutes"));
+const notificationService_1 = require("./utils/notificationService");
 app.use("/api/auth", authRoutes_1.default);
 app.use("/api/users", userRoutes_1.default);
 app.use("/api/player-profiles", playerProfileRoutes_1.default);
 app.use("/api/organization-profiles", organizationProfileRoutes_1.default);
 app.use("/api/upload", uploadRoutes_1.default);
+app.use("/api", notificationRoutes_1.default);
 const messageRoutes_1 = __importStar(require("./routes/messageRoutes"));
 (0, messageRoutes_1.setSocketManager)(socketManager);
 app.use("/api", messageRoutes_1.default);
@@ -161,12 +164,21 @@ process.on("SIGTERM", async () => {
 const startServer = async () => {
     try {
         await (0, database_1.connectDB)();
+        setInterval(async () => {
+            try {
+                await notificationService_1.NotificationService.cleanupOldNotifications();
+            }
+            catch (error) {
+                console.error("Error in notification cleanup job:", error);
+            }
+        }, 24 * 60 * 60 * 1000);
         server.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
             console.log(`📊 Health check: http://localhost:${PORT}/health`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
             console.log(`🔐 OAuth: Google & Facebook enabled`);
             console.log(`🔌 WebSocket: Real-time chat enabled`);
+            console.log(`🧹 Notification cleanup: Every 24 hours (7+ days old)`);
             console.log(`🌐 Server bound to 0.0.0.0:${PORT}`);
         });
     }

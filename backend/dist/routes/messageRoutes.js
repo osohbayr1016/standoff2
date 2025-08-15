@@ -41,6 +41,7 @@ const express_1 = require("express");
 const Message_1 = __importStar(require("../models/Message"));
 const User_1 = __importDefault(require("../models/User"));
 const auth_1 = require("../middleware/auth");
+const notificationService_1 = require("../utils/notificationService");
 const router = (0, express_1.Router)();
 let socketManager = null;
 const setSocketManager = (manager) => {
@@ -75,6 +76,12 @@ router.post("/messages", auth_1.authenticateToken, async (req, res) => {
             { path: "senderId", select: "id name avatar" },
             { path: "receiverId", select: "id name avatar" },
         ]);
+        const isReceiverOnline = socketManager
+            ? socketManager.isUserOnline(receiverId)
+            : false;
+        if (!isReceiverOnline) {
+            await notificationService_1.NotificationService.createMessageNotification(senderId, receiverId, message._id.toString(), content);
+        }
         return res.status(201).json({
             message: "Message sent successfully",
             data: message,
@@ -110,6 +117,7 @@ router.get("/messages/:userId", auth_1.authenticateToken, async (req, res) => {
             receiverId: currentUserId,
             status: { $in: [Message_1.MessageStatus.SENT, Message_1.MessageStatus.DELIVERED] },
         }, { status: Message_1.MessageStatus.READ });
+        await notificationService_1.NotificationService.markNotificationsAsSeen(currentUserId, userId);
         return res.json({
             messages: messages.reverse(),
             pagination: {
@@ -127,36 +135,43 @@ router.get("/messages/:userId", auth_1.authenticateToken, async (req, res) => {
 router.get("/conversations", auth_1.authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const conversations = await Message_1.default.find({
+        const messages = await Message_1.default.find({
             $or: [{ senderId: userId }, { receiverId: userId }],
         })
-            .populate("senderId", "id name avatar isOnline")
-            .populate("receiverId", "id name avatar isOnline")
+            .populate("senderId", "id name avatar")
+            .populate("receiverId", "id name avatar")
             .sort({ createdAt: -1 })
             .lean();
-        const conversationMap = new Map();
-        conversations.forEach((message) => {
-            const partnerId = message.senderId._id.toString() === userId
-                ? message.receiverId._id.toString()
-                : message.senderId._id.toString();
-            const partner = message.senderId._id.toString() === userId
-                ? message.receiverId
-                : message.senderId;
-            if (!conversationMap.has(partnerId)) {
-                conversationMap.set(partnerId, {
-                    partner,
+        const conversationsMap = new Map();
+        messages.forEach((message) => {
+            const sender = message.senderId;
+            const receiver = message.receiverId;
+            const partnerId = sender._id === userId ? receiver._id : sender._id;
+            const partner = sender._id === userId ? receiver : sender;
+            if (!conversationsMap.has(partnerId)) {
+                conversationsMap.set(partnerId, {
+                    partner: {
+                        _id: partnerId,
+                        name: partner.name,
+                        avatar: partner.avatar,
+                        isOnline: false,
+                    },
                     lastMessage: message,
                     unreadCount: 0,
                 });
             }
-            if (message.receiverId._id.toString() === userId &&
-                message.status !== Message_1.MessageStatus.READ) {
-                conversationMap.get(partnerId).unreadCount++;
+            else {
+                const conversation = conversationsMap.get(partnerId);
+                if (receiver._id === userId && message.status === "SENT") {
+                    conversation.unreadCount++;
+                }
             }
         });
-        const conversationList = Array.from(conversationMap.values()).sort((a, b) => new Date(b.lastMessage.createdAt).getTime() -
-            new Date(a.lastMessage.createdAt).getTime());
-        return res.json({ conversations: conversationList });
+        const conversations = Array.from(conversationsMap.values());
+        return res.json({
+            conversations,
+            total: conversations.length,
+        });
     }
     catch (error) {
         console.error("Get conversations error:", error);

@@ -44,51 +44,74 @@ interface Player {
   highlightVideo?: string;
 }
 
-// Game categories and their respective games
-const gameCategories = {
+// Game data with images and routes
+const gameData = {
   PC: [
-    "Бүх PC Тоглоомууд",
-    "Valorant",
-    "Dota 2",
-    "CS2",
-    "Apex Legends",
-    "PUBG",
-    "Warcraft",
+    {
+      id: "valorant",
+      name: "Valorant",
+      image:
+        "https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg",
+      route: "/games/valorant",
+      playerCount: 0,
+    },
+    {
+      id: "dota2",
+      name: "Dota 2",
+      image:
+        "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png",
+      route: "/games/dota2",
+      playerCount: 0,
+    },
+    {
+      id: "cs2",
+      name: "CS2",
+      image:
+        "https://images.seeklogo.com/logo-png/47/2/counter-strike-2-logo-png_seeklogo-477404.png",
+      route: "/games/cs2",
+      playerCount: 0,
+    },
+    {
+      id: "apex-legends",
+      name: "Apex Legends",
+      image: "https://cdn.akamai.steamstatic.com/steam/apps/1172470/logo.png",
+      route: "/games/apex-legends",
+      playerCount: 0,
+    },
+    {
+      id: "pubg",
+      name: "PUBG",
+      image:
+        "https://images.seeklogo.com/logo-png/39/2/pubg-mobile-logo-png_seeklogo-399111.png",
+      route: "/games/pubg",
+      playerCount: 0,
+    },
   ],
   Mobile: [
-    "Бүх Mobile Тоглоомууд",
-    "Mobile Legends",
-    "Standoff 2",
-    "PUBG Mobile",
+    {
+      id: "mobile-legends",
+      name: "Mobile Legends",
+      image: "https://i.redd.it/op52fca67y9c1.jpeg",
+      route: "/games/mobile-legends",
+      playerCount: 0,
+    },
+    {
+      id: "standoff2",
+      name: "Standoff 2",
+      image:
+        "https://i.pinimg.com/originals/42/cb/81/42cb812f44c77d4c0cf40774df855ae6.png",
+      route: "/games/standoff2",
+      playerCount: 0,
+    },
+    {
+      id: "pubg-mobile",
+      name: "PUBG Mobile",
+      image:
+        "https://play-lh.googleusercontent.com/JRd05pyBH41qjgsJuWduRJpDeZG0Hnb0yjf2nWqO7VaGKL10-G5UIygxED-WNOc3pg",
+      route: "/games/pubg-mobile",
+      playerCount: 0,
+    },
   ],
-};
-
-// Roles for each game
-const gameRoles = {
-  Valorant: ["Бүх Үүргүүд", "Duelist", "Controller", "Initiator", "Sentinel"],
-  "Dota 2": [
-    "Бүх Үүргүүд",
-    "Carry",
-    "Mid",
-    "Offlane",
-    "Support",
-    "Hard Support",
-  ],
-  CS2: ["Бүх Үүргүүд", "AWPer", "Rifler", "IGL", "Entry Fragger", "Lurker"],
-  "Apex Legends": ["Бүх Үүргүүд", "Assault", "Recon", "Support", "Controller"],
-  PUBG: ["Бүх Үүргүүд", "IGL", "Fragger", "Support", "Sniper"],
-  Warcraft: ["Бүх Үүргүүд", "Tank", "DPS", "Healer", "Support"],
-  "Mobile Legends": [
-    "Бүх Үүргүүд",
-    "Tank",
-    "Fighter",
-    "Assassin",
-    "Mage",
-    "Marksman",
-    "Support",
-  ],
-  "Standoff 2": ["Бүх Үүргүүд", "AWPer", "Rifler", "IGL", "Entry Fragger"],
-  "PUBG Mobile": ["Бүх Үүргүүд", "IGL", "Fragger", "Support", "Sniper"],
 };
 
 export default function PlayersPage() {
@@ -99,19 +122,9 @@ export default function PlayersPage() {
   const [selectedCategory, setSelectedCategory] = useState<"PC" | "Mobile">(
     "PC"
   );
-  const [selectedGame, setSelectedGame] = useState("Бүх Mobile Тоглоомууд");
-  const [selectedRole, setSelectedRole] = useState("Бүх Үүргүүд");
   const [loading, setLoading] = useState(true);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-
-  // Get available games for selected category
-  const availableGames = gameCategories[selectedCategory];
-
-  // Get available roles for selected game
-  const availableRoles = gameRoles[selectedGame as keyof typeof gameRoles] || [
-    "Бүх Үүргүүд",
-  ];
 
   // Handle opening chat modal
   const handleOpenChat = (player: Player) => {
@@ -129,17 +142,6 @@ export default function PlayersPage() {
     setIsChatModalOpen(false);
     setSelectedPlayer(null);
   };
-
-  // Update selected game when category changes
-  useEffect(() => {
-    setSelectedGame(gameCategories[selectedCategory][0]);
-    setSelectedRole("Бүх Үүргүүд");
-  }, [selectedCategory]);
-
-  // Update selected role when game changes
-  useEffect(() => {
-    setSelectedRole("Бүх Үүргүүд");
-  }, [selectedGame]);
 
   // Fetch players from API
   useEffect(() => {
@@ -170,14 +172,27 @@ export default function PlayersPage() {
     fetchPlayers();
   }, []);
 
+  // Calculate player counts for each game
+  useEffect(() => {
+    const updatedGameData = { ...gameData };
+
+    // Count players for each game
+    Object.keys(updatedGameData).forEach((category) => {
+      updatedGameData[category as keyof typeof gameData].forEach((game) => {
+        const count = players.filter(
+          (player) => player.game === game.name && player.category === category
+        ).length;
+        game.playerCount = count;
+      });
+    });
+  }, [players]);
+
   useEffect(() => {
     let filtered = players;
 
     console.log("Filtering players:", {
       totalPlayers: players.length,
       selectedCategory,
-      selectedGame,
-      selectedRole,
       searchTerm,
     });
 
@@ -197,16 +212,6 @@ export default function PlayersPage() {
       (player) => player.category === selectedCategory
     );
 
-    // Filter by game
-    if (selectedGame !== `Бүх ${selectedCategory} Тоглоомууд`) {
-      filtered = filtered.filter((player) => player.game === selectedGame);
-    }
-
-    // Filter by role
-    if (selectedRole !== "Бүх Үүргүүд") {
-      filtered = filtered.filter((player) => player.role === selectedRole);
-    }
-
     console.log("Filtered results:", {
       filteredCount: filtered.length,
       filteredPlayers: filtered.map((p) => ({
@@ -217,7 +222,7 @@ export default function PlayersPage() {
     });
 
     setFilteredPlayers(filtered);
-  }, [players, searchTerm, selectedCategory, selectedGame, selectedRole]);
+  }, [players, searchTerm, selectedCategory]);
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -286,14 +291,14 @@ export default function PlayersPage() {
             </p>
           </motion.div>
 
-          {/* Search and Filters */}
+          {/* Search and Category Filter */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -322,164 +327,83 @@ export default function PlayersPage() {
                   {getCategoryIcon(selectedCategory)}
                 </div>
               </div>
-
-              {/* Game Filter */}
-              <select
-                value={selectedGame}
-                onChange={(e) => setSelectedGame(e.target.value)}
-                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
-              >
-                {availableGames.map((game) => (
-                  <option key={game} value={game}>
-                    {game}
-                  </option>
-                ))}
-              </select>
-
-              {/* Role Filter */}
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
-              >
-                {availableRoles.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </select>
             </div>
           </motion.div>
 
-          {/* Results Count */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mb-6"
-          >
-            <p className="text-gray-600 dark:text-gray-300">
-              Олдсон{" "}
-              <span className="font-semibold text-purple-600 dark:text-green-400">
-                {filteredPlayers.length}
-              </span>{" "}
-              тоглогч
-            </p>
-          </motion.div>
-
-          {/* Players Grid */}
+          {/* Game Selection Cards */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mb-8"
           >
-            {filteredPlayers.map((player, index) => (
-              <motion.div
-                key={player.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 * index }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
-              >
-                {/* Player Header */}
-                <div className="relative p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
-                      <Image
-                        src={player.avatar || "/default-avatar.png"}
-                        alt={player.name}
-                        width={64}
-                        height={64}
-                        className="rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-lg"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                        {player.name}
-                      </h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <div className="flex items-center space-x-1">
-                          {getCategoryIcon(player.category)}
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {player.category}
-                          </span>
-                        </div>
-                        <span className="text-gray-300">•</span>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {player.game}
-                        </span>
-                        <span className="text-gray-300">•</span>
-                        <div className="flex items-center space-x-1">
-                          {getRoleIcon(player.role)}
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {player.role}
-                          </span>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              {selectedCategory === "PC"
+                ? "PC Тоглоомууд"
+                : "Mobile Тоглоомууд"}
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {gameData[selectedCategory].map((game, index) => (
+                <motion.div
+                  key={game.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 * index }}
+                  className="group"
+                >
+                  <Link href={game.route}>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:scale-105">
+                      <div className="relative">
+                        <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center relative overflow-hidden">
+                          {/* Game Logo */}
+                          <div className="absolute inset-0 flex items-center justify-center p-1">
+                            <Image
+                              src={game.image}
+                              alt={game.name}
+                              width={120}
+                              height={120}
+                              className="object-contain w-full h-full drop-shadow-lg"
+                              unoptimized={true}
+                              onError={(e) => {
+                                // Fallback to icon if image fails to load
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = "none";
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = `
+                                    <div class="text-center">
+                                      <svg class="w-16 h-16 text-gray-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                                      </svg>
+                                      <p class="text-sm text-gray-600 dark:text-gray-400 font-medium">${game.name}</p>
+                                    </div>
+                                  `;
+                                }
+                              }}
+                            />
+                          </div>
+                          {/* Player Count Badge */}
+                          <div className="absolute top-2 right-2">
+                            <span className="bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg backdrop-blur-sm">
+                              {game.playerCount}
+                            </span>
+                          </div>
                         </div>
                       </div>
+                      <div className="p-3">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white text-center">
+                          {game.name}
+                        </h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                          {game.playerCount} тоглогч
+                        </p>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Status Badges */}
-                  <div className="flex space-x-2 mt-4">
-                    <span className="px-3 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full">
-                      {player.rank}
-                    </span>
-                    {player.isLookingForTeam && (
-                      <span className="px-3 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
-                        Баг Хайж Байна
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Player Details */}
-                <div className="px-6 pb-6">
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-                    {player.bio ||
-                      player.description ||
-                      "No description available"}
-                  </p>
-
-                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    <span>Туршлага: {player.experience}</span>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex space-x-2">
-                    <Link href={`/players/${player.id}`}>
-                      <button className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white py-2 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-200 transform hover:scale-105">
-                        Профайл Харах
-                      </button>
-                    </Link>
-                    <button
-                      onClick={() => handleOpenChat(player)}
-                      className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
-                    >
-                      Зурвас
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
-
-          {/* Empty State */}
-          {filteredPlayers.length === 0 && !loading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12"
-            >
-              <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Тоглогч олдсонгүй
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300">
-                Хайлтын нөхцөл эсвэл шүүлтүүрээ тохируулна уу
-              </p>
-            </motion.div>
-          )}
         </div>
       </main>
 
