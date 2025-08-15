@@ -2,23 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Search,
-  Users,
-  Gamepad2,
-  Shield,
-  Sword,
-  Zap,
-  Monitor,
-  Smartphone,
-  ArrowLeft,
-  Filter,
-} from "lucide-react";
-import Image from "next/image";
+import { Search, Users, ArrowLeft, Monitor, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Navigation from "../../components/Navigation";
 import ChatModal from "../../components/ChatModal";
+import PlayerCard from "../../components/PlayerCard";
 import { useAuth } from "../../contexts/AuthContext";
 import { API_ENDPOINTS } from "@/config/api";
 
@@ -45,6 +34,26 @@ interface Player {
     website?: string;
   };
   highlightVideo?: string;
+}
+
+interface Team {
+  id: string;
+  name: string;
+  tag: string;
+  logo: string;
+  game: string;
+  gameIcon: string;
+  createdBy: string;
+  members: TeamMember[];
+  createdAt: string;
+}
+
+interface TeamMember {
+  id: string;
+  name: string;
+  avatar: string;
+  status: "pending" | "accepted" | "declined";
+  invitedAt: string;
 }
 
 // Game information
@@ -206,6 +215,11 @@ export default function GamePage() {
   const [loading, setLoading] = useState(true);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [userTeam, setUserTeam] = useState<Team | null>(null);
+  const [playersInTeams, setPlayersInTeams] = useState<string[]>([]);
+  const [playersTeamTags, setPlayersTeamTags] = useState<
+    Record<string, string>
+  >({});
 
   const game = gameInfo[gameId as keyof typeof gameInfo];
 
@@ -223,6 +237,125 @@ export default function GamePage() {
   const handleCloseChat = () => {
     setIsChatModalOpen(false);
     setSelectedPlayer(null);
+  };
+
+  // Load user team from localStorage
+  useEffect(() => {
+    const loadUserTeam = () => {
+      const savedTeam = localStorage.getItem("userTeam");
+      if (savedTeam) {
+        try {
+          const team = JSON.parse(savedTeam);
+          setUserTeam(team);
+
+          // Extract player IDs who are in teams
+          const memberIds = team.members.map((member: TeamMember) => member.id);
+          setPlayersInTeams(memberIds);
+
+          // Extract team tags for players who have accepted invitations
+          const teamTags: Record<string, string> = {};
+          team.members.forEach((member: TeamMember) => {
+            if (member.status === "accepted") {
+              teamTags[member.id] = team.tag;
+            }
+          });
+          setPlayersTeamTags(teamTags);
+        } catch (error) {
+          console.error("Error parsing saved team:", error);
+          setUserTeam(null);
+          setPlayersInTeams([]);
+          setPlayersTeamTags({});
+        }
+      } else {
+        setUserTeam(null);
+        setPlayersInTeams([]);
+        setPlayersTeamTags({});
+      }
+    };
+
+    loadUserTeam();
+
+    // Listen for team updates
+    const handleTeamUpdate = () => {
+      loadUserTeam();
+    };
+
+    window.addEventListener("teamUpdated", handleTeamUpdate);
+    window.addEventListener("storage", handleTeamUpdate);
+
+    return () => {
+      window.removeEventListener("teamUpdated", handleTeamUpdate);
+      window.removeEventListener("storage", handleTeamUpdate);
+    };
+  }, []);
+
+  // Handle team invitation
+  const handleInviteToTeam = (player: Player) => {
+    if (!userTeam || !user) {
+      alert("Та багт орж байхгүй эсвэл нэвтрээгүй байна");
+      return;
+    }
+
+    // Check if user is team owner
+    if (userTeam.createdBy !== user.id) {
+      alert("Зөвхөн багийн дарга л тоглогч урих боломжтой");
+      return;
+    }
+
+    // Check if player is already in the team
+    const isAlreadyInTeam = userTeam.members.some(
+      (member) => member.id === player.id
+    );
+    if (isAlreadyInTeam) {
+      alert("Энэ тоглогч аль хэдийн таны багт байна");
+      return;
+    }
+
+    // Check if player is in another team
+    if (playersInTeams.includes(player.id)) {
+      alert("Энэ тоглогч өөр багт орсон байна");
+      return;
+    }
+
+    // Add player to team with pending status
+    const newMember: TeamMember = {
+      id: player.id,
+      name: player.name,
+      avatar: player.avatar || "/default-avatar.png",
+      status: "pending",
+      invitedAt: new Date().toISOString(),
+    };
+
+    const updatedTeam = {
+      ...userTeam,
+      members: [...userTeam.members, newMember],
+    };
+
+    // Update localStorage and state
+    localStorage.setItem("userTeam", JSON.stringify(updatedTeam));
+    setUserTeam(updatedTeam);
+    setPlayersInTeams([...playersInTeams, player.id]);
+
+    // Trigger update event
+    window.dispatchEvent(new Event("teamUpdated"));
+
+    alert(`${player.name}-г таны багт урилалав!`);
+  };
+
+  // Check if user can invite players (is team owner)
+  const canInvitePlayers = userTeam && user && userTeam.createdBy === user.id;
+
+  // Check if a player is already in a team or invited
+  const isPlayerInTeamOrInvited = (playerId: string): boolean => {
+    // Check if player is in an accepted team (has team tag)
+    if (playersTeamTags[playerId]) {
+      return true;
+    }
+
+    // Check if player has pending invitation in current user's team
+    return userTeam
+      ? userTeam.members.some((member) => member.id === playerId)
+      : false;
   };
 
   // Fetch players from API
@@ -285,27 +418,6 @@ export default function GamePage() {
 
     setFilteredPlayers(filtered);
   }, [players, searchTerm, selectedRole, selectedRank]);
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case "Carry":
-      case "Duelist":
-      case "Assault":
-      case "Fighter":
-        return <Sword className="w-4 h-4" />;
-      case "Support":
-      case "Hard Support":
-      case "Sentinel":
-        return <Shield className="w-4 h-4" />;
-      case "Mid":
-      case "Mage":
-      case "Initiator":
-      case "Controller":
-        return <Zap className="w-4 h-4" />;
-      default:
-        return <Gamepad2 className="w-4 h-4" />;
-    }
-  };
 
   const getCategoryIcon = (category: "PC" | "Mobile") => {
     return category === "PC" ? (
@@ -400,9 +512,9 @@ export default function GamePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 mb-8"
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -466,91 +578,19 @@ export default function GamePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           >
             {filteredPlayers.map((player, index) => (
-              <motion.div
+              <PlayerCard
                 key={player.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 * index }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
-              >
-                {/* Player Header */}
-                <div className="relative p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
-                      <Image
-                        src={player.avatar || "/default-avatar.png"}
-                        alt={player.name}
-                        width={64}
-                        height={64}
-                        className="rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-lg"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                        {player.name}
-                      </h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <div className="flex items-center space-x-1">
-                          {getCategoryIcon(player.category)}
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {player.category}
-                          </span>
-                        </div>
-                        <span className="text-gray-300">•</span>
-                        <div className="flex items-center space-x-1">
-                          {getRoleIcon(player.role)}
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {player.role}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Status Badges */}
-                  <div className="flex space-x-2 mt-4">
-                    <span className="px-3 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full">
-                      {player.rank}
-                    </span>
-                    {player.isLookingForTeam && (
-                      <span className="px-3 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
-                        Баг Хайж Байна
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Player Details */}
-                <div className="px-6 pb-6">
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-                    {player.bio ||
-                      player.description ||
-                      "No description available"}
-                  </p>
-
-                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    <span>Туршлага: {player.experience}</span>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex space-x-2">
-                    <Link href={`/players/${player.id}`}>
-                      <button className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white py-2 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-200 transform hover:scale-105">
-                        Профайл Харах
-                      </button>
-                    </Link>
-                    <button
-                      onClick={() => handleOpenChat(player)}
-                      className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
-                    >
-                      Зурвас
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
+                player={player}
+                index={index}
+                canInvitePlayers={!!canInvitePlayers}
+                isPlayerInTeamOrInvited={isPlayerInTeamOrInvited}
+                playersTeamTags={playersTeamTags}
+                onInviteToTeam={handleInviteToTeam}
+                onOpenChat={handleOpenChat}
+              />
             ))}
           </motion.div>
 
@@ -586,4 +626,3 @@ export default function GamePage() {
     </div>
   );
 }
-

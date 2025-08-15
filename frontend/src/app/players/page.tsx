@@ -2,21 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Search,
-  Users,
-  Gamepad2,
-  Shield,
-  Sword,
-  Zap,
-  Monitor,
-  Smartphone,
-} from "lucide-react";
+import { Search, Monitor, Smartphone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import Navigation from "../components/Navigation";
-import ChatModal from "../components/ChatModal";
-import { useAuth } from "../contexts/AuthContext";
+
 import { API_ENDPOINTS } from "@/config/api";
 
 interface Player {
@@ -44,7 +34,6 @@ interface Player {
   highlightVideo?: string;
 }
 
-// Game data with images and routes
 const gameData = {
   PC: [
     {
@@ -115,35 +104,13 @@ const gameData = {
 };
 
 export default function PlayersPage() {
-  const { user } = useAuth();
   const [players, setPlayers] = useState<Player[]>([]);
-  const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<"PC" | "Mobile">(
     "PC"
   );
   const [loading, setLoading] = useState(true);
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
 
-  // Handle opening chat modal
-  const handleOpenChat = (player: Player) => {
-    if (!user) {
-      // Redirect to login page or show login modal
-      alert("Та чатлахын тулд нэвтэрх хэрэгтэй");
-      return;
-    }
-    setSelectedPlayer(player);
-    setIsChatModalOpen(true);
-  };
-
-  // Handle closing chat modal
-  const handleCloseChat = () => {
-    setIsChatModalOpen(false);
-    setSelectedPlayer(null);
-  };
-
-  // Fetch players from API
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
@@ -172,11 +139,9 @@ export default function PlayersPage() {
     fetchPlayers();
   }, []);
 
-  // Calculate player counts for each game
   useEffect(() => {
     const updatedGameData = { ...gameData };
 
-    // Count players for each game
     Object.keys(updatedGameData).forEach((category) => {
       updatedGameData[category as keyof typeof gameData].forEach((game) => {
         const count = players.filter(
@@ -186,63 +151,6 @@ export default function PlayersPage() {
       });
     });
   }, [players]);
-
-  useEffect(() => {
-    let filtered = players;
-
-    console.log("Filtering players:", {
-      totalPlayers: players.length,
-      selectedCategory,
-      searchTerm,
-    });
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (player) =>
-          player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (player.bio || player.description || "")
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filter by category
-    filtered = filtered.filter(
-      (player) => player.category === selectedCategory
-    );
-
-    console.log("Filtered results:", {
-      filteredCount: filtered.length,
-      filteredPlayers: filtered.map((p) => ({
-        name: p.name,
-        category: p.category,
-        game: p.game,
-      })),
-    });
-
-    setFilteredPlayers(filtered);
-  }, [players, searchTerm, selectedCategory]);
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case "Carry":
-      case "Duelist":
-      case "Assault":
-      case "Fighter":
-        return <Sword className="w-4 h-4" />;
-      case "Support":
-      case "Hard Support":
-      case "Sentinel":
-        return <Shield className="w-4 h-4" />;
-      case "Mid":
-      case "Mage":
-      case "Initiator":
-        return <Zap className="w-4 h-4" />;
-      default:
-        return <Gamepad2 className="w-4 h-4" />;
-    }
-  };
 
   const getCategoryIcon = (category: "PC" | "Mobile") => {
     return category === "PC" ? (
@@ -276,7 +184,6 @@ export default function PlayersPage() {
 
       <main className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -291,7 +198,6 @@ export default function PlayersPage() {
             </p>
           </motion.div>
 
-          {/* Search and Category Filter */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -299,7 +205,6 @@ export default function PlayersPage() {
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -311,7 +216,6 @@ export default function PlayersPage() {
                 />
               </div>
 
-              {/* Category Filter */}
               <div className="relative">
                 <select
                   value={selectedCategory}
@@ -330,7 +234,6 @@ export default function PlayersPage() {
             </div>
           </motion.div>
 
-          {/* Game Selection Cards */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -355,7 +258,6 @@ export default function PlayersPage() {
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:scale-105">
                       <div className="relative">
                         <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center relative overflow-hidden">
-                          {/* Game Logo */}
                           <div className="absolute inset-0 flex items-center justify-center p-1">
                             <Image
                               src={game.image}
@@ -365,7 +267,6 @@ export default function PlayersPage() {
                               className="object-contain w-full h-full drop-shadow-lg"
                               unoptimized={true}
                               onError={(e) => {
-                                // Fallback to icon if image fails to load
                                 const target = e.target as HTMLImageElement;
                                 target.style.display = "none";
                                 const parent = target.parentElement;
@@ -382,7 +283,6 @@ export default function PlayersPage() {
                               }}
                             />
                           </div>
-                          {/* Player Count Badge */}
                           <div className="absolute top-2 right-2">
                             <span className="bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg backdrop-blur-sm">
                               {game.playerCount}
@@ -406,17 +306,6 @@ export default function PlayersPage() {
           </motion.div>
         </div>
       </main>
-
-      {/* Chat Modal */}
-      {selectedPlayer && (
-        <ChatModal
-          isOpen={isChatModalOpen}
-          onClose={handleCloseChat}
-          playerId={selectedPlayer.id}
-          playerName={selectedPlayer.name}
-          playerAvatar={selectedPlayer.avatar}
-        />
-      )}
     </div>
   );
 }
