@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Team {
   id: string;
@@ -45,6 +46,7 @@ export default function ProfileDropdown({
   onInviteFriend,
 }: ProfileDropdownProps) {
   const { user, hasProfile } = useAuth();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [userTeam, setUserTeam] = useState<Team | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -110,7 +112,7 @@ export default function ProfileDropdown({
   const handleViewTeam = () => {
     handleItemClick();
     // Navigate to settings page with team tab active
-    window.location.href = "/settings#team";
+    router.push("/settings#team");
   };
 
   const handleLeaveTeam = () => {

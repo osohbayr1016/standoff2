@@ -43,6 +43,14 @@ export default function SettingsPage() {
         console.error("Error parsing saved team:", error);
       }
     }
+
+    // Check URL hash and switch to team tab if needed
+    const hash = window.location.hash.replace("#", "");
+    if (hash === "team") {
+      setActiveTab("team");
+      // Clear the hash to avoid confusion
+      window.history.replaceState(null, "", window.location.pathname);
+    }
   }, []);
 
   const tabs = [

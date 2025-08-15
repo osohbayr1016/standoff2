@@ -27,33 +27,8 @@ interface Friend {
   rank: string;
 }
 
-// Mock friend suggestions
-const mockFriends: Friend[] = [
-  {
-    id: "friend1",
-    name: "Батсайхан",
-    email: "batsaikhan@email.com",
-    avatar: "/default-avatar.png",
-    game: "Valorant",
-    rank: "Diamond",
-  },
-  {
-    id: "friend2",
-    name: "Ганболд",
-    email: "ganbold@email.com",
-    avatar: "/default-avatar.png",
-    game: "CS2",
-    rank: "Legendary Eagle",
-  },
-  {
-    id: "friend3",
-    name: "Мөнхжаргал",
-    email: "munkhjargal@email.com",
-    avatar: "/default-avatar.png",
-    game: "PUBG",
-    rank: "Crown",
-  },
-];
+// Friends will be loaded from API
+const friends: Friend[] = [];
 
 export default function InviteFriendModal({
   isOpen,
@@ -64,11 +39,11 @@ export default function InviteFriendModal({
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [emailInput, setEmailInput] = useState("");
-  const [inviteLink] = useState("https://esportconnection.mn/invite/abc123");
+  const [inviteLink] = useState("E-Sport-Connection.vercel.app");
   const [copiedLink, setCopiedLink] = useState(false);
   const [sentInvites, setSentInvites] = useState<string[]>([]);
 
-  const filteredFriends = mockFriends.filter(
+  const filteredFriends = friends.filter(
     (friend) =>
       friend.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       friend.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -76,14 +51,16 @@ export default function InviteFriendModal({
 
   const handleInviteFriend = (friendId: string) => {
     setSentInvites([...sentInvites, friendId]);
-    // Here you would typically send the invitation via API
+    // TODO: Implement API call to send friend invitation
+    // Example: await api.sendFriendInvitation(friendId);
   };
 
   const handleEmailInvite = () => {
     if (emailInput.trim()) {
-      // Here you would typically send email invitation via API
+      // TODO: Implement API call to send email invitation
+      // Example: await api.sendEmailInvitation(emailInput);
       setEmailInput("");
-      // Show success message
+      // TODO: Show success/error message based on API response
     }
   };
 
@@ -235,7 +212,7 @@ export default function InviteFriendModal({
 
                     {!searchTerm && (
                       <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                        Найзаа хайхын тулд нэр эсвэл и-мэйл оруулна уу
+                        Найзын жагсаалт API-аас ачаалагдах болно
                       </p>
                     )}
                   </div>
