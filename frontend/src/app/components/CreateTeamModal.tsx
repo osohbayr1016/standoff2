@@ -82,14 +82,46 @@ const mockPlayers: Player[] = [
 ];
 
 const games = [
-  { name: "Valorant", icon: "/games/valorant.png" },
-  { name: "Counter-Strike 2", icon: "/games/cs2.png" },
-  { name: "PUBG", icon: "/games/pubg.png" },
-  { name: "PUBG Mobile", icon: "/games/pubg-mobile.png" },
-  { name: "Dota 2", icon: "/games/dota2.png" },
-  { name: "Mobile Legends", icon: "/games/mobile-legends.png" },
-  { name: "Apex Legends", icon: "/games/apex-legends.png" },
-  { name: "Standoff 2", icon: "/games/standoff2.png" },
+  {
+    name: "Valorant",
+    icon: "https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg",
+    category: "PC",
+  },
+  {
+    name: "Counter-Strike 2",
+    icon: "https://images.seeklogo.com/logo-png/47/2/counter-strike-2-logo-png_seeklogo-477404.png",
+    category: "PC",
+  },
+  {
+    name: "PUBG",
+    icon: "https://images.seeklogo.com/logo-png/39/2/pubg-mobile-logo-png_seeklogo-399111.png",
+    category: "PC",
+  },
+  {
+    name: "PUBG Mobile",
+    icon: "https://play-lh.googleusercontent.com/JRd05pyBH41qjgsJuWduRJpDeZG0Hnb0yjf2nWqO7VaGKL10-G5UIygxED-WNOc3pg",
+    category: "Mobile",
+  },
+  {
+    name: "Dota 2",
+    icon: "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png",
+    category: "PC",
+  },
+  {
+    name: "Mobile Legends",
+    icon: "https://i.redd.it/op52fca67y9c1.jpeg",
+    category: "Mobile",
+  },
+  {
+    name: "Apex Legends",
+    icon: "https://cdn.akamai.steamstatic.com/steam/apps/1172470/logo.png",
+    category: "PC",
+  },
+  {
+    name: "Standoff 2",
+    icon: "https://i.pinimg.com/originals/42/cb/81/42cb812f44c77d4c0cf40774df855ae6.png",
+    category: "Mobile",
+  },
 ];
 
 export default function CreateTeamModal({
@@ -105,6 +137,7 @@ export default function CreateTeamModal({
   const [teamName, setTeamName] = useState("");
   const [teamTag, setTeamTag] = useState("");
   const [teamLogo, setTeamLogo] = useState("");
+  const [useGameLogo, setUseGameLogo] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [invitedPlayers, setInvitedPlayers] = useState<Player[]>([]);
   const [isCreating, setIsCreating] = useState(false);
@@ -116,6 +149,7 @@ export default function CreateTeamModal({
     setTeamName("");
     setTeamTag("");
     setTeamLogo("");
+    setUseGameLogo(true);
     setSearchTerm("");
     setInvitedPlayers([]);
     setIsCreating(false);
@@ -133,9 +167,22 @@ export default function CreateTeamModal({
       const reader = new FileReader();
       reader.onload = (e) => {
         setTeamLogo(e.target?.result as string);
+        setUseGameLogo(false);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleUseGameLogo = () => {
+    setUseGameLogo(true);
+    setTeamLogo("");
+  };
+
+  const getEffectiveTeamLogo = () => {
+    if (useGameLogo && selectedGame) {
+      return selectedGame.icon;
+    }
+    return teamLogo || "/default-avatar.png";
   };
 
   const validateTeamDetails = () => {
@@ -174,7 +221,7 @@ export default function CreateTeamModal({
       id: `team_${Date.now()}`,
       name: teamName,
       tag: teamTag,
-      logo: teamLogo || "/default-avatar.png",
+      logo: getEffectiveTeamLogo(),
       game: selectedGame.name,
       gameIcon: selectedGame.icon,
       createdBy: user.id || "current_user",
@@ -253,12 +300,29 @@ export default function CreateTeamModal({
                         whileTap={{ scale: 0.95 }}
                         className="flex flex-col items-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-lg hover:border-purple-500 dark:hover:border-green-500 transition-colors"
                       >
-                        <div className="w-16 h-16 relative mb-3">
+                        <div className="w-16 h-16 relative mb-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg flex items-center justify-center overflow-hidden">
                           <Image
                             src={game.icon}
                             alt={game.name}
-                            fill
-                            className="rounded-lg object-cover"
+                            width={56}
+                            height={56}
+                            className="rounded-lg object-contain drop-shadow-lg"
+                            unoptimized={true}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `
+                                  <div class="text-center">
+                                    <svg class="w-8 h-8 text-gray-400 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                                    </svg>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">${game.name}</p>
+                                  </div>
+                                `;
+                              }
+                            }}
                           />
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-white text-center">
@@ -274,12 +338,18 @@ export default function CreateTeamModal({
               {step === 2 && selectedGame && (
                 <div className="p-6">
                   <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-8 h-8 relative">
+                    <div className="w-8 h-8 relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded flex items-center justify-center overflow-hidden">
                       <Image
                         src={selectedGame.icon}
                         alt={selectedGame.name}
-                        fill
-                        className="rounded object-cover"
+                        width={28}
+                        height={28}
+                        className="rounded object-contain"
+                        unoptimized={true}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                        }}
                       />
                     </div>
                     <span className="font-medium text-gray-900 dark:text-white">
@@ -293,37 +363,114 @@ export default function CreateTeamModal({
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Багийн лого
                       </label>
-                      <div className="flex items-center space-x-4">
-                        <div className="w-20 h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center">
-                          {teamLogo ? (
-                            <Image
-                              src={teamLogo}
-                              alt="Team logo"
-                              width={64}
-                              height={64}
-                              className="rounded-lg object-cover"
-                            />
-                          ) : (
-                            <ImageIcon className="w-8 h-8 text-gray-400" />
-                          )}
-                        </div>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleLogoUpload}
-                          className="hidden"
-                        />
-                        <motion.button
+
+                      {/* Logo options */}
+                      <div className="flex items-center space-x-4 mb-4">
+                        <button
+                          type="button"
+                          onClick={handleUseGameLogo}
+                          className={`flex items-center space-x-2 px-3 py-2 rounded-lg border-2 transition-colors ${
+                            useGameLogo
+                              ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
+                              : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                          }`}
+                        >
+                          <div className="w-8 h-8 relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded flex items-center justify-center overflow-hidden">
+                            {selectedGame && (
+                              <Image
+                                src={selectedGame.icon}
+                                alt={selectedGame.name}
+                                width={28}
+                                height={28}
+                                className="rounded object-contain"
+                                unoptimized={true}
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = "none";
+                                }}
+                              />
+                            )}
+                          </div>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Тоглоомын лого
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                          className={`flex items-center space-x-2 px-3 py-2 rounded-lg border-2 transition-colors ${
+                            !useGameLogo && teamLogo
+                              ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
+                              : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                          }`}
                         >
                           <Upload className="w-4 h-4" />
-                          <span className="text-sm">Зураг оруулах</span>
-                        </motion.button>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Хувийн лого
+                          </span>
+                        </button>
                       </div>
+
+                      {/* Logo preview */}
+                      <div className="flex items-center space-x-4">
+                        <div className="w-20 h-20 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+                          <Image
+                            src={getEffectiveTeamLogo()}
+                            alt="Team logo"
+                            width={64}
+                            height={64}
+                            className="rounded-lg object-contain"
+                            unoptimized={true}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `
+                                  <div class="text-center">
+                                    <svg class="w-8 h-8 text-gray-400 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                                    </svg>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">Logo</p>
+                                  </div>
+                                `;
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {useGameLogo ? (
+                            <p>
+                              <span className="font-medium">
+                                Тоглоомын лого:
+                              </span>
+                              <br />
+                              {selectedGame?.name} логог ашиглаж байна
+                            </p>
+                          ) : teamLogo ? (
+                            <p>
+                              <span className="font-medium">Хувийн лого:</span>
+                              <br />
+                              Таны оруулсан зураг
+                            </p>
+                          ) : (
+                            <p>
+                              <span className="font-medium">Анхдагч лого:</span>
+                              <br />
+                              Багийн стандарт лого
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                      />
                     </div>
 
                     {/* Team Name */}
@@ -378,19 +525,19 @@ export default function CreateTeamModal({
                           Үзэх:
                         </p>
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 relative">
-                            {teamLogo ? (
-                              <Image
-                                src={teamLogo}
-                                alt="Team logo"
-                                fill
-                                className="rounded object-cover"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 bg-purple-500 dark:bg-green-500 rounded flex items-center justify-center">
-                                <Users className="w-4 h-4 text-white" />
-                              </div>
-                            )}
+                          <div className="w-8 h-8 relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded flex items-center justify-center overflow-hidden">
+                            <Image
+                              src={getEffectiveTeamLogo()}
+                              alt="Team logo"
+                              width={28}
+                              height={28}
+                              className="rounded object-contain"
+                              unoptimized={true}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = "none";
+                              }}
+                            />
                           </div>
                           <span className="font-medium text-gray-900 dark:text-white">
                             [{teamTag}] {teamName}

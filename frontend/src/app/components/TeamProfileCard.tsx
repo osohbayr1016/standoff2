@@ -71,7 +71,7 @@ export default function TeamProfileCard({
       className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
     >
       {/* Team Header */}
-      <div className="relative h-32 bg-gradient-to-br from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500">
+      <div className="relative h-32 bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500">
         <div className="absolute inset-0 bg-black bg-opacity-20"></div>
         <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
