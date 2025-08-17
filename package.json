@@ -1,0 +1,31 @@
+{
+  "name": "e-sport-connection",
+  "version": "1.0.0",
+  "description": "E-Sport Connection Platform",
+  "main": "backend/dist/index.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "build": "cd backend && npm run build",
+    "dev": "cd backend && npm run dev",
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/e-sport-connection.git"
+  },
+  "keywords": [
+    "esport",
+    "gaming",
+    "tournament",
+    "connection",
+    "mongodb",
+    "express",
+    "nextjs"
+  ],
+  "author": "",
+  "license": "ISC"
+}
