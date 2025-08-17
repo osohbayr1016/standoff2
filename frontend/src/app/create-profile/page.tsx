@@ -151,6 +151,7 @@ interface ProfileFormData {
   category: "PC" | "Mobile";
   game: string;
   role: string;
+  realName: string;
   inGameName: string;
   rank: string;
   experience: string;
@@ -190,6 +191,7 @@ export default function CreateProfilePage() {
     category: "PC",
     game: "",
     role: "",
+    realName: "",
     inGameName: "",
     rank: "",
     experience: "",
@@ -218,6 +220,14 @@ export default function CreateProfilePage() {
     if (hasProfile) {
       router.push("/profile");
       return;
+    }
+
+    // Set the real name from user data
+    if (user?.name) {
+      setFormData((prev) => ({
+        ...prev,
+        realName: user.name,
+      }));
     }
 
     // Double-check profile status from server
@@ -527,10 +537,30 @@ export default function CreateProfilePage() {
                       </select>
                     </div>
 
+                    {/* Real Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Жинхэнэ нэр *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.realName}
+                        onChange={(e) =>
+                          handleInputChange("realName", e.target.value)
+                        }
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                        placeholder="Таны жинхэнэ нэр"
+                        required
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Энэ нэр зөвхөн профайлын дэлгэрэнгүй хуудсанд харагдана
+                      </p>
+                    </div>
+
                     {/* In-Game Name */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        In-Game Name *
+                        Тоглоомын нэр *
                       </label>
                       <input
                         type="text"
@@ -539,9 +569,12 @@ export default function CreateProfilePage() {
                           handleInputChange("inGameName", e.target.value)
                         }
                         className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
-                        placeholder="Your in-game username"
+                        placeholder="Таны тоглоомын нэр (username)"
                         required
                       />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Энэ нэр тоглогчдын жагсаалтад харагдана
+                      </p>
                     </div>
 
                     {/* Experience */}

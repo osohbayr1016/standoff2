@@ -29,6 +29,7 @@ import { API_ENDPOINTS } from "../../../config/api";
 interface Player {
   id: string;
   name: string;
+  realName?: string;
   avatar?: string;
   avatarPublicId?: string;
   category: "PC" | "Mobile";
@@ -437,9 +438,19 @@ export default function PlayerDetailPage({
                     </span>
                   )}
                   <span className="text-center lg:text-left">
-                    {player.name}
+                    {player.realName || player.name}
                   </span>
                 </h1>
+
+                {player.realName &&
+                  player.inGameName &&
+                  player.realName !== player.inGameName && (
+                    <div className="mb-4">
+                      <span className="inline-block px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 rounded-full text-sm font-medium">
+                        Тоглоомын нэр: {player.inGameName}
+                      </span>
+                    </div>
+                  )}
 
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-6">
                   <div className="flex items-center space-x-2">

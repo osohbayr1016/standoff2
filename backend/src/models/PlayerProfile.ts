@@ -5,6 +5,7 @@ export interface IPlayerProfile extends Document {
   category: "PC" | "Mobile";
   game: string;
   role: string;
+  realName?: string;
   inGameName: string;
   rank: string;
   experience: string;
@@ -54,6 +55,10 @@ const playerProfileSchema = new Schema<IPlayerProfile>(
     role: {
       type: String,
       required: true,
+    },
+    realName: {
+      type: String,
+      trim: true,
     },
     inGameName: {
       type: String,

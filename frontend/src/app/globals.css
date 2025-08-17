@@ -123,6 +123,82 @@ html {
   border-radius: 2px;
 }
 
+/* Compact mode styles */
+.compact-mode {
+  --spacing-scale: 0.75;
+  --text-scale: 0.9;
+}
+
+/* Use direct CSS values instead of @apply to avoid circular dependencies */
+.compact-mode [class*="p-4"] {
+  padding: 0.75rem;
+}
+
+.compact-mode [class*="p-6"] {
+  padding: 1rem;
+}
+
+.compact-mode [class*="p-8"] {
+  padding: 1.5rem;
+}
+
+.compact-mode [class*="py-12"] {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.compact-mode [class*="mb-6"] {
+  margin-bottom: 1rem;
+}
+
+.compact-mode [class*="mb-4"] {
+  margin-bottom: 0.75rem;
+}
+
+.compact-mode [class*="space-y-6"] > * + * {
+  margin-top: 1rem !important;
+}
+
+.compact-mode [class*="space-y-4"] > * + * {
+  margin-top: 0.75rem !important;
+}
+
+.compact-mode [class*="text-xl"] {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.compact-mode [class*="text-2xl"] {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.compact-mode [class*="text-4xl"] {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+.compact-mode [class*="text-5xl"] {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+
+.compact-mode [class*="h-16"] {
+  height: 3.5rem;
+}
+
+.compact-mode [class*="w-16"] {
+  width: 3.5rem;
+}
+
+.compact-mode [class*="h-20"] {
+  height: 4rem;
+}
+
+.compact-mode [class*="w-20"] {
+  width: 4rem;
+}
+
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.8);
 }

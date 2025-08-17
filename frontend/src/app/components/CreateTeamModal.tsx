@@ -3,16 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
-import {
-  X,
-  Upload,
-  Users,
-  Search,
-  UserPlus,
-  Check,
-  Clock,
-  Image as ImageIcon,
-} from "lucide-react";
+import { X, Upload, Search, UserPlus, Check, Clock } from "lucide-react";
 import Image from "next/image";
 
 interface CreateTeamModalProps {

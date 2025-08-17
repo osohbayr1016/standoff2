@@ -16,6 +16,8 @@ import Link from "next/link";
 interface Player {
   id: string;
   name: string;
+  realName?: string;
+  inGameName?: string;
   avatar?: string;
   category: "PC" | "Mobile";
   game: string;
@@ -86,7 +88,7 @@ export default function PlayerCard({
           <div className="relative flex-shrink-0">
             <Image
               src={player.avatar || "/default-avatar.png"}
-              alt={player.name}
+              alt={player.inGameName || player.name}
               width={64}
               height={64}
               className="rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-lg"
@@ -99,7 +101,7 @@ export default function PlayerCard({
                   [{playersTeamTags[player.id]}]
                 </span>
               )}
-              <span>{player.name}</span>
+              <span>{player.inGameName || player.name}</span>
             </h3>
             <div className="flex items-center justify-center sm:justify-start space-x-2 mt-1 flex-wrap gap-1">
               <div className="flex items-center space-x-1">

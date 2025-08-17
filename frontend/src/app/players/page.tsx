@@ -12,6 +12,7 @@ import { API_ENDPOINTS } from "@/config/api";
 interface Player {
   id: string;
   name: string;
+  realName?: string;
   avatar?: string;
   avatarPublicId?: string;
   category: "PC" | "Mobile";
