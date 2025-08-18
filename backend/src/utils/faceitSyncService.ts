@@ -1,6 +1,7 @@
 import PlayerProfile from "../models/PlayerProfile";
 import faceitService from "./faceitService";
-import * as cron from "node-cron";
+const cron = require("node-cron");
+import * as NodeCron from "node-cron";
 
 class FaceitSyncService {
   private syncInterval: NodeJS.Timeout | null = null;

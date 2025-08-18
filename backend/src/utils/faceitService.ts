@@ -1,4 +1,5 @@
-import axios from "axios";
+const axios = require("axios");
+import { AxiosResponse } from "axios";
 
 const FACEIT_BASE_URL = "https://open.faceit.com/data/v4";
 const FACEIT_API_KEY = process.env.FACEIT_API_KEY;
