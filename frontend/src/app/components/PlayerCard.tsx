@@ -25,6 +25,13 @@ interface Player {
   rank: string;
   experience: string;
   isLookingForTeam: boolean;
+  faceitData?: {
+    nickname: string;
+    level: number;
+    elo: number;
+    country: string;
+    lastUpdated: string;
+  };
 }
 
 interface PlayerCardProps {
@@ -72,6 +79,22 @@ export default function PlayerCard({
     ) : (
       <Smartphone className="w-4 h-4" />
     );
+  };
+
+  const getFaceitLevelColor = (level: number): string => {
+    const colors = [
+      "#9e9e9e", // Level 1 - Gray
+      "#4caf50", // Level 2 - Green
+      "#8bc34a", // Level 3 - Light Green
+      "#cddc39", // Level 4 - Lime
+      "#ffeb3b", // Level 5 - Yellow
+      "#ffc107", // Level 6 - Amber
+      "#ff9800", // Level 7 - Orange
+      "#ff5722", // Level 8 - Deep Orange
+      "#e91e63", // Level 9 - Pink
+      "#9c27b0", // Level 10 - Purple
+    ];
+    return colors[level - 1] || "#9e9e9e";
   };
 
   return (
@@ -152,6 +175,41 @@ export default function PlayerCard({
             </p>
           </div>
         </div>
+
+        {/* FACEIT Data for CS2 Players */}
+        {(player.game === "CS2" || player.game === "Counter-Strike 2") &&
+          player.faceitData && (
+            <div className="mt-4 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-800">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                    style={{
+                      backgroundColor: getFaceitLevelColor(
+                        player.faceitData.level
+                      ),
+                    }}
+                  >
+                    {player.faceitData.level}
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    FACEIT
+                  </span>
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">
+                  {player.faceitData.nickname}
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Level {player.faceitData.level}
+                </span>
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {player.faceitData.elo} ELO
+                </span>
+              </div>
+            </div>
+          )}
       </div>
 
       {/* Action Buttons */}

@@ -43,6 +43,13 @@ export const API_ENDPOINTS = {
     LIST: (playerId: string) => `${API_BASE_URL}/api/messages/${playerId}`,
     SEND: `${API_BASE_URL}/api/messages`,
   },
+  FACEIT: {
+    LINK: `${API_BASE_URL}/api/faceit/link`,
+    UNLINK: `${API_BASE_URL}/api/faceit/unlink`,
+    REFRESH: `${API_BASE_URL}/api/faceit/refresh`,
+    STATUS: `${API_BASE_URL}/api/faceit/status`,
+    VERIFY: `${API_BASE_URL}/api/faceit/verify`,
+  },
   HEALTH: `${API_BASE_URL}/health`,
 };
 

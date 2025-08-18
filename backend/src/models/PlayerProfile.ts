@@ -31,6 +31,23 @@ export interface IPlayerProfile extends Document {
     preferredHours: string;
   };
   languages: string[];
+  faceitData?: {
+    faceitId: string;
+    nickname: string;
+    avatar: string;
+    country: string;
+    level: number;
+    elo: number;
+    gamePlayerStats?: {
+      averageKD: number;
+      averageKR: number;
+      averageHeadshots: number;
+      winRate: number;
+      matches: number;
+    };
+    lastUpdated: Date;
+    isActive: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -120,6 +137,41 @@ const playerProfileSchema = new Schema<IPlayerProfile>(
       type: [String],
       default: ["Mongolian"],
     },
+    faceitData: {
+      faceitId: {
+        type: String,
+        unique: true,
+        sparse: true,
+      },
+      nickname: String,
+      avatar: String,
+      country: String,
+      level: {
+        type: Number,
+        min: 1,
+        max: 10,
+      },
+      elo: {
+        type: Number,
+        min: 100,
+        max: 4000,
+      },
+      gamePlayerStats: {
+        averageKD: Number,
+        averageKR: Number,
+        averageHeadshots: Number,
+        winRate: Number,
+        matches: Number,
+      },
+      lastUpdated: {
+        type: Date,
+        default: Date.now,
+      },
+      isActive: {
+        type: Boolean,
+        default: true,
+      },
+    },
   },
   {
     timestamps: true,
@@ -130,6 +182,9 @@ const playerProfileSchema = new Schema<IPlayerProfile>(
 playerProfileSchema.index({ game: 1 });
 playerProfileSchema.index({ category: 1 });
 playerProfileSchema.index({ isLookingForTeam: 1 });
+playerProfileSchema.index({ "faceitData.faceitId": 1 });
+playerProfileSchema.index({ "faceitData.level": 1 });
+playerProfileSchema.index({ "faceitData.elo": 1 });
 
 export default mongoose.model<IPlayerProfile>(
   "PlayerProfile",

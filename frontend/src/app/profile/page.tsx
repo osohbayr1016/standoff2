@@ -29,6 +29,7 @@ import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import ImageUploader from "../components/ImageUploader";
 import YouTubeVideoInput from "../components/YouTubeVideoInput";
+import FaceitIntegration from "../components/FaceitIntegration";
 import ProtectedRoute from "../components/ProtectedRoute";
 import { useAuth } from "../contexts/AuthContext";
 import { API_ENDPOINTS } from "../../config/api";
@@ -679,11 +680,27 @@ export default function ProfilePage() {
               )}
             </motion.div>
 
+            {/* FACEIT Integration Section */}
+            {profile.game === "CS2" || profile.game === "Counter-Strike 2" ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <FaceitIntegration
+                  playerGame={profile.game}
+                  onFaceitDataUpdate={(faceitData) => {
+                    console.log("FACEIT data updated:", faceitData);
+                  }}
+                />
+              </motion.div>
+            ) : null}
+
             {/* YouTube Highlight Video Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
             >
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">

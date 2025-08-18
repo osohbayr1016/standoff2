@@ -121,7 +121,9 @@ import playerProfileRoutes from "./routes/playerProfileRoutes";
 import organizationProfileRoutes from "./routes/organizationProfileRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
+import faceitRoutes from "./routes/faceitRoutes";
 import { NotificationService } from "./utils/notificationService";
+import faceitSyncService from "./utils/faceitSyncService";
 
 // API routes
 app.use("/api/auth", authRoutes);
@@ -130,6 +132,7 @@ app.use("/api/player-profiles", playerProfileRoutes);
 app.use("/api/organization-profiles", organizationProfileRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api", notificationRoutes);
+app.use("/api/faceit", faceitRoutes);
 
 // Import and set up message routes after socket manager is initialized
 import messageRoutes, { setSocketManager } from "./routes/messageRoutes";
@@ -183,6 +186,14 @@ const startServer = async () => {
       }
     }, 24 * 60 * 60 * 1000); // 24 hours
 
+    // Start FACEIT sync service (runs every 30 minutes)
+    try {
+      faceitSyncService.start();
+      console.log("🎮 FACEIT sync service started");
+    } catch (error) {
+      console.error("Error starting FACEIT sync service:", error);
+    }
+
     // Listen on the specified port
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
@@ -191,6 +202,7 @@ const startServer = async () => {
       console.log(`🔐 OAuth: Google & Facebook enabled`);
       console.log(`🔌 WebSocket: Real-time chat enabled`);
       console.log(`🧹 Notification cleanup: Every 24 hours (7+ days old)`);
+      console.log(`🎮 FACEIT sync: Every 30 minutes for linked CS2 players`);
       console.log(`🌐 Server bound to 0.0.0.0:${PORT}`);
     });
   } catch (error) {
