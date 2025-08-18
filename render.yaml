@@ -3,7 +3,8 @@ services:
     name: e-sport-connection-backend
     env: node
     plan: free
-    buildCommand: npm run build
+    rootDir: backend
+    buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -33,4 +34,6 @@ services:
       - key: EMAIL_USER
         sync: false
       - key: EMAIL_PASS
+        sync: false
+      - key: FACEIT_API_KEY
         sync: false

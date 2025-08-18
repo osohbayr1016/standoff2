@@ -5,6 +5,27 @@ import PlayerProfile from "../models/PlayerProfile";
 import Notification from "../models/Notification";
 import { authenticateToken } from "../middleware/auth";
 
+// Extended interfaces for populated data
+interface PopulatedUser {
+  _id: string;
+  name: string;
+  avatar?: string;
+  email?: string;
+}
+
+interface PopulatedTeamMember
+  extends Omit<ITeamMember, "userId" | "invitedBy"> {
+  userId: PopulatedUser;
+  invitedBy?: PopulatedUser;
+}
+
+interface PopulatedTeam extends Omit<ITeam, "createdBy" | "members"> {
+  createdBy: PopulatedUser;
+  members: PopulatedTeamMember[];
+}
+
+type TeamWithMethods = ITeam & { isLeader: (userId: string) => boolean };
+
 const router = Router();
 
 // Get all teams (public endpoint with pagination and filters)
@@ -20,7 +41,7 @@ router.get("/", async (req: Request, res: Response) => {
     } = req.query;
 
     const skip = (Number(page) - 1) * Number(limit);
-    
+
     // Build filter object
     const filter: any = { isActive: true };
 
@@ -44,12 +65,12 @@ router.get("/", async (req: Request, res: Response) => {
       ];
     }
 
-    const teams = await Team.find(filter)
+    const teams = (await Team.find(filter)
       .populate("createdBy", "name avatar")
       .populate("members.userId", "name avatar")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(Number(limit));
+      .limit(Number(limit))) as unknown as PopulatedTeam[];
 
     const total = await Team.countDocuments(filter);
 
@@ -67,7 +88,8 @@ router.get("/", async (req: Request, res: Response) => {
         name: team.createdBy.name,
         avatar: team.createdBy.avatar,
       },
-      activeMembersCount: team.members.filter((m) => m.status === "active").length,
+      activeMembersCount: team.members.filter((m) => m.status === "active")
+        .length,
       maxMembers: team.maxMembers,
       isLookingForMembers: team.isLookingForMembers,
       stats: team.stats,
@@ -96,10 +118,13 @@ router.get("/", async (req: Request, res: Response) => {
 // Get specific team details (public endpoint)
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const team = await Team.findById(req.params.id)
+    const team = (await Team.findById(req.params.id)
       .populate("createdBy", "name avatar email")
       .populate("members.userId", "name avatar")
-      .populate("members.invitedBy", "name");
+      .populate(
+        "members.invitedBy",
+        "name"
+      )) as unknown as PopulatedTeam | null;
 
     if (!team || !team.isActive) {
       return res.status(404).json({
@@ -114,7 +139,7 @@ router.get("/:id", async (req: Request, res: Response) => {
         const playerProfile = await PlayerProfile.findOne({
           userId: member.userId._id,
         });
-        
+
         return {
           id: member.userId._id,
           name: member.userId.name,
@@ -124,12 +149,14 @@ router.get("/:id", async (req: Request, res: Response) => {
           joinedAt: member.joinedAt,
           invitedAt: member.invitedAt,
           invitedBy: member.invitedBy?.name,
-          playerProfile: playerProfile ? {
-            game: playerProfile.game,
-            gameRole: playerProfile.role,
-            rank: playerProfile.rank,
-            experience: playerProfile.experience,
-          } : null,
+          playerProfile: playerProfile
+            ? {
+                game: playerProfile.game,
+                gameRole: playerProfile.role,
+                rank: playerProfile.rank,
+                experience: playerProfile.experience,
+              }
+            : null,
         };
       })
     );
@@ -180,14 +207,14 @@ router.get(
     try {
       const userId = (req.user as any).id;
 
-      const teams = await Team.find({
+      const teams = (await Team.find({
         "members.userId": userId,
         "members.status": { $in: ["active", "pending"] },
         isActive: true,
       })
         .populate("createdBy", "name avatar")
         .populate("members.userId", "name avatar")
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })) as unknown as PopulatedTeam[];
 
       const transformedTeams = teams.map((team) => {
         const userMember = team.members.find(
@@ -204,7 +231,8 @@ router.get(
           description: team.description,
           userRole: userMember?.role,
           userStatus: userMember?.status,
-          activeMembersCount: team.members.filter((m) => m.status === "active").length,
+          activeMembersCount: team.members.filter((m) => m.status === "active")
+            .length,
           maxMembers: team.maxMembers,
           isLookingForMembers: team.isLookingForMembers,
           stats: team.stats,
@@ -319,20 +347,22 @@ router.post(
       await newTeam.populate("createdBy", "name avatar");
       await newTeam.populate("members.userId", "name avatar");
 
+      const populatedTeam = newTeam as unknown as PopulatedTeam;
+
       const transformedTeam = {
-        id: newTeam._id,
-        name: newTeam.name,
-        tag: newTeam.tag,
-        logo: newTeam.logo,
-        game: newTeam.game,
-        gameCategory: newTeam.gameCategory,
-        description: newTeam.description,
+        id: populatedTeam._id,
+        name: populatedTeam.name,
+        tag: populatedTeam.tag,
+        logo: populatedTeam.logo,
+        game: populatedTeam.game,
+        gameCategory: populatedTeam.gameCategory,
+        description: populatedTeam.description,
         createdBy: {
-          id: newTeam.createdBy._id,
-          name: newTeam.createdBy.name,
-          avatar: newTeam.createdBy.avatar,
+          id: populatedTeam.createdBy._id,
+          name: populatedTeam.createdBy.name,
+          avatar: populatedTeam.createdBy.avatar,
         },
-        members: newTeam.members.map((member) => ({
+        members: populatedTeam.members.map((member) => ({
           id: member.userId._id,
           name: member.userId.name,
           avatar: member.userId.avatar,
@@ -340,12 +370,12 @@ router.post(
           status: member.status,
           joinedAt: member.joinedAt,
         })),
-        maxMembers: newTeam.maxMembers,
-        isLookingForMembers: newTeam.isLookingForMembers,
-        requirements: newTeam.requirements,
-        socialLinks: newTeam.socialLinks,
-        stats: newTeam.stats,
-        createdAt: newTeam.createdAt,
+        maxMembers: populatedTeam.maxMembers,
+        isLookingForMembers: populatedTeam.isLookingForMembers,
+        requirements: populatedTeam.requirements,
+        socialLinks: populatedTeam.socialLinks,
+        stats: populatedTeam.stats,
+        createdAt: populatedTeam.createdAt,
       };
 
       res.status(201).json({
@@ -364,72 +394,68 @@ router.post(
 );
 
 // Update team (protected endpoint)
-router.put(
-  "/:id",
-  authenticateToken,
-  async (req: Request, res: Response) => {
-    try {
-      const userId = (req.user as any).id;
-      const teamId = req.params.id;
-      const updateData = req.body;
+router.put("/:id", authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any).id;
+    const teamId = req.params.id;
+    const updateData = req.body;
 
-      const team = await Team.findById(teamId);
-      if (!team || !team.isActive) {
-        return res.status(404).json({
-          success: false,
-          message: "Баг олдсонгүй",
-        });
-      }
-
-      // Check if user is team leader
-      if (!team.isLeader(userId)) {
-        return res.status(403).json({
-          success: false,
-          message: "Зөвхөн багийн удирдагч мэдээлэл засварлах боломжтой",
-        });
-      }
-
-      // Remove fields that shouldn't be updated directly
-      delete updateData.createdBy;
-      delete updateData.members;
-      delete updateData.stats;
-
-      // If tag is being updated, check if it's available
-      if (updateData.tag && updateData.tag !== team.tag) {
-        const existingTeam = await Team.findOne({
-          tag: updateData.tag.toUpperCase(),
-          _id: { $ne: teamId },
-        });
-        if (existingTeam) {
-          return res.status(409).json({
-            success: false,
-            message: "Энэ TAG-г аль хэдийн ашиглаж байна",
-          });
-        }
-        updateData.tag = updateData.tag.toUpperCase();
-      }
-
-      const updatedTeam = await Team.findByIdAndUpdate(teamId, updateData, {
-        new: true,
-        runValidators: true,
-      })
-        .populate("createdBy", "name avatar")
-        .populate("members.userId", "name avatar");
-
-      res.json({
-        success: true,
-        message: "Багийн мэдээлэл амжилттай шинэчлэгдлээ",
-        team: updatedTeam,
-      });
-    } catch (error) {
-      console.error("Error updating team:", error);
-      res.status(500).json({
+    const team = (await Team.findById(teamId)) as TeamWithMethods | null;
+    if (!team || !team.isActive) {
+      return res.status(404).json({
         success: false,
-        message: "Серверийн алдаа гарлаа",
+        message: "Баг олдсонгүй",
       });
     }
+
+    // Check if user is team leader
+    if (!team.isLeader(userId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Зөвхөн багийн удирдагч мэдээлэл засварлах боломжтой",
+      });
+    }
+
+    // Remove fields that shouldn't be updated directly
+    delete updateData.createdBy;
+    delete updateData.members;
+    delete updateData.stats;
+
+    // If tag is being updated, check if it's available
+    if (updateData.tag && updateData.tag !== team.tag) {
+      const existingTeam = await Team.findOne({
+        tag: updateData.tag.toUpperCase(),
+        _id: { $ne: teamId },
+      });
+      if (existingTeam) {
+        return res.status(409).json({
+          success: false,
+          message: "Энэ TAG-г аль хэдийн ашиглаж байна",
+        });
+      }
+      updateData.tag = updateData.tag.toUpperCase();
+    }
+
+    const updatedTeam = (await Team.findByIdAndUpdate(teamId, updateData, {
+      new: true,
+      runValidators: true,
+    })
+      .populate("createdBy", "name avatar")
+      .populate("members.userId", "name avatar")) as unknown as PopulatedTeam;
+
+    res.json({
+      success: true,
+      message: "Багийн мэдээлэл амжилттай шинэчлэгдлээ",
+      team: updatedTeam,
+    });
+  } catch (error) {
+    console.error("Error updating team:", error);
+    res.status(500).json({
+      success: false,
+      message: "Серверийн алдаа гарлаа",
+    });
   }
-);
+});
 
 // Invite player to team (protected endpoint)
 router.post(
@@ -448,7 +474,7 @@ router.post(
         });
       }
 
-      const team = await Team.findById(teamId);
+      const team = (await Team.findById(teamId)) as TeamWithMethods | null;
       if (!team || !team.isActive) {
         return res.status(404).json({
           success: false,
@@ -675,7 +701,7 @@ router.delete(
       const teamId = req.params.id;
       const memberId = req.params.memberId;
 
-      const team = await Team.findById(teamId);
+      const team = (await Team.findById(teamId)) as TeamWithMethods | null;
       if (!team || !team.isActive) {
         return res.status(404).json({
           success: false,
@@ -722,14 +748,15 @@ router.delete(
       if (isRemovingSelf && memberToRemove.role === "leader") {
         const otherActiveMembers = team.members.filter(
           (member) =>
-            member.userId.toString() !== memberId &&
-            member.status === "active"
+            member.userId.toString() !== memberId && member.status === "active"
         );
 
         if (otherActiveMembers.length > 0) {
           // Promote the first active member to leader
           const newLeaderIndex = team.members.findIndex(
-            (member) => member.userId.toString() === otherActiveMembers[0].userId.toString()
+            (member) =>
+              member.userId.toString() ===
+              otherActiveMembers[0].userId.toString()
           );
           team.members[newLeaderIndex].role = "leader";
 
@@ -790,7 +817,7 @@ router.delete(
       const userId = (req.user as any).id;
       const teamId = req.params.id;
 
-      const team = await Team.findById(teamId);
+      const team = (await Team.findById(teamId)) as TeamWithMethods | null;
       if (!team || !team.isActive) {
         return res.status(404).json({
           success: false,
@@ -812,7 +839,8 @@ router.delete(
 
       // Create notifications for all active members
       const activeMembers = team.members.filter(
-        (member) => member.status === "active" && member.userId.toString() !== userId
+        (member) =>
+          member.status === "active" && member.userId.toString() !== userId
       );
 
       for (const member of activeMembers) {

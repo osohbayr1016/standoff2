@@ -126,13 +126,18 @@ const playerProfileRoutes_1 = __importDefault(require("./routes/playerProfileRou
 const organizationProfileRoutes_1 = __importDefault(require("./routes/organizationProfileRoutes"));
 const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
 const notificationRoutes_1 = __importDefault(require("./routes/notificationRoutes"));
+const faceitRoutes_1 = __importDefault(require("./routes/faceitRoutes"));
+const teamRoutes_1 = __importDefault(require("./routes/teamRoutes"));
 const notificationService_1 = require("./utils/notificationService");
+const faceitSyncService_1 = __importDefault(require("./utils/faceitSyncService"));
 app.use("/api/auth", authRoutes_1.default);
 app.use("/api/users", userRoutes_1.default);
 app.use("/api/player-profiles", playerProfileRoutes_1.default);
 app.use("/api/organization-profiles", organizationProfileRoutes_1.default);
 app.use("/api/upload", uploadRoutes_1.default);
 app.use("/api", notificationRoutes_1.default);
+app.use("/api/faceit", faceitRoutes_1.default);
+app.use("/api/teams", teamRoutes_1.default);
 const messageRoutes_1 = __importStar(require("./routes/messageRoutes"));
 (0, messageRoutes_1.setSocketManager)(socketManager);
 app.use("/api", messageRoutes_1.default);
@@ -172,6 +177,13 @@ const startServer = async () => {
                 console.error("Error in notification cleanup job:", error);
             }
         }, 24 * 60 * 60 * 1000);
+        try {
+            faceitSyncService_1.default.start();
+            console.log("🎮 FACEIT sync service started");
+        }
+        catch (error) {
+            console.error("Error starting FACEIT sync service:", error);
+        }
         server.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
             console.log(`📊 Health check: http://localhost:${PORT}/health`);
@@ -179,6 +191,7 @@ const startServer = async () => {
             console.log(`🔐 OAuth: Google & Facebook enabled`);
             console.log(`🔌 WebSocket: Real-time chat enabled`);
             console.log(`🧹 Notification cleanup: Every 24 hours (7+ days old)`);
+            console.log(`🎮 FACEIT sync: Every 30 minutes for linked CS2 players`);
             console.log(`🌐 Server bound to 0.0.0.0:${PORT}`);
         });
     }

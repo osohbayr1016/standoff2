@@ -122,6 +122,7 @@ import organizationProfileRoutes from "./routes/organizationProfileRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import faceitRoutes from "./routes/faceitRoutes";
+import teamRoutes from "./routes/teamRoutes";
 import { NotificationService } from "./utils/notificationService";
 import faceitSyncService from "./utils/faceitSyncService";
 
@@ -133,6 +134,7 @@ app.use("/api/organization-profiles", organizationProfileRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api", notificationRoutes);
 app.use("/api/faceit", faceitRoutes);
+app.use("/api/teams", teamRoutes);
 
 // Import and set up message routes after socket manager is initialized
 import messageRoutes, { setSocketManager } from "./routes/messageRoutes";
