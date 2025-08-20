@@ -5,22 +5,26 @@ A Node.js/Express backend API for the E-Sport Connection platform, built with Ty
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - MongoDB Atlas account
 - npm or yarn
 
 ### Installation
+
 ```bash
 cd backend
 npm install
 ```
 
 ### Development
+
 ```bash
 npm run dev
 ```
 
 ### Production Build
+
 ```bash
 npm run build
 npm start
@@ -71,11 +75,13 @@ The backend has been fixed and is ready for production deployment. All deploymen
 ### Quick Deployment
 
 1. **Run deployment script:**
+
 ```bash
 ./deploy-production.sh
 ```
 
 2. **Push to GitHub:**
+
 ```bash
 git add .
 git commit -m "Fix production deployment issues"
@@ -83,11 +89,13 @@ git push origin main
 ```
 
 3. **Deploy to Render:**
+
 - Go to Render Dashboard
 - Select your backend service
 - Click "Deploy latest commit"
 
 4. **Verify deployment:**
+
 ```bash
 curl https://your-app.onrender.com/health
 curl https://your-app.onrender.com/api/test-cors
@@ -102,17 +110,20 @@ curl https://your-app.onrender.com/api/test-cors
 ## 📊 API Endpoints
 
 ### Health & Status
+
 - `GET /health` - Health check
 - `GET /api/test-cors` - CORS test
 - `GET /api/v1` - API version info
 
 ### Authentication
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `GET /api/auth/google` - Google OAuth
 - `GET /api/auth/facebook` - Facebook OAuth
 
 ### Users & Profiles
+
 - `GET /api/users` - Get users
 - `GET /api/users/:id` - Get user by ID
 - `PUT /api/users/:id` - Update user
@@ -120,6 +131,7 @@ curl https://your-app.onrender.com/api/test-cors
 - `POST /api/player-profiles` - Create player profile
 
 ### Teams
+
 - `GET /api/teams` - Get teams
 - `POST /api/teams/create` - Create team
 - `GET /api/teams/:id` - Get team details
@@ -128,6 +140,7 @@ curl https://your-app.onrender.com/api/test-cors
 - `POST /api/teams/:id/respond` - Respond to invitation
 
 ### Real-time Features
+
 - WebSocket connection for chat
 - Real-time notifications
 - Live team updates
@@ -135,12 +148,14 @@ curl https://your-app.onrender.com/api/test-cors
 ## 🛠️ Development
 
 ### Scripts
+
 - `npm run dev` - Start development server with nodemon
 - `npm run build` - Build TypeScript to JavaScript
 - `npm start` - Start production server
 - `npm run migrate` - Run database migrations
 
 ### Project Structure
+
 ```
 src/
 ├── config/          # Configuration files
@@ -156,12 +171,15 @@ src/
 ## 🔍 Monitoring
 
 ### Health Checks
+
 - Application health: `/health`
 - CORS functionality: `/api/test-cors`
 - Database connection: Monitored in logs
 
 ### Logs
+
 Monitor these in production logs:
+
 - ✅ MongoDB connection successful
 - ✅ Server running on port XXXX
 - ✅ FACEIT sync service status
@@ -172,12 +190,14 @@ Monitor these in production logs:
 ### Common Issues
 
 **Build fails:**
+
 ```bash
 npm run build 2>&1
 # Check for TypeScript errors
 ```
 
 **Server won't start:**
+
 ```bash
 # Check if port is in use
 lsof -ti:8000 | xargs kill -9
@@ -185,17 +205,20 @@ npm start
 ```
 
 **Database connection fails:**
+
 - Verify MONGODB_URI is correct
 - Check MongoDB Atlas network access
 - Ensure database exists
 
 **CORS errors:**
+
 - Verify FRONTEND_URL is correct
 - Check allowed origins in CORS configuration
 
 ## 📞 Support
 
 For deployment issues:
+
 1. Check [Production Deployment Guide](PRODUCTION_DEPLOYMENT_GUIDE.md)
 2. Review [Deployment Fixes Summary](DEPLOYMENT_FIXES_SUMMARY.md)
 3. Check Render deployment logs
@@ -209,4 +232,4 @@ This project is part of the E-Sport Connection platform.
 
 **Last Updated**: January 2024  
 **Status**: ✅ Production Ready  
-**Version**: 1.0.0 
+**Version**: 1.0.0

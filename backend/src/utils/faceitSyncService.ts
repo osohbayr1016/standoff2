@@ -1,7 +1,16 @@
 import PlayerProfile from "../models/PlayerProfile";
 import faceitService from "./faceitService";
-const cron = require("node-cron");
-import * as NodeCron from "node-cron";
+
+// Optional node-cron import - only used if available
+let cron: any = null;
+let NodeCron: any = null;
+
+try {
+  cron = require("node-cron");
+  NodeCron = require("node-cron");
+} catch (error) {
+  console.log("⚠️  node-cron not available - FACEIT sync will be disabled");
+}
 
 class FaceitSyncService {
   private syncInterval: NodeJS.Timeout | null = null;
@@ -13,6 +22,11 @@ class FaceitSyncService {
   start() {
     if (!faceitService.isServiceEnabled()) {
       console.log("🔄 FACEIT sync service disabled (no API key configured)");
+      return;
+    }
+
+    if (!cron) {
+      console.log("🔄 FACEIT sync service disabled (node-cron not available)");
       return;
     }
 

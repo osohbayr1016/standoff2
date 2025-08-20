@@ -183,7 +183,7 @@ const startServer = async () => {
             console.log("🎮 FACEIT sync service started");
         }
         catch (error) {
-            console.error("Error starting FACEIT sync service:", error);
+            console.log("🔄 FACEIT sync service disabled (optional feature)");
         }
         server.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);

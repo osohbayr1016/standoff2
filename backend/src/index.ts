@@ -189,12 +189,12 @@ const startServer = async () => {
       }
     }, 24 * 60 * 60 * 1000); // 24 hours
 
-    // Start FACEIT sync service (runs every 30 minutes)
+    // Start FACEIT sync service (runs every 30 minutes) - optional
     try {
       faceitSyncService.start();
       console.log("🎮 FACEIT sync service started");
     } catch (error) {
-      console.error("Error starting FACEIT sync service:", error);
+      console.log("🔄 FACEIT sync service disabled (optional feature)");
     }
 
     // Listen on the specified port

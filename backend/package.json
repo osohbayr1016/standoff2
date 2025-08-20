@@ -23,6 +23,7 @@
   "license": "ISC",
   "description": "Backend API for e-sport connection application",
   "dependencies": {
+    "@types/axios": "^0.9.36",
     "axios": "^1.11.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.7.0",

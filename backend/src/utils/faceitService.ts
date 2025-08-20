@@ -1,5 +1,13 @@
-const axios = require("axios");
-import { AxiosResponse } from "axios";
+// Optional axios import - only used if FACEIT_API_KEY is configured
+let axios: any = null;
+let AxiosResponse: any = null;
+
+try {
+  axios = require("axios");
+  AxiosResponse = require("axios").AxiosResponse;
+} catch (error) {
+  console.log("⚠️  Axios not available - FACEIT features will be disabled");
+}
 
 const FACEIT_BASE_URL = "https://open.faceit.com/data/v4";
 const FACEIT_API_KEY = process.env.FACEIT_API_KEY;
@@ -74,12 +82,19 @@ class FaceitService {
   constructor() {
     this.apiKey = FACEIT_API_KEY || null;
     this.baseURL = FACEIT_BASE_URL;
-    this.isEnabled = !!FACEIT_API_KEY;
+    this.isEnabled = !!FACEIT_API_KEY && !!axios;
 
     if (!this.isEnabled) {
-      console.warn(
-        "⚠️  FACEIT_API_KEY is not configured. FACEIT features will be disabled."
-      );
+      if (!FACEIT_API_KEY) {
+        console.warn(
+          "⚠️  FACEIT_API_KEY is not configured. FACEIT features will be disabled."
+        );
+      }
+      if (!axios) {
+        console.warn(
+          "⚠️  Axios is not available. FACEIT features will be disabled."
+        );
+      }
     } else {
       console.log("✅ FACEIT API integration enabled");
     }
