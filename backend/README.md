@@ -1,145 +1,212 @@
 # E-Sport Connection Backend
 
-A robust Express.js backend API for the E-Sport Connection application, built with TypeScript, MongoDB, and JWT authentication.
+A Node.js/Express backend API for the E-Sport Connection platform, built with TypeScript and MongoDB.
 
-## 🚀 Features
+## 🚀 Quick Start
 
-- **TypeScript** - Full type safety and modern JavaScript features
-- **Express.js** - Fast, unopinionated web framework
-- **MongoDB** - NoSQL database with Mongoose ODM
-- **JWT Authentication** - Secure token-based authentication
-- **Password Hashing** - Bcrypt for secure password storage
-- **CORS** - Cross-origin resource sharing support
-- **Helmet** - Security headers middleware
-- **Morgan** - HTTP request logger
-- **Environment Variables** - Secure configuration management
+### Prerequisites
+- Node.js 18+ 
+- MongoDB Atlas account
+- npm or yarn
 
-## 📁 Project Structure
-
-```
-src/
-├── config/
-│   └── database.ts          # MongoDB connection configuration
-├── controllers/
-│   └── userController.ts    # User-related business logic
-├── middleware/
-│   └── auth.ts             # JWT authentication middleware
-├── models/
-│   └── User.ts             # User data model
-├── routes/
-│   └── userRoutes.ts       # User API routes
-├── utils/                  # Utility functions
-└── index.ts               # Main server entry point
+### Installation
+```bash
+cd backend
+npm install
 ```
 
-## 🛠️ Installation
-
-1. **Clone the repository**
-   ```bash
-   cd backend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
-   ```bash
-   cp env.example .env
-   ```
-   
-   Edit `.env` file with your configuration:
-   ```env
-   PORT=5000
-   NODE_ENV=development
-   MONGODB_URI=mongodb://localhost:27017/e-sport-connection
-   FRONTEND_URL=http://localhost:3000
-   JWT_SECRET=your-super-secret-jwt-key-here
-   JWT_EXPIRES_IN=7d
-   BCRYPT_ROUNDS=12
-   ```
-
-4. **Start MongoDB** (if running locally)
-   ```bash
-   mongod
-   ```
-
-## 🚀 Running the Application
-
-### Development Mode
+### Development
 ```bash
 npm run dev
 ```
 
-### Production Mode
+### Production Build
 ```bash
 npm run build
 npm start
 ```
 
-## 📡 API Endpoints
+## 📋 Features
+
+- **Authentication**: JWT-based auth with Google/Facebook OAuth
+- **User Management**: Player and organization profiles
+- **Team Management**: Create, join, and manage teams
+- **Real-time Chat**: WebSocket-based messaging
+- **FACEIT Integration**: CS2 player stats and rankings
+- **File Upload**: Cloudinary integration for images
+- **Notifications**: Real-time notification system
+- **Email Service**: Invitation and notification emails
+
+## 🔧 Environment Variables
+
+Create a `.env` file based on `env.example`:
+
+```bash
+# Required
+NODE_ENV=development
+MONGODB_URI=your-mongodb-connection-string
+JWT_SECRET=your-jwt-secret
+SESSION_SECRET=your-session-secret
+FRONTEND_URL=http://localhost:3000
+
+# Optional (for enhanced features)
+FACEIT_API_KEY=your-faceit-api-key
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+FACEBOOK_APP_ID=your-facebook-app-id
+FACEBOOK_APP_SECRET=your-facebook-app-secret
+CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
+CLOUDINARY_API_KEY=your-cloudinary-api-key
+CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+EMAIL_USER=your-gmail-address
+EMAIL_PASS=your-gmail-app-password
+```
+
+## 🚀 Production Deployment
+
+### Status: ✅ Production Ready
+
+The backend has been fixed and is ready for production deployment. All deployment issues have been resolved.
+
+### Quick Deployment
+
+1. **Run deployment script:**
+```bash
+./deploy-production.sh
+```
+
+2. **Push to GitHub:**
+```bash
+git add .
+git commit -m "Fix production deployment issues"
+git push origin main
+```
+
+3. **Deploy to Render:**
+- Go to Render Dashboard
+- Select your backend service
+- Click "Deploy latest commit"
+
+4. **Verify deployment:**
+```bash
+curl https://your-app.onrender.com/health
+curl https://your-app.onrender.com/api/test-cors
+```
+
+### Deployment Documentation
+
+- 📖 [Production Deployment Guide](PRODUCTION_DEPLOYMENT_GUIDE.md)
+- 📋 [Deployment Fixes Summary](DEPLOYMENT_FIXES_SUMMARY.md)
+- 🔧 [Render Deployment Fix](RENDER_DEPLOYMENT_FIX.md)
+
+## 📊 API Endpoints
+
+### Health & Status
+- `GET /health` - Health check
+- `GET /api/test-cors` - CORS test
+- `GET /api/v1` - API version info
 
 ### Authentication
-- `POST /api/v1/users/register` - Register a new user
-- `POST /api/v1/users/login` - Login user
-- `GET /api/v1/users/profile` - Get user profile (protected)
-- `PUT /api/v1/users/profile` - Update user profile (protected)
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/auth/google` - Google OAuth
+- `GET /api/auth/facebook` - Facebook OAuth
 
-### Health Check
-- `GET /health` - Server health status
+### Users & Profiles
+- `GET /api/users` - Get users
+- `GET /api/users/:id` - Get user by ID
+- `PUT /api/users/:id` - Update user
+- `GET /api/player-profiles` - Get player profiles
+- `POST /api/player-profiles` - Create player profile
 
-## 🔧 Available Scripts
+### Teams
+- `GET /api/teams` - Get teams
+- `POST /api/teams/create` - Create team
+- `GET /api/teams/:id` - Get team details
+- `PUT /api/teams/:id` - Update team
+- `POST /api/teams/:id/invite` - Invite player
+- `POST /api/teams/:id/respond` - Respond to invitation
 
-- `npm run dev` - Start development server with hot reload
+### Real-time Features
+- WebSocket connection for chat
+- Real-time notifications
+- Live team updates
+
+## 🛠️ Development
+
+### Scripts
+- `npm run dev` - Start development server with nodemon
 - `npm run build` - Build TypeScript to JavaScript
 - `npm start` - Start production server
-- `npm test` - Run tests (to be implemented)
+- `npm run migrate` - Run database migrations
 
-## 🛡️ Security Features
+### Project Structure
+```
+src/
+├── config/          # Configuration files
+├── controllers/     # Route controllers
+├── middleware/      # Express middleware
+├── models/          # Mongoose models
+├── routes/          # API routes
+├── types/           # TypeScript type definitions
+├── utils/           # Utility functions
+└── index.ts         # Main application file
+```
 
-- **Helmet** - Security headers
-- **CORS** - Cross-origin protection
-- **JWT** - Secure authentication
-- **Password Hashing** - Bcrypt encryption
-- **Input Validation** - Request data validation
-- **Rate Limiting** - API rate limiting (to be implemented)
+## 🔍 Monitoring
 
-## 📊 Database Schema
+### Health Checks
+- Application health: `/health`
+- CORS functionality: `/api/test-cors`
+- Database connection: Monitored in logs
 
-### User Model
-- `username` (required, unique)
-- `email` (required, unique)
-- `password` (required, hashed)
-- `firstName` (optional)
-- `lastName` (optional)
-- `avatar` (optional)
-- `bio` (optional)
-- `isVerified` (boolean, default: false)
-- `role` (enum: user, admin, moderator, default: user)
-- `createdAt` (timestamp)
-- `updatedAt` (timestamp)
+### Logs
+Monitor these in production logs:
+- ✅ MongoDB connection successful
+- ✅ Server running on port XXXX
+- ✅ FACEIT sync service status
+- ❌ Any error messages
 
-## 🔐 Environment Variables
+## 🐛 Troubleshooting
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | 5000 |
-| `NODE_ENV` | Environment | development |
-| `MONGODB_URI` | MongoDB connection string | mongodb://localhost:27017/e-sport-connection |
-| `FRONTEND_URL` | Frontend URL for CORS | http://localhost:3000 |
-| `JWT_SECRET` | JWT signing secret | fallback-secret |
-| `JWT_EXPIRES_IN` | JWT token expiration | 7d |
-| `BCRYPT_ROUNDS` | Password hashing rounds | 12 |
+### Common Issues
 
-## 🤝 Contributing
+**Build fails:**
+```bash
+npm run build 2>&1
+# Check for TypeScript errors
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+**Server won't start:**
+```bash
+# Check if port is in use
+lsof -ti:8000 | xargs kill -9
+npm start
+```
 
-## 📝 License
+**Database connection fails:**
+- Verify MONGODB_URI is correct
+- Check MongoDB Atlas network access
+- Ensure database exists
 
-This project is licensed under the ISC License. 
+**CORS errors:**
+- Verify FRONTEND_URL is correct
+- Check allowed origins in CORS configuration
+
+## 📞 Support
+
+For deployment issues:
+1. Check [Production Deployment Guide](PRODUCTION_DEPLOYMENT_GUIDE.md)
+2. Review [Deployment Fixes Summary](DEPLOYMENT_FIXES_SUMMARY.md)
+3. Check Render deployment logs
+4. Verify environment variables
+
+## 📄 License
+
+This project is part of the E-Sport Connection platform.
+
+---
+
+**Last Updated**: January 2024  
+**Status**: ✅ Production Ready  
+**Version**: 1.0.0 

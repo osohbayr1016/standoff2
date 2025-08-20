@@ -140,7 +140,6 @@ const playerProfileSchema = new Schema<IPlayerProfile>(
     faceitData: {
       faceitId: {
         type: String,
-        unique: true,
         sparse: true,
       },
       nickname: String,
