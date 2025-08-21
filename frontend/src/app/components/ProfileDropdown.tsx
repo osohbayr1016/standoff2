@@ -3,87 +3,29 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
-import {
-  User,
-  Settings,
-  Users,
-  UserPlus,
-  ChevronDown,
-  Eye,
-  UserMinus,
-} from "lucide-react";
+import { User, Settings, UserPlus, ChevronDown, Crown } from "lucide-react";
+import { Clan } from "../../types/clan";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-interface Team {
-  id: string;
-  name: string;
-  tag: string;
-  logo: string;
-  game: string;
-  gameIcon: string;
-  createdBy: string;
-  members: TeamMember[];
-  createdAt: string;
-}
-
-interface TeamMember {
-  id: string;
-  name: string;
-  avatar: string;
-  status: "pending" | "accepted" | "declined";
-  invitedAt: string;
-}
-
 interface ProfileDropdownProps {
-  onCreateTeam: () => void;
   onInviteFriend: () => void;
+  onCreateClan?: () => void;
+  onViewMyClan?: () => void;
+  userClan?: Clan | null;
 }
 
 export default function ProfileDropdown({
-  onCreateTeam,
   onInviteFriend,
+  onCreateClan,
+  onViewMyClan,
+  userClan,
 }: ProfileDropdownProps) {
   const { user, hasProfile } = useAuth();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [userTeam, setUserTeam] = useState<Team | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Load user team from localStorage
-  useEffect(() => {
-    const loadUserTeam = () => {
-      const savedTeam = localStorage.getItem("userTeam");
-      if (savedTeam) {
-        try {
-          setUserTeam(JSON.parse(savedTeam));
-        } catch (error) {
-          console.error("Error parsing saved team:", error);
-          setUserTeam(null);
-        }
-      } else {
-        setUserTeam(null);
-      }
-    };
-
-    loadUserTeam();
-
-    // Listen for localStorage changes
-    const handleStorageChange = () => {
-      loadUserTeam();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    // Also listen for manual updates (custom event)
-    window.addEventListener("teamUpdated", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("teamUpdated", handleStorageChange);
-    };
-  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -108,54 +50,6 @@ export default function ProfileDropdown({
       callback();
     }
   };
-
-  const handleViewTeam = () => {
-    handleItemClick();
-    // Navigate to settings page with team tab active
-    router.push("/settings#team");
-  };
-
-  const handleLeaveTeam = () => {
-    if (userTeam && user) {
-      // Check if user is team owner
-      if (userTeam.createdBy === user.id) {
-        alert(
-          "Та багийн дарга учир багийг орхих боломжгүй. Эхлээд багаа устгана уу."
-        );
-        return;
-      }
-
-      // Remove user from team
-      const updatedTeam = {
-        ...userTeam,
-        members: userTeam.members.filter((member) => member.id !== user.id),
-      };
-
-      // If no members left, delete the team
-      if (updatedTeam.members.length === 0) {
-        localStorage.removeItem("userTeam");
-        setUserTeam(null);
-      } else {
-        localStorage.setItem("userTeam", JSON.stringify(updatedTeam));
-        setUserTeam(null); // User is no longer part of the team
-      }
-
-      // Trigger update event
-      window.dispatchEvent(new Event("teamUpdated"));
-    }
-    handleItemClick();
-  };
-
-  // Check if user is in a team
-  const isInTeam =
-    userTeam &&
-    user &&
-    userTeam.members.some(
-      (member) => member.id === user.id && member.status === "accepted"
-    );
-
-  // Check if user is team owner
-  const isTeamOwner = userTeam && user && userTeam.createdBy === user.id;
 
   const getProfileLink = () => {
     if (user?.role === "PLAYER" && hasProfile) return "/profile";
@@ -268,55 +162,6 @@ export default function ProfileDropdown({
                 </motion.button>
               </Link>
 
-              {/* Team Management - Only for players */}
-              {user.role === "PLAYER" && (
-                <>
-                  {isInTeam ? (
-                    <>
-                      {/* View Team */}
-                      <motion.button
-                        onClick={handleViewTeam}
-                        whileHover={{
-                          backgroundColor: "rgba(124, 58, 237, 0.1)",
-                        }}
-                        className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span className="text-sm font-medium">Баг үзэх</span>
-                      </motion.button>
-
-                      {/* Leave Team - Only if not team owner */}
-                      {!isTeamOwner && (
-                        <motion.button
-                          onClick={handleLeaveTeam}
-                          whileHover={{
-                            backgroundColor: "rgba(239, 68, 68, 0.1)",
-                          }}
-                          className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200"
-                        >
-                          <UserMinus className="w-4 h-4" />
-                          <span className="text-sm font-medium">
-                            Багаас гарах
-                          </span>
-                        </motion.button>
-                      )}
-                    </>
-                  ) : (
-                    /* Create Team */
-                    <motion.button
-                      onClick={() => handleItemClick(onCreateTeam)}
-                      whileHover={{
-                        backgroundColor: "rgba(124, 58, 237, 0.1)",
-                      }}
-                      className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
-                    >
-                      <Users className="w-4 h-4" />
-                      <span className="text-sm font-medium">Баг үүсгэх</span>
-                    </motion.button>
-                  )}
-                </>
-              )}
-
               {/* Invite Friend */}
               <motion.button
                 onClick={() => handleItemClick(onInviteFriend)}
@@ -326,6 +171,29 @@ export default function ProfileDropdown({
                 <UserPlus className="w-4 h-4" />
                 <span className="text-sm font-medium">Найзаа урих</span>
               </motion.button>
+
+              {/* Clan Management */}
+              {userClan ? (
+                <motion.button
+                  onClick={() => handleItemClick(onViewMyClan)}
+                  whileHover={{ backgroundColor: "rgba(124, 58, 237, 0.1)" }}
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                >
+                  <Crown className="w-4 h-4" />
+                  <span className="text-sm font-medium">Миний Клан</span>
+                </motion.button>
+              ) : (
+                onCreateClan && (
+                  <motion.button
+                    onClick={() => handleItemClick(onCreateClan)}
+                    whileHover={{ backgroundColor: "rgba(124, 58, 237, 0.1)" }}
+                    className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                  >
+                    <Crown className="w-4 h-4" />
+                    <span className="text-sm font-medium">Клан үүсгэх</span>
+                  </motion.button>
+                )
+              )}
             </div>
           </motion.div>
         )}

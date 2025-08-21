@@ -31,7 +31,6 @@ router.get("/profiles", async (req: Request, res: Response) => {
       preferredRoles: profile.preferredRoles,
       availability: profile.availability,
       languages: profile.languages,
-      faceitData: profile.faceitData,
     }));
 
     res.json({ profiles: transformedProfiles });
@@ -74,7 +73,6 @@ router.get("/profiles/:id", async (req: Request, res: Response) => {
       preferredRoles: profile.preferredRoles,
       availability: profile.availability,
       languages: profile.languages,
-      faceitData: profile.faceitData,
     };
 
     res.json({ profile: transformedProfile });

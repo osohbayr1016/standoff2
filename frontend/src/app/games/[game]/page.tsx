@@ -10,6 +10,7 @@ import ChatModal from "../../components/ChatModal";
 import PlayerCard from "../../components/PlayerCard";
 import { useAuth } from "../../contexts/AuthContext";
 import { API_ENDPOINTS } from "@/config/api";
+import { Clan } from "../../../types/clan";
 
 interface Player {
   id: string;
@@ -215,11 +216,8 @@ export default function GamePage() {
   const [loading, setLoading] = useState(true);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const [userTeam, setUserTeam] = useState<Team | null>(null);
-  const [playersInTeams, setPlayersInTeams] = useState<string[]>([]);
-  const [playersTeamTags, setPlayersTeamTags] = useState<
-    Record<string, string>
-  >({});
+  const [userClan, setUserClan] = useState<Clan | null>(null);
+  const [invitingPlayer, setInvitingPlayer] = useState<string | null>(null);
 
   const game = gameInfo[gameId as keyof typeof gameInfo];
 
@@ -239,124 +237,94 @@ export default function GamePage() {
     setSelectedPlayer(null);
   };
 
-  // Load user team from localStorage
+  // Load user clan from API
   useEffect(() => {
-    const loadUserTeam = () => {
-      const savedTeam = localStorage.getItem("userTeam");
-      if (savedTeam) {
+    const fetchUserClan = async () => {
+      if (user) {
         try {
-          const team = JSON.parse(savedTeam);
-          setUserTeam(team);
-
-          // Extract player IDs who are in teams
-          const memberIds = team.members.map((member: TeamMember) => member.id);
-          setPlayersInTeams(memberIds);
-
-          // Extract team tags for players who have accepted invitations
-          const teamTags: Record<string, string> = {};
-          team.members.forEach((member: TeamMember) => {
-            if (member.status === "accepted") {
-              teamTags[member.id] = team.tag;
-            }
+          const response = await fetch(API_ENDPOINTS.CLANS.USER_CLAN, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            credentials: "include",
           });
-          setPlayersTeamTags(teamTags);
+          if (response.ok) {
+            const data = await response.json();
+            setUserClan(data.clan || null);
+          }
         } catch (error) {
-          console.error("Error parsing saved team:", error);
-          setUserTeam(null);
-          setPlayersInTeams([]);
-          setPlayersTeamTags({});
+          console.error("Error fetching user clan:", error);
         }
       } else {
-        setUserTeam(null);
-        setPlayersInTeams([]);
-        setPlayersTeamTags({});
+        setUserClan(null);
       }
     };
 
-    loadUserTeam();
+    fetchUserClan();
+  }, [user]);
 
-    // Listen for team updates
-    const handleTeamUpdate = () => {
-      loadUserTeam();
-    };
-
-    window.addEventListener("teamUpdated", handleTeamUpdate);
-    window.addEventListener("storage", handleTeamUpdate);
-
-    return () => {
-      window.removeEventListener("teamUpdated", handleTeamUpdate);
-      window.removeEventListener("storage", handleTeamUpdate);
-    };
-  }, []);
-
-  // Handle team invitation
-  const handleInviteToTeam = (player: Player) => {
-    if (!userTeam || !user) {
-      alert("Та багт орж байхгүй эсвэл нэвтрээгүй байна");
+  // Handle clan invitation
+  const handleInviteToClan = async (player: Player) => {
+    if (!userClan || !user) {
+      alert("Та кланд орж байхгүй эсвэл нэвтрээгүй байна");
       return;
     }
 
-    // Check if user is team owner
-    if (userTeam.createdBy !== user.id) {
-      alert("Зөвхөн багийн дарга л тоглогч урих боломжтой");
+    // Check if user is clan leader
+    if (userClan.leader?._id !== user.id) {
+      alert("Зөвхөн кланы дарга л тоглогч урих боломжтой");
       return;
     }
 
-    // Check if player is already in the team
-    const isAlreadyInTeam = userTeam.members.some(
+    // Check if player is already in the clan
+    const isAlreadyInClan = userClan.members?.some(
       (member) => member.id === player.id
     );
-    if (isAlreadyInTeam) {
-      alert("Энэ тоглогч аль хэдийн таны багт байна");
+    if (isAlreadyInClan) {
+      alert("Энэ тоглогч аль хэдийн таны кланд байна");
       return;
     }
 
-    // Check if player is in another team
-    if (playersInTeams.includes(player.id)) {
-      alert("Энэ тоглогч өөр багт орсон байна");
-      return;
+    try {
+      setInvitingPlayer(player.id);
+      const response = await fetch(API_ENDPOINTS.CLANS.INVITE(userClan._id), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          playerId: player.id,
+        }),
+      });
+
+      if (response.ok) {
+        alert(`${player.name}-г таны кланд урилалав!`);
+        // Refresh clan data
+        const clanResponse = await fetch(API_ENDPOINTS.CLANS.USER_CLAN, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          credentials: "include",
+        });
+        if (clanResponse.ok) {
+          const data = await clanResponse.json();
+          setUserClan(data.clan || null);
+        }
+      } else {
+        const error = await response.json();
+        alert(error.message || "Урилга илгээхэд алдаа гарлаа");
+      }
+    } catch (error) {
+      console.error("Error inviting player:", error);
+      alert("Урилга илгээхэд алдаа гарлаа");
+    } finally {
+      setInvitingPlayer(null);
     }
-
-    // Add player to team with pending status
-    const newMember: TeamMember = {
-      id: player.id,
-      name: player.name,
-      avatar: player.avatar || "/default-avatar.png",
-      status: "pending",
-      invitedAt: new Date().toISOString(),
-    };
-
-    const updatedTeam = {
-      ...userTeam,
-      members: [...userTeam.members, newMember],
-    };
-
-    // Update localStorage and state
-    localStorage.setItem("userTeam", JSON.stringify(updatedTeam));
-    setUserTeam(updatedTeam);
-    setPlayersInTeams([...playersInTeams, player.id]);
-
-    // Trigger update event
-    window.dispatchEvent(new Event("teamUpdated"));
-
-    alert(`${player.name}-г таны багт урилалав!`);
   };
 
-  // Check if user can invite players (is team owner)
-  const canInvitePlayers = userTeam && user && userTeam.createdBy === user.id;
-
-  // Check if a player is already in a team or invited
-  const isPlayerInTeamOrInvited = (playerId: string): boolean => {
-    // Check if player is in an accepted team (has team tag)
-    if (playersTeamTags[playerId]) {
-      return true;
-    }
-
-    // Check if player has pending invitation in current user's team
-    return userTeam
-      ? userTeam.members.some((member) => member.id === playerId)
-      : false;
-  };
+  // Check if user can invite players (is clan leader)
+  const canInvitePlayers = userClan && user && userClan.leader?._id === user.id;
 
   // Fetch players from API
   useEffect(() => {
@@ -585,11 +553,10 @@ export default function GamePage() {
                 key={player.id}
                 player={player}
                 index={index}
-                canInvitePlayers={!!canInvitePlayers}
-                isPlayerInTeamOrInvited={isPlayerInTeamOrInvited}
-                playersTeamTags={playersTeamTags}
-                onInviteToTeam={handleInviteToTeam}
                 onOpenChat={handleOpenChat}
+                canInviteToClan={!!canInvitePlayers}
+                onInviteToClan={handleInviteToClan}
+                invitingPlayer={invitingPlayer}
               />
             ))}
           </motion.div>

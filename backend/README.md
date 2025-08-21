@@ -36,7 +36,7 @@ npm start
 - **User Management**: Player and organization profiles
 - **Team Management**: Create, join, and manage teams
 - **Real-time Chat**: WebSocket-based messaging
-- **FACEIT Integration**: CS2 player stats and rankings
+
 - **File Upload**: Cloudinary integration for images
 - **Notifications**: Real-time notification system
 - **Email Service**: Invitation and notification emails
@@ -54,7 +54,6 @@ SESSION_SECRET=your-session-secret
 FRONTEND_URL=http://localhost:3000
 
 # Optional (for enhanced features)
-FACEIT_API_KEY=your-faceit-api-key
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 FACEBOOK_APP_ID=your-facebook-app-id

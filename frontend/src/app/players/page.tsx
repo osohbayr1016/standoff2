@@ -111,6 +111,7 @@ export default function PlayersPage() {
     "PC"
   );
   const [loading, setLoading] = useState(true);
+  const [gameDataState, setGameDataState] = useState(gameData);
 
   useEffect(() => {
     const fetchPlayers = async () => {
@@ -151,6 +152,8 @@ export default function PlayersPage() {
         game.playerCount = count;
       });
     });
+
+    setGameDataState(updatedGameData);
   }, [players]);
 
   const getCategoryIcon = (category: "PC" | "Mobile") => {
@@ -247,7 +250,7 @@ export default function PlayersPage() {
                 : "Mobile Тоглоомууд"}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {gameData[selectedCategory].map((game, index) => (
+              {gameDataState[selectedCategory].map((game, index) => (
                 <motion.div
                   key={game.id}
                   initial={{ opacity: 0, y: 20 }}

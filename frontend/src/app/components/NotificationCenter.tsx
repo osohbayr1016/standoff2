@@ -2,10 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, X, Trash2, MessageCircle } from "lucide-react";
+import {
+  Bell,
+  X,
+  Trash2,
+  MessageCircle,
+  Crown,
+  Check,
+  Ban,
+} from "lucide-react";
 import { useNotifications } from "../hooks/useNotifications";
 import { useAuth } from "../contexts/AuthContext";
 import Image from "next/image";
+import Link from "next/link";
+import { API_ENDPOINTS } from "../../config/api";
 
 const NotificationCenter: React.FC = () => {
   const { getToken } = useAuth();
@@ -19,6 +29,9 @@ const NotificationCenter: React.FC = () => {
     deleteNotification,
   } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const [processingNotification, setProcessingNotification] = useState<
+    string | null
+  >(null);
 
   // Fetch notifications when component mounts
   useEffect(() => {
@@ -36,6 +49,60 @@ const NotificationCenter: React.FC = () => {
       await markAsSeen(notification._id);
     }
     // You can add navigation logic here if needed
+  };
+
+  const handleClanInvitation = async (
+    notificationId: string,
+    clanId: string,
+    action: "accept" | "decline"
+  ) => {
+    const token = getToken();
+    if (!token) {
+      alert("Та нэвтэрч орох хэрэгтэй");
+      return;
+    }
+
+    try {
+      setProcessingNotification(notificationId);
+
+      const endpoint =
+        action === "accept"
+          ? API_ENDPOINTS.CLANS.ACCEPT(clanId)
+          : API_ENDPOINTS.CLANS.DECLINE(clanId);
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        // Mark notification as seen and refresh notifications
+        await markAsSeen(notificationId);
+        await fetchNotifications();
+
+        const actionText = action === "accept" ? "хүлээн авлаа" : "татгалзлаа";
+        alert(`Кланы урилгыг амжилттай ${actionText}`);
+      } else {
+        const error = await response.json();
+        alert(
+          error.message ||
+            `Урилгыг ${
+              action === "accept" ? "хүлээн авахад" : "татгалзахад"
+            } алдаа гарлаа`
+        );
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing clan invitation:`, error);
+      alert(
+        `Урилгыг ${
+          action === "accept" ? "хүлээн авахад" : "татгалзахад"
+        } алдаа гарлаа`
+      );
+    } finally {
+      setProcessingNotification(null);
+    }
   };
 
   const formatTime = (timestamp: string) => {
@@ -172,6 +239,62 @@ const NotificationCenter: React.FC = () => {
                           <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                             {formatTime(notification.createdAt)}
                           </p>
+
+                          {/* Clan Invitation Actions */}
+                          {notification.type === "CLAN_INVITATION" &&
+                            notification.status === "PENDING" &&
+                            notification.relatedClanId && (
+                              <div className="flex items-center space-x-2 mt-3">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (notification.relatedClanId) {
+                                      handleClanInvitation(
+                                        notification._id,
+                                        notification.relatedClanId,
+                                        "accept"
+                                      );
+                                    }
+                                  }}
+                                  disabled={
+                                    processingNotification === notification._id
+                                  }
+                                  className="flex items-center space-x-1 px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {processingNotification ===
+                                  notification._id ? (
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b border-white"></div>
+                                  ) : (
+                                    <Check size={12} />
+                                  )}
+                                  <span>Хүлээн авах</span>
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (notification.relatedClanId) {
+                                      handleClanInvitation(
+                                        notification._id,
+                                        notification.relatedClanId,
+                                        "decline"
+                                      );
+                                    }
+                                  }}
+                                  disabled={
+                                    processingNotification === notification._id
+                                  }
+                                  className="flex items-center space-x-1 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {processingNotification ===
+                                  notification._id ? (
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b border-white"></div>
+                                  ) : (
+                                    <Ban size={12} />
+                                  )}
+                                  <span>Татгалзах</span>
+                                </button>
+                              </div>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -191,6 +314,18 @@ const NotificationCenter: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* Clan Invitations Link */}
+            <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+              <Link
+                href="/clan-invitations"
+                className="flex items-center space-x-2 text-sm text-purple-600 dark:text-green-400 hover:text-purple-700 dark:hover:text-green-300 transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <Crown className="w-4 h-4" />
+                <span>Кланын урилгуудыг харах</span>
+              </Link>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

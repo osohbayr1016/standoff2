@@ -16,8 +16,6 @@ import {
   Moon,
   Check,
 } from "lucide-react";
-import TeamProfileCard from "../components/TeamProfileCard";
-import TeamSettingsModal from "../components/TeamSettingsModal";
 
 interface Team {
   id: string;
@@ -438,34 +436,6 @@ export default function SettingsPage() {
                     Хадгалах
                   </motion.button>
                 </div>
-              </div>
-            )}
-
-            {/* Team Tab */}
-            {activeTab === "team" && (
-              <div className="space-y-6">
-                {userTeam ? (
-                  <TeamProfileCard
-                    team={userTeam}
-                    isOwner={isTeamOwner || false}
-                    onRemovePlayer={handleRemovePlayer}
-                    onLeaveTeam={!isTeamOwner ? handleLeaveTeam : undefined}
-                    onTeamSettings={
-                      isTeamOwner ? handleTeamSettings : undefined
-                    }
-                  />
-                ) : (
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-                    <Users className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                      Та багт орж байхгүй байна
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-6">
-                      Баг үүсгэх эсвэл нэгдэхийн тулд профайлын цэсээс &quot;Баг
-                      үүсгэх&quot; товчийг дарна уу.
-                    </p>
-                  </div>
-                )}
               </div>
             )}
 
@@ -1424,17 +1394,6 @@ export default function SettingsPage() {
           </motion.div>
         </div>
       </div>
-
-      {/* Team Settings Modal */}
-      {userTeam && (
-        <TeamSettingsModal
-          isOpen={isTeamSettingsOpen}
-          onClose={() => setIsTeamSettingsOpen(false)}
-          team={userTeam}
-          onTeamUpdated={handleTeamUpdated}
-          onTeamDeleted={handleTeamDeleted}
-        />
-      )}
     </div>
   );
 }

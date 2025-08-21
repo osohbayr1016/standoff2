@@ -1,67 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDarkMode } from "../contexts/DarkModeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useSocket } from "../contexts/SocketContext";
-import { Sun, Moon, Menu, X, Search, Bell, User, LogOut } from "lucide-react";
+import { API_ENDPOINTS } from "../../config/api";
+import { Clan } from "../../types/clan";
+import {
+  Sun,
+  Moon,
+  Menu,
+  X,
+  Search,
+  Bell,
+  User,
+  LogOut,
+  Crown,
+} from "lucide-react";
 import Link from "next/link";
 import NotificationCenter from "./NotificationCenter";
 import ProfileDropdown from "./ProfileDropdown";
-import CreateTeamModal from "./CreateTeamModal";
 import InviteFriendModal from "./InviteFriendModal";
-
-interface Team {
-  id: string;
-  name: string;
-  tag: string;
-  logo: string;
-  game: string;
-  gameIcon: string;
-  createdBy: string;
-  members: TeamMember[];
-  createdAt: string;
-}
-
-interface TeamMember {
-  id: string;
-  name: string;
-  avatar: string;
-  status: "pending" | "accepted" | "declined";
-  invitedAt: string;
-}
+import CreateClanModal from "./CreateClanModal";
 
 export default function Navigation() {
   const { isDarkMode, toggleDarkMode, isLoaded } = useDarkMode();
   const { user, logout, hasProfile } = useAuth();
   const { isConnected } = useSocket();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
   const [isInviteFriendModalOpen, setIsInviteFriendModalOpen] = useState(false);
+  const [isCreateClanModalOpen, setIsCreateClanModalOpen] = useState(false);
+  const [userClan, setUserClan] = useState<Clan | null>(null);
 
   const navItems = [
     { name: "Нүүр", href: "/" },
     { name: "Тоглогчид", href: "/players" },
+    { name: "Кланууд", href: "/clans" },
     { name: "Тэмцээнүүд", href: "/tournaments" },
     { name: "Бидний тухай", href: "/about" },
   ];
-
-  const handleCreateTeam = () => {
-    setIsCreateTeamModalOpen(true);
-  };
 
   const handleInviteFriend = () => {
     setIsInviteFriendModalOpen(true);
   };
 
-  const handleTeamCreated = (team: Team) => {
-    // Here you would typically save the team to localStorage or send to API
-    localStorage.setItem("userTeam", JSON.stringify(team));
-
-    // Trigger update event to notify other components
-    window.dispatchEvent(new Event("teamUpdated"));
+  const handleCreateClan = () => {
+    setIsCreateClanModalOpen(true);
   };
+
+  const handleClanCreated = (clan: Clan) => {
+    setIsCreateClanModalOpen(false);
+    setUserClan(clan); // Update user's clan when created
+    console.log("Clan created:", clan);
+  };
+
+  const handleViewMyClan = () => {
+    if (userClan) {
+      window.location.href = `/clans/${userClan._id}`;
+    }
+  };
+
+  // Fetch user's clan when component mounts or user changes
+  useEffect(() => {
+    const fetchUserClan = async () => {
+      if (user) {
+        try {
+          const response = await fetch(API_ENDPOINTS.CLANS.USER_CLAN, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            credentials: "include",
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setUserClan(data.clan || null);
+          }
+        } catch (error) {
+          console.error("Error fetching user clan:", error);
+        }
+      } else {
+        setUserClan(null);
+      }
+    };
+
+    fetchUserClan();
+  }, [user]);
 
   return (
     <>
@@ -146,8 +170,10 @@ export default function Navigation() {
               {user ? (
                 <div className="flex items-center space-x-2">
                   <ProfileDropdown
-                    onCreateTeam={handleCreateTeam}
                     onInviteFriend={handleInviteFriend}
+                    onCreateClan={handleCreateClan}
+                    onViewMyClan={handleViewMyClan}
+                    userClan={userClan}
                   />
                   <motion.button
                     onClick={logout}
@@ -296,15 +322,14 @@ export default function Navigation() {
       </nav>
 
       {/* Modals - Moved outside nav for proper positioning */}
-      <CreateTeamModal
-        isOpen={isCreateTeamModalOpen}
-        onClose={() => setIsCreateTeamModalOpen(false)}
-        onTeamCreated={handleTeamCreated}
-      />
-
       <InviteFriendModal
         isOpen={isInviteFriendModalOpen}
         onClose={() => setIsInviteFriendModalOpen(false)}
+      />
+      <CreateClanModal
+        isOpen={isCreateClanModalOpen}
+        onClose={() => setIsCreateClanModalOpen(false)}
+        onClanCreated={handleClanCreated}
       />
     </>
   );

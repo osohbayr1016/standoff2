@@ -6,7 +6,7 @@ interface Notification {
   _id: string;
   title: string;
   content: string;
-  type: "MESSAGE" | "SYSTEM";
+  type: "MESSAGE" | "SYSTEM" | "CLAN_INVITATION";
   status: "PENDING" | "SEEN" | "DELETED";
   senderId: {
     _id: string;
@@ -14,6 +14,7 @@ interface Notification {
     avatar?: string;
   };
   relatedMessageId?: string;
+  relatedClanId?: string;
   createdAt: string;
 }
 

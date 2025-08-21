@@ -60,26 +60,6 @@ interface Player {
   languages?: string[];
 }
 
-interface Team {
-  id: string;
-  name: string;
-  tag: string;
-  logo: string;
-  game: string;
-  gameIcon: string;
-  createdBy: string;
-  members: TeamMember[];
-  createdAt: string;
-}
-
-interface TeamMember {
-  id: string;
-  name: string;
-  avatar: string;
-  status: "pending" | "accepted" | "declined";
-  invitedAt: string;
-}
-
 export default function PlayerDetailPage({
   params,
 }: {
@@ -90,11 +70,6 @@ export default function PlayerDetailPage({
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [userTeam, setUserTeam] = useState<Team | null>(null);
-  const [playerTeam, setPlayerTeam] = useState<{
-    tag: string;
-    name: string;
-  } | null>(null);
 
   useEffect(() => {
     console.log("🔍 PlayerDetailPage: useEffect triggered with id:", id);
@@ -136,159 +111,6 @@ export default function PlayerDetailPage({
 
     fetchPlayer();
   }, [id]);
-
-  // Load user team and check player's team status
-  useEffect(() => {
-    const loadTeamData = () => {
-      // Load current user's team
-      const savedTeam = localStorage.getItem("userTeam");
-      if (savedTeam) {
-        try {
-          const team = JSON.parse(savedTeam);
-          setUserTeam(team);
-        } catch (error) {
-          console.error("Error parsing saved team:", error);
-          setUserTeam(null);
-        }
-      } else {
-        setUserTeam(null);
-      }
-
-      // Check if current player is in any team
-      if (player) {
-        // In a real app, this would be fetched from API
-        // For now, check localStorage for teams
-        const allTeams = [];
-        const userTeamData = localStorage.getItem("userTeam");
-        if (userTeamData) {
-          allTeams.push(JSON.parse(userTeamData));
-        }
-
-        // Find team that contains this player
-        let foundTeam = null;
-        for (const team of allTeams) {
-          const member = team.members.find(
-            (m: TeamMember) => m.id === player.id && m.status === "accepted"
-          );
-          if (member) {
-            foundTeam = { tag: team.tag, name: team.name };
-            break;
-          }
-        }
-        setPlayerTeam(foundTeam);
-      }
-    };
-
-    loadTeamData();
-
-    // Listen for team updates
-    const handleTeamUpdate = () => {
-      loadTeamData();
-    };
-
-    window.addEventListener("teamUpdated", handleTeamUpdate);
-    window.addEventListener("storage", handleTeamUpdate);
-
-    return () => {
-      window.removeEventListener("teamUpdated", handleTeamUpdate);
-      window.removeEventListener("storage", handleTeamUpdate);
-    };
-  }, [player]);
-
-  // Handle team invitation
-  const handleInviteToTeam = () => {
-    if (!userTeam || !user || !player) {
-      alert("Та багт орж байхгүй эсвэл нэвтрээгүй байна");
-      return;
-    }
-
-    // Check if user is team owner
-    if (userTeam.createdBy !== user.id) {
-      alert("Зөвхөн багийн дарга л тоглогч урих боломжтой");
-      return;
-    }
-
-    // Check if player is already in the team
-    const isAlreadyInTeam = userTeam.members.some(
-      (member) => member.id === player.id
-    );
-    if (isAlreadyInTeam) {
-      alert("Энэ тоглогч аль хэдийн таны багт байна");
-      return;
-    }
-
-    // Check if player is in another team (accepted status)
-    if (playerTeam) {
-      alert("Энэ тоглогч өөр багт орсон байна");
-      return;
-    }
-
-    // Add player to team with pending status
-    const newMember: TeamMember = {
-      id: player.id,
-      name: player.name,
-      avatar: player.avatar || "/default-avatar.png",
-      status: "pending",
-      invitedAt: new Date().toISOString(),
-    };
-
-    const updatedTeam = {
-      ...userTeam,
-      members: [...userTeam.members, newMember],
-    };
-
-    // Update localStorage and state
-    localStorage.setItem("userTeam", JSON.stringify(updatedTeam));
-    setUserTeam(updatedTeam);
-
-    // Trigger update event
-    window.dispatchEvent(new Event("teamUpdated"));
-
-    alert(`${player.name}-г таны багт урилалав!`);
-  };
-
-  // Check invitation status
-  const getInvitationStatus = () => {
-    if (!userTeam || !player) return null;
-
-    const member = userTeam.members.find((m) => m.id === player.id);
-    return member ? member.status : null;
-  };
-
-  // Get button state
-  const getInviteButtonState = () => {
-    if (!userTeam || !user) return null;
-
-    if (userTeam.createdBy !== user.id) return null; // Not team owner
-
-    const invitationStatus = getInvitationStatus();
-
-    if (playerTeam) {
-      return {
-        disabled: true,
-        text: "Багт орсон",
-        reason: "Player is in a team",
-      };
-    }
-
-    if (invitationStatus === "pending") {
-      return {
-        disabled: false,
-        text: "Дахин урих",
-        reason: "Invitation pending",
-      };
-    }
-
-    if (invitationStatus === "accepted") {
-      return {
-        disabled: true,
-        text: "Багт орсон",
-        reason: "Player accepted invitation",
-      };
-    }
-
-    return { disabled: false, text: "Багт урих", reason: "Can invite" };
-  };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -432,11 +254,6 @@ export default function PlayerDetailPage({
               {/* Player Info */}
               <div className="flex-1 text-center lg:text-left">
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2 sm:gap-3">
-                  {playerTeam && (
-                    <span className="bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white px-2 sm:px-3 py-1 rounded-lg text-sm sm:text-base lg:text-lg font-bold shadow-lg">
-                      [{playerTeam.tag}]
-                    </span>
-                  )}
                   <span className="text-center lg:text-left">
                     {player.realName || player.name}
                   </span>
@@ -506,46 +323,17 @@ export default function PlayerDetailPage({
                     </div>
                   )}
 
-                  <div className="flex flex-wrap items-center justify-center gap-3">
-                    {/* Team Invite Button - Only show for team owners */}
-                    {getInviteButtonState() && (
-                      <motion.button
-                        onClick={handleInviteToTeam}
-                        disabled={getInviteButtonState()?.disabled}
-                        className={`inline-flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base ${
-                          getInviteButtonState()?.disabled
-                            ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                            : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-800"
-                        }`}
-                        whileHover={
-                          !getInviteButtonState()?.disabled
-                            ? { scale: 1.05 }
-                            : {}
-                        }
-                        whileTap={
-                          !getInviteButtonState()?.disabled
-                            ? { scale: 0.95 }
-                            : {}
-                        }
-                        title={getInviteButtonState()?.reason}
-                      >
-                        <UserPlus className="w-5 h-5" />
-                        <span>{getInviteButtonState()?.text}</span>
-                      </motion.button>
-                    )}
-
-                    {user && user.id !== player.id && (
-                      <motion.button
-                        onClick={() => setIsChatOpen(true)}
-                        className="inline-flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 dark:bg-green-600 text-white rounded-full hover:bg-purple-700 dark:hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <MessageCircle className="w-5 h-5" />
-                        <span>Chat</span>
-                      </motion.button>
-                    )}
-                  </div>
+                  {user && user.id !== player.id && (
+                    <motion.button
+                      onClick={() => setIsChatOpen(true)}
+                      className="inline-flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 dark:bg-green-600 text-white rounded-full hover:bg-purple-700 dark:hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      <span>Chat</span>
+                    </motion.button>
+                  )}
                 </div>
               </div>
             </div>

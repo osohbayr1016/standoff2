@@ -8,7 +8,7 @@ import {
   Zap,
   Monitor,
   Smartphone,
-  UserPlus,
+  Crown,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,33 +25,28 @@ interface Player {
   rank: string;
   experience: string;
   isLookingForTeam: boolean;
-  faceitData?: {
-    nickname: string;
-    level: number;
-    elo: number;
-    country: string;
-    lastUpdated: string;
+  clan?: {
+    name: string;
+    tag: string;
   };
 }
 
 interface PlayerCardProps {
   player: Player;
   index: number;
-  canInvitePlayers: boolean;
-  isPlayerInTeamOrInvited: (playerId: string) => boolean;
-  playersTeamTags: Record<string, string>;
-  onInviteToTeam: (player: Player) => void;
   onOpenChat: (player: Player) => void;
+  canInviteToClan?: boolean;
+  onInviteToClan?: (player: Player) => void;
+  invitingPlayer?: string | null;
 }
 
 export default function PlayerCard({
   player,
   index,
-  canInvitePlayers,
-  isPlayerInTeamOrInvited,
-  playersTeamTags,
-  onInviteToTeam,
   onOpenChat,
+  canInviteToClan,
+  onInviteToClan,
+  invitingPlayer,
 }: PlayerCardProps) {
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -81,22 +76,6 @@ export default function PlayerCard({
     );
   };
 
-  const getFaceitLevelColor = (level: number): string => {
-    const colors = [
-      "#9e9e9e", // Level 1 - Gray
-      "#4caf50", // Level 2 - Green
-      "#8bc34a", // Level 3 - Light Green
-      "#cddc39", // Level 4 - Lime
-      "#ffeb3b", // Level 5 - Yellow
-      "#ffc107", // Level 6 - Amber
-      "#ff9800", // Level 7 - Orange
-      "#ff5722", // Level 8 - Deep Orange
-      "#e91e63", // Level 9 - Pink
-      "#9c27b0", // Level 10 - Purple
-    ];
-    return colors[level - 1] || "#9e9e9e";
-  };
-
   return (
     <motion.div
       key={player.id}
@@ -119,9 +98,9 @@ export default function PlayerCard({
           </div>
           <div className="flex-1 text-center sm:text-left">
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-              {playersTeamTags[player.id] && (
-                <span className="bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white px-2 py-1 rounded text-sm font-bold shadow-lg">
-                  [{playersTeamTags[player.id]}]
+              {player.clan && (
+                <span className="bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                  [{player.clan.tag}]
                 </span>
               )}
               <span>{player.inGameName || player.name}</span>
@@ -175,81 +154,47 @@ export default function PlayerCard({
             </p>
           </div>
         </div>
-
-        {/* FACEIT Data for CS2 Players */}
-        {(player.game === "CS2" || player.game === "Counter-Strike 2") &&
-          player.faceitData && (
-            <div className="mt-4 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-800">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                    style={{
-                      backgroundColor: getFaceitLevelColor(
-                        player.faceitData.level
-                      ),
-                    }}
-                  >
-                    {player.faceitData.level}
-                  </div>
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                    FACEIT
-                  </span>
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">
-                  {player.faceitData.nickname}
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Level {player.faceitData.level}
-                </span>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {player.faceitData.elo} ELO
-                </span>
-              </div>
-            </div>
-          )}
       </div>
 
       {/* Action Buttons */}
       <div className="bg-gray-50 dark:bg-gray-700 px-4 sm:px-6 py-4">
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Link href={`/players/${player.id}`} className="flex-1">
-            <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white py-2 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-200 transform hover:scale-105 text-sm">
-              Профайл Харах
-            </button>
-          </Link>
+        <div className="flex flex-col gap-2">
+          {/* First Row - Profile and Chat */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Link href={`/players/${player.id}`} className="flex-1">
+              <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white py-2 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-200 transform hover:scale-105 text-sm">
+                Профайл Харах
+              </button>
+            </Link>
 
-          {/* Team Invite Button - Only show for team owners */}
-          {canInvitePlayers && (
             <button
-              onClick={() => onInviteToTeam(player)}
-              disabled={isPlayerInTeamOrInvited(player.id)}
-              className={`px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-1 text-sm flex-shrink-0 ${
-                isPlayerInTeamOrInvited(player.id)
-                  ? "bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                  : "bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 transform hover:scale-105"
-              }`}
-              title={
-                isPlayerInTeamOrInvited(player.id)
-                  ? "Тоглогч багт орсон"
-                  : "Багт урих"
-              }
+              onClick={() => onOpenChat(player)}
+              className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 text-sm flex-shrink-0"
             >
-              <UserPlus className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {isPlayerInTeamOrInvited(player.id) ? "Багт орсон" : "Урих"}
-              </span>
+              Зурвас
+            </button>
+          </div>
+
+          {/* Second Row - Clan Invitation (only for clan leaders) */}
+          {canInviteToClan && onInviteToClan && (
+            <button
+              onClick={() => onInviteToClan(player)}
+              disabled={invitingPlayer === player.id}
+              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 dark:from-yellow-500 dark:to-orange-500 text-white rounded-lg font-medium hover:from-orange-600 hover:to-red-600 dark:hover:from-yellow-600 dark:hover:to-orange-600 transition-all duration-200 transform hover:scale-105 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {invitingPlayer === player.id ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Урилга илгээж байна...</span>
+                </>
+              ) : (
+                <>
+                  <Crown className="w-4 h-4" />
+                  <span>Кланд Урих</span>
+                </>
+              )}
             </button>
           )}
-
-          <button
-            onClick={() => onOpenChat(player)}
-            className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 text-sm flex-shrink-0"
-          >
-            Зурвас
-          </button>
         </div>
       </div>
     </motion.div>
