@@ -4,7 +4,7 @@ services:
     env: node
     plan: free
     rootDir: backend
-    buildCommand: npm install --production=false && npm run build
+    buildCommand: rm -rf node_modules package-lock.json && npm cache clean --force && npm install && npm run build
     startCommand: node dist/index.js
     envVars:
       - key: NODE_ENV

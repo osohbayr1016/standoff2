@@ -36,7 +36,7 @@
     "passport": "^0.7.0",
     "passport-facebook": "^3.0.0",
     "passport-google-oauth20": "^2.0.0",
-    "debug": "^4.3.4"
+    "debug": "4.3.4"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
