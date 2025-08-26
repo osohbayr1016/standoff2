@@ -43,6 +43,25 @@ app.get("/health", async (request, reply) => {
     status: "OK",
     message: "E-Sport Connection API is running",
     timestamp: new Date().toISOString(),
+    version: "1.0.0",
+    deployment: "root-level-guaranteed-working"
+  };
+});
+
+// Root endpoint
+app.get("/", async (request, reply) => {
+  return {
+    message: "E-Sport Connection API",
+    status: "running",
+    endpoints: [
+      "/health",
+      "/api/v1", 
+      "/api/auth/*",
+      "/api/users/*",
+      "/api/player-profiles/*",
+      "/api/organization-profiles/*"
+    ],
+    timestamp: new Date().toISOString()
   };
 });
 

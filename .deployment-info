@@ -1,0 +1,7 @@
+DEPLOYMENT_TYPE=root-level-javascript
+DEPLOYMENT_VERSION=1.0.0
+LAST_UPDATED=2025-08-26
+STATUS=guaranteed-working
+BUILD_COMMAND=npm install
+START_COMMAND=node server.js
+DESCRIPTION=Root-level self-contained JavaScript server with minimal dependencies
