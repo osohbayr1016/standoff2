@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
-import helmet from "helmet";
-import morgan from "morgan";
+
 import dotenv from "dotenv";
 import session from "express-session";
 import { createServer } from "http";
@@ -20,7 +19,6 @@ const PORT = process.env.PORT || 8000;
 // Real-time sockets disabled
 
 // Middleware
-app.use(helmet());
 
 // CORS configuration
 const allowedOrigins = [
@@ -51,7 +49,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
-app.use(morgan("combined"));
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
