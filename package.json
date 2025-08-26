@@ -1,35 +1,16 @@
 {
-  "name": "e-sport-connection",
+  "name": "e-sport-connection-server",
   "version": "1.0.0",
-  "description": "E-Sport Connection Platform",
-  "main": "backend/dist/index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "cd backend && node dist/index.js",
-    "build": "cd backend && npm install && npm run build",
-    "dev": "cd backend && npm run dev",
-    "install-backend": "cd backend && npm install",
-    "install-frontend": "cd frontend && npm install",
-    "postinstall": "cd backend && npm install"
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "fastify": "^4.29.1",
+    "@fastify/cors": "^9.0.1"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "typescript": "^5.3.3"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/your-username/e-sport-connection.git"
-  },
-  "keywords": [
-    "esport",
-    "gaming",
-    "tournament",
-    "connection",
-    "mongodb",
-    "express",
-    "nextjs"
-  ],
-  "author": "",
-  "license": "ISC"
+  }
 }
