@@ -125,7 +125,7 @@ router.post("/register", async (req, res) => {
             role: req.body.role,
             hasPassword: !!req.body.password,
         });
-        const { email, password, name, role = "PLAYER" } = req.body;
+        const { email, password, name } = req.body;
         if (!email || !password || !name) {
             return res.status(400).json({
                 success: false,
@@ -168,12 +168,7 @@ router.post("/register", async (req, res) => {
                 message: "Нэр хэт урт байна",
             });
         }
-        if (!Object.values(User_1.UserRole).includes(role)) {
-            return res.status(400).json({
-                success: false,
-                message: "Буруу үүрэг сонгосон",
-            });
-        }
+        const role = User_1.UserRole.PLAYER;
         const existingUser = await User_1.default.findOne({ email: email.toLowerCase() });
         if (existingUser) {
             return res.status(409).json({
@@ -185,7 +180,7 @@ router.post("/register", async (req, res) => {
             email: email.toLowerCase().trim(),
             password,
             name: name.trim(),
-            role: role,
+            role,
             isVerified: false,
             isOnline: true,
             lastSeen: new Date(),
