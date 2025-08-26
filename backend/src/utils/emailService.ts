@@ -1,7 +1,4 @@
-import nodemailer from "nodemailer";
-import { config } from "dotenv";
-
-config();
+// Nodemailer disabled; provide a minimal stub
 
 interface EmailConfig {
   from: string;
@@ -11,17 +8,7 @@ interface EmailConfig {
 }
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
-
-  constructor() {
-    this.transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-  }
+  constructor() {}
 
   async sendEmail({ from, to, subject, html }: EmailConfig): Promise<boolean> {
     try {
@@ -32,8 +19,8 @@ class EmailService {
         html,
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log("Email sent successfully:", result.messageId);
+      // Email sending disabled in this environment
+      console.log("Email send stub called");
       return true;
     } catch (error) {
       console.error("Error sending email:", error);
@@ -256,8 +243,7 @@ class EmailService {
 
   async testConnection(): Promise<boolean> {
     try {
-      await this.transporter.verify();
-      console.log("Email service connection successful");
+      console.log("Email service stub: connection OK");
       return true;
     } catch (error) {
       console.error("Email service connection failed:", error);

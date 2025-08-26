@@ -2,17 +2,11 @@ import { Router, Request, Response, NextFunction } from "express";
 import Message, { MessageStatus } from "../models/Message";
 import User from "../models/User";
 import { authenticateToken } from "../middleware/auth";
-import { SocketManager } from "../config/socket";
 import { NotificationService } from "../utils/notificationService";
 
 const router = Router();
 
-// Socket manager instance (will be set from main server)
-let socketManager: SocketManager | null = null;
-
-export const setSocketManager = (manager: SocketManager) => {
-  socketManager = manager;
-};
+// Sockets disabled; always treat receiver as offline
 
 // Send message
 router.post(
@@ -58,20 +52,13 @@ router.post(
         { path: "receiverId", select: "id name avatar" },
       ]);
 
-      // Check if receiver is online via socket manager
-      const isReceiverOnline = socketManager
-        ? socketManager.isUserOnline(receiverId)
-        : false;
-
-      // If receiver is offline, create notification
-      if (!isReceiverOnline) {
-        await NotificationService.createMessageNotification(
-          senderId,
-          receiverId,
-          message._id.toString(),
-          content
-        );
-      }
+      // Sockets disabled; create notification
+      await NotificationService.createMessageNotification(
+        senderId,
+        receiverId,
+        message._id.toString(),
+        content
+      );
 
       return res.status(201).json({
         message: "Message sent successfully",

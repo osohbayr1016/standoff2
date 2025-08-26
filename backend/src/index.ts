@@ -8,7 +8,7 @@ import { createServer } from "http";
 import passport from "./config/passport";
 import { connectDB } from "./config/database";
 import mongoose from "mongoose";
-import SocketManager from "./config/socket";
+// Socket removed for production stability
 
 // Load environment variables
 dotenv.config();
@@ -17,8 +17,7 @@ const app = express();
 const server = createServer(app);
 const PORT = process.env.PORT || 8000;
 
-// Initialize Socket.IO
-const socketManager = new SocketManager(server);
+// Real-time sockets disabled
 
 // Middleware
 app.use(helmet());
@@ -120,7 +119,7 @@ import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import playerProfileRoutes from "./routes/playerProfileRoutes";
 import organizationProfileRoutes from "./routes/organizationProfileRoutes";
-import uploadRoutes from "./routes/uploadRoutes";
+// Upload routes removed due to Cloudinary/multer removal
 import notificationRoutes from "./routes/notificationRoutes";
 import { NotificationService } from "./utils/notificationService";
 import statsRoutes from "./routes/statsRoutes";
@@ -130,13 +129,12 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/player-profiles", playerProfileRoutes);
 app.use("/api/organization-profiles", organizationProfileRoutes);
-app.use("/api/upload", uploadRoutes);
+// app.use("/api/upload", uploadRoutes);
 app.use("/api", notificationRoutes);
 app.use("/api", statsRoutes);
 
 // Import and set up message routes after socket manager is initialized
-import messageRoutes, { setSocketManager } from "./routes/messageRoutes";
-setSocketManager(socketManager);
+import messageRoutes from "./routes/messageRoutes";
 app.use("/api", messageRoutes);
 app.get("/api/v1", (req: any, res: any) => {
   res.json({ message: "E-Sport Connection API v1" });

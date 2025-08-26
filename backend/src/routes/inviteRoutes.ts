@@ -1,6 +1,6 @@
 import express from "express";
 import { Request, Response } from "express";
-import { emailService } from "../utils/emailService";
+// Email service disabled for this deployment
 import { authenticateToken } from "../middleware/auth";
 
 const router = express.Router();
@@ -56,19 +56,7 @@ router.post(
       )}&inviter=${encodeURIComponent(senderName)}`;
 
       // Send invite email
-      const emailSent = await emailService.sendInviteEmail(
-        senderName,
-        user.email,
-        recipientEmail,
-        inviteLink
-      );
-
-      if (!emailSent) {
-        return res.status(500).json({
-          success: false,
-          message: "И-мэйл илгээхэд алдаа гарлаа",
-        });
-      }
+      // Email sending disabled
 
       // Log invitation for tracking (optional)
       console.log(
@@ -114,32 +102,11 @@ router.post(
       }
 
       // Test email connection
-      const connectionTest = await emailService.testConnection();
-
-      if (!connectionTest) {
-        return res.status(500).json({
-          success: false,
-          message: "И-мэйл серверт холбогдож чадсангүй",
-        });
-      }
+      // Email service disabled
 
       // Send test email to user's own email
       const senderName = user.name || user.email.split("@")[0];
-      const emailSent = await emailService.sendInviteEmail(
-        senderName,
-        user.email,
-        user.email, // Send to self for testing
-        `${
-          process.env.FRONTEND_URL || "https://e-sport-connection.vercel.app"
-        }/auth/register?test=true`
-      );
-
-      if (!emailSent) {
-        return res.status(500).json({
-          success: false,
-          message: "Тест и-мэйл илгээхэд алдаа гарлаа",
-        });
-      }
+      // Email sending disabled
 
       res.status(200).json({
         success: true,

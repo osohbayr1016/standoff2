@@ -36,18 +36,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setSocketManager = void 0;
 const express_1 = require("express");
 const Message_1 = __importStar(require("../models/Message"));
 const User_1 = __importDefault(require("../models/User"));
 const auth_1 = require("../middleware/auth");
 const notificationService_1 = require("../utils/notificationService");
 const router = (0, express_1.Router)();
-let socketManager = null;
-const setSocketManager = (manager) => {
-    socketManager = manager;
-};
-exports.setSocketManager = setSocketManager;
 router.post("/messages", auth_1.authenticateToken, async (req, res) => {
     try {
         const { receiverId, content } = req.body;
@@ -76,12 +70,7 @@ router.post("/messages", auth_1.authenticateToken, async (req, res) => {
             { path: "senderId", select: "id name avatar" },
             { path: "receiverId", select: "id name avatar" },
         ]);
-        const isReceiverOnline = socketManager
-            ? socketManager.isUserOnline(receiverId)
-            : false;
-        if (!isReceiverOnline) {
-            await notificationService_1.NotificationService.createMessageNotification(senderId, receiverId, message._id.toString(), content);
-        }
+        await notificationService_1.NotificationService.createMessageNotification(senderId, receiverId, message._id.toString(), content);
         return res.status(201).json({
             message: "Message sent successfully",
             data: message,
