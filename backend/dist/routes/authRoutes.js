@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+const { FastifyInstance, FastifyPluginAsync } = require("fastify");
 const authRoutes = async (fastify) => {
     fastify.get("/health", async (request, reply) => {
         return {
@@ -21,4 +20,4 @@ const authRoutes = async (fastify) => {
         };
     });
 };
-exports.default = authRoutes;
+module.exports = authRoutes;
