@@ -150,4 +150,3 @@ function getRandomDescription(name) {
     return descriptions[Math.floor(Math.random() * descriptions.length)];
 }
 exports.default = router;
-//# sourceMappingURL=userRoutes.js.map

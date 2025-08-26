@@ -114,7 +114,12 @@ process.on("SIGTERM", async () => {
 });
 const startServer = async () => {
     try {
+        console.log("🚀 Starting server...");
+        console.log("Environment:", process.env.NODE_ENV);
+        console.log("Port:", PORT);
+        console.log("MongoDB URI exists:", !!process.env.MONGODB_URI);
         await (0, database_1.connectDB)();
+        console.log("✅ Database connected successfully");
         setInterval(async () => {
             try {
                 await notificationService_1.NotificationService.cleanupOldNotifications();
@@ -124,13 +129,18 @@ const startServer = async () => {
             }
         }, 24 * 60 * 60 * 1000);
         server.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
+            console.log(`✅ Server running on port ${PORT}`);
+            console.log(`📡 Health check: http://localhost:${PORT}/health`);
+            console.log(`🚀 API endpoint: http://localhost:${PORT}/api/v1`);
         });
     }
     catch (error) {
-        console.error("Failed to start server:", error);
-        process.exit(1);
+        console.error("❌ Failed to start server:", error);
+        console.error("Stack trace:", error.stack);
+        console.log("🔄 Attempting to start server without database...");
+        server.listen(PORT, () => {
+            console.log(`⚠️  Server running on port ${PORT} (database disconnected)`);
+        });
     }
 };
 startServer();
-//# sourceMappingURL=index.js.map

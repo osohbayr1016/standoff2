@@ -220,4 +220,3 @@ router.delete("/messages/:messageId", auth_1.authenticateToken, async (req, res)
     }
 });
 exports.default = router;
-//# sourceMappingURL=messageRoutes.js.map

@@ -21,4 +21,3 @@ const connectDB = async () => {
 };
 exports.connectDB = connectDB;
 exports.default = mongoose_1.default;
-//# sourceMappingURL=database.js.map

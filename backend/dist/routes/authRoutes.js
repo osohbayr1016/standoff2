@@ -304,4 +304,3 @@ router.post("/refresh", auth_1.authenticateToken, (req, res) => {
     }
 });
 exports.default = router;
-//# sourceMappingURL=authRoutes.js.map
