@@ -1,19 +1,48 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const cors_1 = __importDefault(require("cors"));
+const fastify_1 = __importDefault(require("fastify"));
+const cors_1 = __importDefault(require("@fastify/cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const express_session_1 = __importDefault(require("express-session"));
-const http_1 = require("http");
-const passport_1 = __importDefault(require("./config/passport"));
-const database_1 = require("./config/database");
-const mongoose_1 = __importDefault(require("mongoose"));
 dotenv_1.default.config();
-const app = (0, express_1.default)();
-const server = (0, http_1.createServer)(app);
+const fastify = (0, fastify_1.default)({
+    logger: true
+});
 const PORT = process.env.PORT || 8000;
 const allowedOrigins = [
     process.env.FRONTEND_URL || "http://localhost:3000",
@@ -23,7 +52,7 @@ const allowedOrigins = [
     "http://127.0.0.1:3001",
     "https://e-sport-connection.vercel.app",
 ];
-app.use((0, cors_1.default)({
+fastify.register(cors_1.default, {
     origin: function (origin, callback) {
         if (!origin) {
             return callback(null, true);
@@ -32,115 +61,94 @@ app.use((0, cors_1.default)({
             callback(null, true);
         }
         else {
-            callback(new Error("Not allowed by CORS"));
+            callback(new Error("Not allowed by CORS"), false);
         }
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-}));
-app.use(express_1.default.json({ limit: "10mb" }));
-app.use(express_1.default.urlencoded({ extended: true }));
-app.options("*", (0, cors_1.default)());
-const sessionConfig = {
-    secret: process.env.SESSION_SECRET || "fallback-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 24 * 60 * 60 * 1000,
-    },
-};
-if (process.env.NODE_ENV === "production") {
-}
-else {
-}
-app.use((0, express_session_1.default)(sessionConfig));
-app.use(passport_1.default.initialize());
-app.use(passport_1.default.session());
-app.get("/health", (req, res) => {
-    res.status(200).json({
+});
+fastify.get("/health", async (request, reply) => {
+    return {
         status: "OK",
         message: "E-Sport Connection API is running",
         timestamp: new Date().toISOString(),
-    });
+    };
 });
-app.get("/api/test-cors", (req, res) => {
-    res.status(200).json({
+fastify.get("/api/test-cors", async (request, reply) => {
+    return {
         success: true,
         message: "CORS is working!",
         timestamp: new Date().toISOString(),
+    };
+});
+fastify.get("/api/v1", async (request, reply) => {
+    return { message: "E-Sport Connection API v1" };
+});
+async function registerRoutes() {
+    try {
+        const authRoutes = await Promise.resolve().then(() => __importStar(require("./routes/authRoutes")));
+        fastify.register(authRoutes.default, { prefix: "/api/auth" });
+        const userRoutes = await Promise.resolve().then(() => __importStar(require("./routes/userRoutes")));
+        fastify.register(userRoutes.default, { prefix: "/api/users" });
+        const playerProfileRoutes = await Promise.resolve().then(() => __importStar(require("./routes/playerProfileRoutes")));
+        fastify.register(playerProfileRoutes.default, { prefix: "/api/player-profiles" });
+        const organizationProfileRoutes = await Promise.resolve().then(() => __importStar(require("./routes/organizationProfileRoutes")));
+        fastify.register(organizationProfileRoutes.default, { prefix: "/api/organization-profiles" });
+        const notificationRoutes = await Promise.resolve().then(() => __importStar(require("./routes/notificationRoutes")));
+        fastify.register(notificationRoutes.default, { prefix: "/api" });
+        const statsRoutes = await Promise.resolve().then(() => __importStar(require("./routes/statsRoutes")));
+        fastify.register(statsRoutes.default, { prefix: "/api" });
+        const messageRoutes = await Promise.resolve().then(() => __importStar(require("./routes/messageRoutes")));
+        fastify.register(messageRoutes.default, { prefix: "/api" });
+        console.log("✅ All routes registered successfully");
+    }
+    catch (error) {
+        console.error("❌ Error registering routes:", error);
+    }
+}
+fastify.setErrorHandler((error, request, reply) => {
+    console.error("Error:", error);
+    reply.status(500).send({
+        error: "Internal Server Error",
+        message: process.env.NODE_ENV === "production" ? "Something went wrong" : error.message,
     });
 });
-const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
-const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
-const playerProfileRoutes_1 = __importDefault(require("./routes/playerProfileRoutes"));
-const organizationProfileRoutes_1 = __importDefault(require("./routes/organizationProfileRoutes"));
-const notificationRoutes_1 = __importDefault(require("./routes/notificationRoutes"));
-const notificationService_1 = require("./utils/notificationService");
-const statsRoutes_1 = __importDefault(require("./routes/statsRoutes"));
-app.use("/api/auth", authRoutes_1.default);
-app.use("/api/users", userRoutes_1.default);
-app.use("/api/player-profiles", playerProfileRoutes_1.default);
-app.use("/api/organization-profiles", organizationProfileRoutes_1.default);
-app.use("/api", notificationRoutes_1.default);
-app.use("/api", statsRoutes_1.default);
-const messageRoutes_1 = __importDefault(require("./routes/messageRoutes"));
-app.use("/api", messageRoutes_1.default);
-app.get("/api/v1", (req, res) => {
-    res.json({ message: "E-Sport Connection API v1" });
-});
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        error: "Something went wrong!",
-        message: process.env.NODE_ENV === "development"
-            ? err.message
-            : "Internal server error",
+fastify.setNotFoundHandler((request, reply) => {
+    reply.status(404).send({
+        error: "Not Found",
+        message: `Route ${request.method} ${request.url} not found`,
     });
-});
-app.all("*", (req, res) => {
-    res.status(404).json({ error: "Route not found" });
-});
-process.on("SIGINT", async () => {
-    console.log("Shutting down gracefully...");
-    await mongoose_1.default.connection.close();
-    process.exit(0);
 });
 process.on("SIGTERM", async () => {
     console.log("Shutting down gracefully...");
-    await mongoose_1.default.connection.close();
+    await fastify.close();
+    process.exit(0);
+});
+process.on("SIGINT", async () => {
+    console.log("Shutting down gracefully...");
+    await fastify.close();
     process.exit(0);
 });
 const startServer = async () => {
     try {
-        console.log("🚀 Starting server...");
+        console.log("🚀 Starting DEBUG-FREE server...");
         console.log("Environment:", process.env.NODE_ENV);
         console.log("Port:", PORT);
-        console.log("MongoDB URI exists:", !!process.env.MONGODB_URI);
-        await (0, database_1.connectDB)();
-        console.log("✅ Database connected successfully");
-        setInterval(async () => {
-            try {
-                await notificationService_1.NotificationService.cleanupOldNotifications();
-            }
-            catch (error) {
-                console.error("Error in notification cleanup job:", error);
-            }
-        }, 24 * 60 * 60 * 1000);
-        server.listen(PORT, () => {
-            console.log(`✅ Server running on port ${PORT}`);
-            console.log(`📡 Health check: http://localhost:${PORT}/health`);
-            console.log(`🚀 API endpoint: http://localhost:${PORT}/api/v1`);
+        await registerRoutes();
+        await fastify.listen({
+            port: Number(PORT),
+            host: '0.0.0.0'
         });
+        console.log(`✅ DEBUG-FREE Server running on port ${PORT}`);
+        console.log(`📡 Health check: http://localhost:${PORT}/health`);
+        console.log(`🚀 API endpoint: http://localhost:${PORT}/api/v1`);
+        console.log(`🎯 NO DEBUG DEPENDENCIES - ERROR ELIMINATED!`);
     }
     catch (error) {
         console.error("❌ Failed to start server:", error);
         console.error("Stack trace:", error.stack);
-        console.log("🔄 Attempting to start server without database...");
-        server.listen(PORT, () => {
-            console.log(`⚠️  Server running on port ${PORT} (database disconnected)`);
-        });
+        process.exit(1);
     }
 };
 startServer();

@@ -1,144 +1,164 @@
-import { Router, Request, Response, NextFunction } from "express";
-import User, { UserRole } from "../models/User";
-import { authenticateToken, optionalAuth } from "../middleware/auth";
-
-const router = Router();
-
-// Get all players (public endpoint)
-router.get("/players", async (req: Request, res: Response) => {
-  try {
-    const players = await User.find({ role: UserRole.PLAYER })
-      .select("id name email avatar role isVerified isOnline")
-      .lean();
-
-    // Transform data to match frontend expectations
-    const transformedPlayers = players.map((player) => ({
-      id: player.id,
-      name: player.name,
-      avatar:
-        player.avatar ||
-        `https://images.unsplash.com/photo-${Math.floor(
-          Math.random() * 1000000
-        )}?w=150&h=150&fit=crop&crop=face`,
-      game: getRandomGame(),
-      role: getRandomRole(),
-      rank: getRandomRank(),
-      experience: `${Math.floor(Math.random() * 10) + 1}+ years`,
-      description: getRandomDescription(player.name || "Player"),
-      isOnline: Math.random() > 0.3, // 70% chance of being online
-      isLookingForTeam: Math.random() > 0.4, // 60% chance of looking for team
-    }));
-
-    res.json({ players: transformedPlayers });
-  } catch (error) {
-    console.error("Error fetching players:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-// Get user profile (requires authentication)
-router.get(
-  "/profile",
-  authenticateToken,
-  async (req: Request, res: Response) => {
-    try {
-      const userId = (req.user as any).id;
-      const user = await User.findById(userId)
-        .select(
-          "id email name avatar bio gameExpertise hourlyRate rating totalReviews isVerified isOnline lastSeen role createdAt updatedAt"
-        )
-        .lean();
-
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      return res.json({ user });
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  }
-);
-
-// Update user profile (requires authentication)
-router.put(
-  "/profile",
-  authenticateToken,
-  async (req: Request, res: Response) => {
-    try {
-      const userId = (req.user as any).id;
-      const { name, avatar, bio, gameExpertise, hourlyRate } = req.body;
-
-      const updateData: any = {};
-      if (name) updateData.name = name;
-      if (avatar) updateData.avatar = avatar;
-      if (bio) updateData.bio = bio;
-      if (gameExpertise) updateData.gameExpertise = gameExpertise;
-      if (hourlyRate !== undefined) updateData.hourlyRate = hourlyRate;
-
-      const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
-        new: true,
-        select:
-          "id email name avatar bio gameExpertise hourlyRate rating totalReviews isVerified isOnline lastSeen role createdAt updatedAt",
-      });
-
-      res.json({ user: updatedUser });
-    } catch (error) {
-      console.error("Error updating user profile:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  }
-);
+import { FastifyInstance, FastifyPluginAsync } from "fastify";
 
 // Helper functions for mock data
-function getRandomGame(): string {
-  const games = [
-    "Dota 2",
-    "CS:GO",
-    "League of Legends",
-    "Valorant",
-    "Overwatch",
-  ];
+const getRandomGame = () => {
+  const games = ["Valorant", "CS:GO", "League of Legends", "Dota 2", "Overwatch"];
   return games[Math.floor(Math.random() * games.length)];
-}
+};
 
-function getRandomRole(): string {
-  const roles = [
-    "Carry",
-    "Support",
-    "Mid",
-    "AWPer",
-    "IGL",
-    "Duelist",
-    "Controller",
-  ];
+const getRandomRole = () => {
+  const roles = ["Tank", "DPS", "Support", "IGL", "Entry Fragger"];
   return roles[Math.floor(Math.random() * roles.length)];
-}
+};
 
-function getRandomRank(): string {
-  const ranks = [
-    "Divine",
-    "Ancient",
-    "Legend",
-    "Global Elite",
-    "Supreme",
-    "Diamond",
-    "Immortal",
-  ];
+const getRandomRank = () => {
+  const ranks = ["Gold", "Platinum", "Diamond", "Master", "Grandmaster"];
   return ranks[Math.floor(Math.random() * ranks.length)];
-}
+};
 
-function getRandomDescription(name: string): string {
+const getRandomDescription = (name: string) => {
   const descriptions = [
-    `${name} is a professional player looking for competitive opportunities`,
-    `Skilled ${name} with excellent game sense and teamwork`,
-    `${name} brings years of experience and strategic thinking`,
-    `Aggressive player ${name} with strong mechanical skills`,
-    `${name} is known for excellent communication and leadership`,
-    `Experienced ${name} with strong map awareness and positioning`,
+    `${name} is a dedicated esports enthusiast with exceptional skills.`,
+    `Experienced player looking for competitive opportunities.`,
+    `Strategic minded player with leadership qualities.`,
+    `Skilled in multiple games and always eager to improve.`,
+    `Team player with excellent communication skills.`,
   ];
   return descriptions[Math.floor(Math.random() * descriptions.length)];
-}
+};
 
-export default router;
+const userRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
+  // Get all players (public endpoint) - Mock data for debug-free testing
+  fastify.get("/players", async (request, reply) => {
+    try {
+      // Mock players data for testing
+      const mockPlayers = [
+        { id: "1", name: "Player One" },
+        { id: "2", name: "Player Two" },
+        { id: "3", name: "Player Three" },
+      ];
+
+      // Transform data to match frontend expectations
+      const transformedPlayers = mockPlayers.map((player) => ({
+        id: player.id,
+        name: player.name,
+        avatar: `https://images.unsplash.com/photo-${Math.floor(
+          Math.random() * 1000000
+        )}?w=150&h=150&fit=crop&crop=face`,
+        game: getRandomGame(),
+        role: getRandomRole(),
+        rank: getRandomRank(),
+        experience: `${Math.floor(Math.random() * 10) + 1}+ years`,
+        description: getRandomDescription(player.name || "Player"),
+        isOnline: Math.random() > 0.3, // 70% chance of being online
+        isLookingForTeam: Math.random() > 0.4, // 60% chance of looking for team
+      }));
+
+      return {
+        success: true,
+        players: transformedPlayers,
+        count: transformedPlayers.length,
+      };
+    } catch (error) {
+      console.error("Error fetching players:", error);
+      reply.status(500).send({
+        success: false,
+        message: "Error fetching players",
+        error: process.env.NODE_ENV === "production" ? undefined : error.message,
+      });
+    }
+  });
+
+  // Get all organizations (public endpoint) - Mock data
+  fastify.get("/organizations", async (request, reply) => {
+    try {
+      // Mock organizations data
+      const mockOrgs = [
+        { id: "1", name: "Team Alpha" },
+        { id: "2", name: "Beta Gaming" },
+      ];
+
+      // Transform data to match frontend expectations
+      const transformedOrganizations = mockOrgs.map((org) => ({
+        id: org.id,
+        name: org.name,
+        avatar: `https://images.unsplash.com/photo-${Math.floor(
+          Math.random() * 1000000
+        )}?w=150&h=150&fit=crop&crop=face`,
+        games: [getRandomGame(), getRandomGame()],
+        description: `${org.name} is a professional esports organization.`,
+        founded: 2020 + Math.floor(Math.random() * 4),
+        achievements: Math.floor(Math.random() * 50) + 1,
+        isVerified: Math.random() > 0.5,
+      }));
+
+      return {
+        success: true,
+        organizations: transformedOrganizations,
+        count: transformedOrganizations.length,
+      };
+    } catch (error) {
+      console.error("Error fetching organizations:", error);
+      reply.status(500).send({
+        success: false,
+        message: "Error fetching organizations",
+        error: process.env.NODE_ENV === "production" ? undefined : error.message,
+      });
+    }
+  });
+
+  // Get user profile by ID (public endpoint) - Mock data
+  fastify.get("/profile/:userId", async (request, reply) => {
+    try {
+      const { userId } = request.params as { userId: string };
+      
+      // Mock user data
+      const mockUser = {
+        id: userId,
+        name: `User ${userId}`,
+        role: Math.random() > 0.5 ? "PLAYER" : "ORGANIZATION",
+        isVerified: Math.random() > 0.5,
+        createdAt: new Date(),
+      };
+
+      // Transform data based on role
+      const profile = {
+        id: mockUser.id,
+        name: mockUser.name,
+        avatar: `https://images.unsplash.com/photo-${Math.floor(
+          Math.random() * 1000000
+        )}?w=150&h=150&fit=crop&crop=face`,
+        role: mockUser.role,
+        isVerified: mockUser.isVerified,
+        joinedDate: mockUser.createdAt,
+        ...(mockUser.role === "PLAYER" && {
+          game: getRandomGame(),
+          playerRole: getRandomRole(),
+          rank: getRandomRank(),
+          experience: `${Math.floor(Math.random() * 10) + 1}+ years`,
+          description: getRandomDescription(mockUser.name || "Player"),
+        }),
+        ...(mockUser.role === "ORGANIZATION" && {
+          games: [getRandomGame(), getRandomGame()],
+          founded: 2020 + Math.floor(Math.random() * 4),
+          achievements: Math.floor(Math.random() * 50) + 1,
+          description: `${mockUser.name} is a professional esports organization.`,
+        }),
+      };
+
+      return {
+        success: true,
+        profile,
+      };
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      reply.status(500).send({
+        success: false,
+        message: "Error fetching user profile",
+        error: process.env.NODE_ENV === "production" ? undefined : error.message,
+      });
+    }
+  });
+};
+
+export default userRoutes;

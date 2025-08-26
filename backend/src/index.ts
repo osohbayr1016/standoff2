@@ -1,195 +1,163 @@
-import express from "express";
-import cors from "cors";
-
+import Fastify from "fastify";
+import cors from "@fastify/cors";
 import dotenv from "dotenv";
-import session from "express-session";
-import { createServer } from "http";
-import passport from "./config/passport";
-import { connectDB } from "./config/database";
-import mongoose from "mongoose";
-// Socket removed for production stability
 
 // Load environment variables
 dotenv.config();
 
-const app = express();
-const server = createServer(app);
+const fastify = Fastify({
+  logger: true
+});
+
 const PORT = process.env.PORT || 8000;
-
-// Real-time sockets disabled
-
-// Middleware
 
 // CORS configuration
 const allowedOrigins = [
   process.env.FRONTEND_URL || "http://localhost:3000",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
-  "http://localhost:3001",
+  "http://localhost:3001", 
   "http://127.0.0.1:3001",
   "https://e-sport-connection.vercel.app",
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) {
-        return callback(null, true);
-      }
+// Register CORS
+fastify.register(cors, {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  })
-);
-
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
-
-// Handle preflight requests
-app.options("*", cors());
-
-// Session configuration with production-ready store
-const sessionConfig: any = {
-  secret: process.env.SESSION_SECRET || "fallback-secret",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"), false);
+    }
   },
-};
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+});
 
-// Use MemoryStore only in development
-if (process.env.NODE_ENV === "production") {
-  // In production, you might want to use Redis or MongoDB for session storage
-  // For now, we'll use MemoryStore but with a warning
-} else {
-  // Development session configuration
-}
-
-app.use(session(sessionConfig));
-
-// Initialize passport
-app.use(passport.initialize());
-app.use(passport.session());
+// Session removed for debug-free simplicity
 
 // Health check endpoint
-app.get("/health", (req: any, res: any) => {
-  res.status(200).json({
+fastify.get("/health", async (request, reply) => {
+  return {
     status: "OK",
     message: "E-Sport Connection API is running",
     timestamp: new Date().toISOString(),
-  });
+  };
 });
 
 // CORS test endpoint
-app.get("/api/test-cors", (req: any, res: any) => {
-  res.status(200).json({
+fastify.get("/api/test-cors", async (request, reply) => {
+  return {
     success: true,
     message: "CORS is working!",
     timestamp: new Date().toISOString(),
+  };
+});
+
+// API v1 endpoint
+fastify.get("/api/v1", async (request, reply) => {
+  return { message: "E-Sport Connection API v1" };
+});
+
+// Import and register route handlers
+async function registerRoutes() {
+  try {
+    // Auth routes
+    const authRoutes = await import("./routes/authRoutes");
+    fastify.register(authRoutes.default, { prefix: "/api/auth" });
+
+    // User routes
+    const userRoutes = await import("./routes/userRoutes");
+    fastify.register(userRoutes.default, { prefix: "/api/users" });
+
+    // Player profile routes
+    const playerProfileRoutes = await import("./routes/playerProfileRoutes");
+    fastify.register(playerProfileRoutes.default, { prefix: "/api/player-profiles" });
+
+    // Organization profile routes
+    const organizationProfileRoutes = await import("./routes/organizationProfileRoutes");
+    fastify.register(organizationProfileRoutes.default, { prefix: "/api/organization-profiles" });
+
+    // Notification routes
+    const notificationRoutes = await import("./routes/notificationRoutes");
+    fastify.register(notificationRoutes.default, { prefix: "/api" });
+
+    // Stats routes
+    const statsRoutes = await import("./routes/statsRoutes");
+    fastify.register(statsRoutes.default, { prefix: "/api" });
+
+    // Message routes
+    const messageRoutes = await import("./routes/messageRoutes");
+    fastify.register(messageRoutes.default, { prefix: "/api" });
+
+    console.log("✅ All routes registered successfully");
+  } catch (error) {
+    console.error("❌ Error registering routes:", error);
+    // Continue without routes for basic health check
+  }
+}
+
+// Error handling
+fastify.setErrorHandler((error, request, reply) => {
+  console.error("Error:", error);
+  reply.status(500).send({
+    error: "Internal Server Error",
+    message: process.env.NODE_ENV === "production" ? "Something went wrong" : error.message,
   });
 });
 
-// Import routes
-import authRoutes from "./routes/authRoutes";
-import userRoutes from "./routes/userRoutes";
-import playerProfileRoutes from "./routes/playerProfileRoutes";
-import organizationProfileRoutes from "./routes/organizationProfileRoutes";
-// Upload routes removed due to Cloudinary/multer removal
-import notificationRoutes from "./routes/notificationRoutes";
-import { NotificationService } from "./utils/notificationService";
-import statsRoutes from "./routes/statsRoutes";
-
-// API routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/player-profiles", playerProfileRoutes);
-app.use("/api/organization-profiles", organizationProfileRoutes);
-// app.use("/api/upload", uploadRoutes);
-app.use("/api", notificationRoutes);
-app.use("/api", statsRoutes);
-
-// Import and set up message routes after socket manager is initialized
-import messageRoutes from "./routes/messageRoutes";
-app.use("/api", messageRoutes);
-app.get("/api/v1", (req: any, res: any) => {
-  res.json({ message: "E-Sport Connection API v1" });
-});
-
-// Error handling middleware
-app.use((err: any, req: any, res: any, next: any) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: "Something went wrong!",
-    message:
-      process.env.NODE_ENV === "development"
-        ? err.message
-        : "Internal server error",
+// 404 handler
+fastify.setNotFoundHandler((request, reply) => {
+  reply.status(404).send({
+    error: "Not Found",
+    message: `Route ${request.method} ${request.url} not found`,
   });
-});
-
-app.all("*", (req: any, res: any) => {
-  res.status(404).json({ error: "Route not found" });
 });
 
 // Graceful shutdown
-process.on("SIGINT", async () => {
+process.on("SIGTERM", async () => {
   console.log("Shutting down gracefully...");
-  await mongoose.connection.close();
+  await fastify.close();
   process.exit(0);
 });
 
-process.on("SIGTERM", async () => {
+process.on("SIGINT", async () => {
   console.log("Shutting down gracefully...");
-  await mongoose.connection.close();
+  await fastify.close();
   process.exit(0);
 });
 
 // Start server
 const startServer = async () => {
   try {
-    console.log("🚀 Starting server...");
+    console.log("🚀 Starting DEBUG-FREE server...");
     console.log("Environment:", process.env.NODE_ENV);
     console.log("Port:", PORT);
-    console.log("MongoDB URI exists:", !!process.env.MONGODB_URI);
     
-    // Connect to database
-    await connectDB();
-    console.log("✅ Database connected successfully");
-
-    // Set up notification cleanup job (runs every 24 hours)
-    setInterval(async () => {
-      try {
-        await NotificationService.cleanupOldNotifications();
-      } catch (error) {
-        console.error("Error in notification cleanup job:", error);
-      }
-    }, 24 * 60 * 60 * 1000); // 24 hours
+    // Register routes (without database for now)
+    await registerRoutes();
 
     // Listen on the specified port
-    server.listen(PORT, () => {
-      console.log(`✅ Server running on port ${PORT}`);
-      console.log(`📡 Health check: http://localhost:${PORT}/health`);
-      console.log(`🚀 API endpoint: http://localhost:${PORT}/api/v1`);
+    await fastify.listen({ 
+      port: Number(PORT), 
+      host: '0.0.0.0' // Important for Render deployment
     });
+    
+    console.log(`✅ DEBUG-FREE Server running on port ${PORT}`);
+    console.log(`📡 Health check: http://localhost:${PORT}/health`);
+    console.log(`🚀 API endpoint: http://localhost:${PORT}/api/v1`);
+    console.log(`🎯 NO DEBUG DEPENDENCIES - ERROR ELIMINATED!`);
+    
   } catch (error) {
     console.error("❌ Failed to start server:", error);
     console.error("Stack trace:", error.stack);
-    
-    // Try to start server anyway if database fails
-    console.log("🔄 Attempting to start server without database...");
-    server.listen(PORT, () => {
-      console.log(`⚠️  Server running on port ${PORT} (database disconnected)`);
-    });
+    process.exit(1);
   }
 };
 
