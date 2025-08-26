@@ -1,4 +1,5 @@
-const { FastifyInstance, FastifyPluginAsync } = require("fastify");
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const getRandomGame = () => {
     const games = ["Valorant", "CS:GO", "League of Legends", "Dota 2", "Overwatch"];
     return games[Math.floor(Math.random() * games.length)];
@@ -133,4 +134,4 @@ const userRoutes = async (fastify) => {
         }
     });
 };
-module.exports = userRoutes;
+exports.default = userRoutes;

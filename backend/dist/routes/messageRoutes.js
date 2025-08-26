@@ -1,4 +1,5 @@
-const { FastifyInstance, FastifyPluginAsync } = require("fastify");
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const messageRoutes = async (fastify) => {
     fastify.get("/messages/health", async (request, reply) => {
         return {
@@ -8,4 +9,4 @@ const messageRoutes = async (fastify) => {
         };
     });
 };
-module.exports = messageRoutes;
+exports.default = messageRoutes;
