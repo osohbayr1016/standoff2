@@ -10,7 +10,6 @@ import ChatModal from "../../components/ChatModal";
 import PlayerCard from "../../components/PlayerCard";
 import { useAuth } from "../../contexts/AuthContext";
 import { API_ENDPOINTS } from "@/config/api";
-import { Clan } from "../../../types/clan";
 
 interface Player {
   id: string;
@@ -57,102 +56,8 @@ interface TeamMember {
   invitedAt: string;
 }
 
-// Game information
+// Game information (MLBB only)
 const gameInfo = {
-  valorant: {
-    name: "Valorant",
-    category: "PC" as const,
-    description: "5v5 tactical shooter game",
-    roles: ["Duelist", "Controller", "Initiator", "Sentinel"],
-    ranks: [
-      "Iron",
-      "Bronze",
-      "Silver",
-      "Gold",
-      "Platinum",
-      "Diamond",
-      "Ascendant",
-      "Immortal",
-      "Radiant",
-    ],
-  },
-  dota2: {
-    name: "Dota 2",
-    category: "PC" as const,
-    description: "Multiplayer online battle arena",
-    roles: ["Carry", "Support", "Mid", "Offlane", "Hard Support"],
-    ranks: [
-      "Herald",
-      "Guardian",
-      "Crusader",
-      "Archon",
-      "Legend",
-      "Ancient",
-      "Divine",
-      "Immortal",
-    ],
-  },
-  cs2: {
-    name: "CS2",
-    category: "PC" as const,
-    description: "First-person tactical shooter",
-    roles: ["AWPer", "Rifler", "IGL", "Entry Fragger", "Lurker"],
-    ranks: [
-      "Silver",
-      "Gold Nova",
-      "Master Guardian",
-      "Distinguished",
-      "Legendary Eagle",
-      "Supreme",
-      "Global Elite",
-    ],
-  },
-  "apex-legends": {
-    name: "Apex Legends",
-    category: "PC" as const,
-    description: "Battle royale hero shooter",
-    roles: ["Assault", "Recon", "Support", "Controller"],
-    ranks: [
-      "Bronze",
-      "Silver",
-      "Gold",
-      "Platinum",
-      "Diamond",
-      "Master",
-      "Predator",
-    ],
-  },
-  pubg: {
-    name: "PUBG",
-    category: "PC" as const,
-    description: "Battle royale game",
-    roles: ["IGL", "Fragger", "Support", "Sniper"],
-    ranks: [
-      "Bronze",
-      "Silver",
-      "Gold",
-      "Platinum",
-      "Diamond",
-      "Crown",
-      "Ace",
-      "Conqueror",
-    ],
-  },
-  warcraft: {
-    name: "Warcraft",
-    category: "PC" as const,
-    description: "Real-time strategy game",
-    roles: ["Tank", "DPS", "Healer", "Support"],
-    ranks: [
-      "Bronze",
-      "Silver",
-      "Gold",
-      "Platinum",
-      "Diamond",
-      "Master",
-      "Grandmaster",
-    ],
-  },
   "mobile-legends": {
     name: "Mobile Legends",
     category: "Mobile" as const,
@@ -170,38 +75,6 @@ const gameInfo = {
       "+Mythical Immortal",
     ],
   },
-  standoff2: {
-    name: "Standoff 2",
-    category: "Mobile" as const,
-    description: "Mobile first-person shooter",
-    roles: ["AWPer", "Rifler", "IGL", "Entry Fragger"],
-    ranks: [
-      "Bronze",
-      "Silver",
-      "Gold",
-      "Platinum",
-      "Diamond",
-      "Legend",
-      "Supreme",
-      "Global Elite",
-    ],
-  },
-  "pubg-mobile": {
-    name: "PUBG Mobile",
-    category: "Mobile" as const,
-    description: "Mobile battle royale game",
-    roles: ["IGL", "Fragger", "Support", "Sniper"],
-    ranks: [
-      "Bronze",
-      "Silver",
-      "Gold",
-      "Platinum",
-      "Diamond",
-      "Crown",
-      "Ace",
-      "Conqueror",
-    ],
-  },
 };
 
 export default function GamePage() {
@@ -216,8 +89,6 @@ export default function GamePage() {
   const [loading, setLoading] = useState(true);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const [userClan, setUserClan] = useState<Clan | null>(null);
-  const [invitingPlayer, setInvitingPlayer] = useState<string | null>(null);
 
   const game = gameInfo[gameId as keyof typeof gameInfo];
 
@@ -236,95 +107,6 @@ export default function GamePage() {
     setIsChatModalOpen(false);
     setSelectedPlayer(null);
   };
-
-  // Load user clan from API
-  useEffect(() => {
-    const fetchUserClan = async () => {
-      if (user) {
-        try {
-          const response = await fetch(API_ENDPOINTS.CLANS.USER_CLAN, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            credentials: "include",
-          });
-          if (response.ok) {
-            const data = await response.json();
-            setUserClan(data.clan || null);
-          }
-        } catch (error) {
-          console.error("Error fetching user clan:", error);
-        }
-      } else {
-        setUserClan(null);
-      }
-    };
-
-    fetchUserClan();
-  }, [user]);
-
-  // Handle clan invitation
-  const handleInviteToClan = async (player: Player) => {
-    if (!userClan || !user) {
-      alert("Та кланд орж байхгүй эсвэл нэвтрээгүй байна");
-      return;
-    }
-
-    // Check if user is clan leader
-    if (userClan.leader?._id !== user.id) {
-      alert("Зөвхөн кланы дарга л тоглогч урих боломжтой");
-      return;
-    }
-
-    // Check if player is already in the clan
-    const isAlreadyInClan = userClan.members?.some(
-      (member) => member.id === player.id
-    );
-    if (isAlreadyInClan) {
-      alert("Энэ тоглогч аль хэдийн таны кланд байна");
-      return;
-    }
-
-    try {
-      setInvitingPlayer(player.id);
-      const response = await fetch(API_ENDPOINTS.CLANS.INVITE(userClan._id), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          playerId: player.id,
-        }),
-      });
-
-      if (response.ok) {
-        alert(`${player.name}-г таны кланд урилалав!`);
-        // Refresh clan data
-        const clanResponse = await fetch(API_ENDPOINTS.CLANS.USER_CLAN, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          credentials: "include",
-        });
-        if (clanResponse.ok) {
-          const data = await clanResponse.json();
-          setUserClan(data.clan || null);
-        }
-      } else {
-        const error = await response.json();
-        alert(error.message || "Урилга илгээхэд алдаа гарлаа");
-      }
-    } catch (error) {
-      console.error("Error inviting player:", error);
-      alert("Урилга илгээхэд алдаа гарлаа");
-    } finally {
-      setInvitingPlayer(null);
-    }
-  };
-
-  // Check if user can invite players (is clan leader)
-  const canInvitePlayers = userClan && user && userClan.leader?._id === user.id;
 
   // Fetch players from API
   useEffect(() => {
@@ -554,9 +336,6 @@ export default function GamePage() {
                 player={player}
                 index={index}
                 onOpenChat={handleOpenChat}
-                canInviteToClan={!!canInvitePlayers}
-                onInviteToClan={handleInviteToClan}
-                invitingPlayer={invitingPlayer}
               />
             ))}
           </motion.div>

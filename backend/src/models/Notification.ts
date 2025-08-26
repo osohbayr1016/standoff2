@@ -3,7 +3,6 @@ import mongoose, { Document, Schema } from "mongoose";
 export enum NotificationType {
   MESSAGE = "MESSAGE",
   SYSTEM = "SYSTEM",
-  CLAN_INVITATION = "CLAN_INVITATION",
 }
 
 export enum NotificationStatus {
@@ -19,7 +18,6 @@ export interface INotification extends Document {
   title: string;
   content: string;
   relatedMessageId?: mongoose.Types.ObjectId;
-  relatedClanId?: mongoose.Types.ObjectId;
   status: NotificationStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -55,10 +53,6 @@ const notificationSchema = new Schema<INotification>(
     relatedMessageId: {
       type: Schema.Types.ObjectId,
       ref: "Message",
-    },
-    relatedClanId: {
-      type: Schema.Types.ObjectId,
-      ref: "Clan",
     },
     status: {
       type: String,

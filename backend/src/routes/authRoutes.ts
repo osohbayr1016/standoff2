@@ -126,7 +126,7 @@ router.post("/register", async (req: Request, res: Response) => {
       hasPassword: !!req.body.password,
     });
 
-    const { email, password, name, role = "PLAYER" } = req.body;
+    const { email, password, name } = req.body;
 
     // Validate required fields
     if (!email || !password || !name) {
@@ -183,13 +183,8 @@ router.post("/register", async (req: Request, res: Response) => {
       });
     }
 
-    // Validate role
-    if (!Object.values(UserRole).includes(role)) {
-      return res.status(400).json({
-        success: false,
-        message: "Буруу үүрэг сонгосон",
-      });
-    }
+    // Force PLAYER role for all registrations
+    const role: UserRole = UserRole.PLAYER;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
@@ -206,7 +201,7 @@ router.post("/register", async (req: Request, res: Response) => {
       email: email.toLowerCase().trim(),
       password,
       name: name.trim(),
-      role: role as UserRole,
+      role,
       isVerified: false, // Local accounts need verification
       isOnline: true,
       lastSeen: new Date(),

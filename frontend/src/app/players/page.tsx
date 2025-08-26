@@ -6,6 +6,7 @@ import { Search, Monitor, Smartphone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import Navigation from "../components/Navigation";
+import ScrollReveal from "../components/ScrollReveal";
 
 import { API_ENDPOINTS } from "@/config/api";
 
@@ -36,47 +37,6 @@ interface Player {
 }
 
 const gameData = {
-  PC: [
-    {
-      id: "valorant",
-      name: "Valorant",
-      image:
-        "https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg",
-      route: "/games/valorant",
-      playerCount: 0,
-    },
-    {
-      id: "dota2",
-      name: "Dota 2",
-      image:
-        "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png",
-      route: "/games/dota2",
-      playerCount: 0,
-    },
-    {
-      id: "cs2",
-      name: "CS2",
-      image:
-        "https://images.seeklogo.com/logo-png/47/2/counter-strike-2-logo-png_seeklogo-477404.png",
-      route: "/games/cs2",
-      playerCount: 0,
-    },
-    {
-      id: "apex-legends",
-      name: "Apex Legends",
-      image: "https://cdn.akamai.steamstatic.com/steam/apps/1172470/logo.png",
-      route: "/games/apex-legends",
-      playerCount: 0,
-    },
-    {
-      id: "pubg",
-      name: "PUBG",
-      image:
-        "https://images.seeklogo.com/logo-png/39/2/pubg-mobile-logo-png_seeklogo-399111.png",
-      route: "/games/pubg",
-      playerCount: 0,
-    },
-  ],
   Mobile: [
     {
       id: "mobile-legends",
@@ -85,31 +45,13 @@ const gameData = {
       route: "/games/mobile-legends",
       playerCount: 0,
     },
-    {
-      id: "standoff2",
-      name: "Standoff 2",
-      image:
-        "https://i.pinimg.com/originals/42/cb/81/42cb812f44c77d4c0cf40774df855ae6.png",
-      route: "/games/standoff2",
-      playerCount: 0,
-    },
-    {
-      id: "pubg-mobile",
-      name: "PUBG Mobile",
-      image:
-        "https://play-lh.googleusercontent.com/JRd05pyBH41qjgsJuWduRJpDeZG0Hnb0yjf2nWqO7VaGKL10-G5UIygxED-WNOc3pg",
-      route: "/games/pubg-mobile",
-      playerCount: 0,
-    },
   ],
 };
 
 export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<"PC" | "Mobile">(
-    "PC"
-  );
+  const [selectedCategory, setSelectedCategory] = useState<"Mobile">("Mobile");
   const [loading, setLoading] = useState(true);
   const [gameDataState, setGameDataState] = useState(gameData);
 
@@ -147,7 +89,7 @@ export default function PlayersPage() {
     Object.keys(updatedGameData).forEach((category) => {
       updatedGameData[category as keyof typeof gameData].forEach((game) => {
         const count = players.filter(
-          (player) => player.game === game.name && player.category === category
+          (player) => player.game === game.name
         ).length;
         game.playerCount = count;
       });
@@ -188,26 +130,16 @@ export default function PlayersPage() {
 
       <main className="pt-20 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
+          <ScrollReveal className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-green-400 dark:to-blue-400 bg-clip-text text-transparent mb-4">
               Find Your Perfect Player
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Бүх төрлийн тоглоом болон role бүрээс чадвартай тоглогчдыг ол.
             </p>
-          </motion.div>
+          </ScrollReveal>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8"
-          >
+          <ScrollReveal className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -219,35 +151,12 @@ export default function PlayersPage() {
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
                 />
               </div>
-
-              <div className="relative">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) =>
-                    setSelectedCategory(e.target.value as "PC" | "Mobile")
-                  }
-                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200 appearance-none"
-                >
-                  <option value="PC">PC Тоглоомууд</option>
-                  <option value="Mobile">Mobile Тоглоомууд</option>
-                </select>
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  {getCategoryIcon(selectedCategory)}
-                </div>
-              </div>
             </div>
-          </motion.div>
+          </ScrollReveal>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mb-8"
-          >
+          <ScrollReveal className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              {selectedCategory === "PC"
-                ? "PC Тоглоомууд"
-                : "Mobile Тоглоомууд"}
+              Mobile Legends
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {gameDataState[selectedCategory].map((game, index) => (
@@ -307,7 +216,7 @@ export default function PlayersPage() {
                 </motion.div>
               ))}
             </div>
-          </motion.div>
+          </ScrollReveal>
         </div>
       </main>
     </div>

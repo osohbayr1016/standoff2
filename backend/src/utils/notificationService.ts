@@ -2,7 +2,7 @@ import Notification, {
   NotificationType,
   NotificationStatus,
 } from "../models/Notification";
-import Message from "../models/Message";
+
 import User from "../models/User";
 
 export class NotificationService {
@@ -37,41 +37,6 @@ export class NotificationService {
       return notification;
     } catch (error) {
       console.error("Error creating message notification:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Create a notification for clan invitation
-   */
-  static async createClanInvitationNotification(
-    senderId: string,
-    receiverId: string,
-    clanId: string,
-    clanName: string,
-    clanTag: string
-  ) {
-    try {
-      // Get sender details
-      const sender = await User.findById(senderId).select("name");
-      if (!sender) {
-        throw new Error("Sender not found");
-      }
-
-      // Create notification
-      const notification = await Notification.create({
-        recipientId: receiverId,
-        senderId,
-        type: NotificationType.CLAN_INVITATION,
-        title: `Кланы урилга - [${clanTag}] ${clanName}`,
-        content: `${sender.name} таныг [${clanTag}] ${clanName} кланд урьж байна`,
-        relatedClanId: clanId,
-        status: NotificationStatus.PENDING,
-      });
-
-      return notification;
-    } catch (error) {
-      console.error("Error creating clan invitation notification:", error);
       throw error;
     }
   }

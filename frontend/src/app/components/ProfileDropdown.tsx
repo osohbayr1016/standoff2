@@ -3,27 +3,20 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
-import { User, Settings, UserPlus, ChevronDown, Crown } from "lucide-react";
-import { Clan } from "../../types/clan";
+import { User, Settings, UserPlus, ChevronDown } from "lucide-react";
+// Clan removed from the app; drop related types and props
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 interface ProfileDropdownProps {
   onInviteFriend: () => void;
-  onCreateClan?: () => void;
-  onViewMyClan?: () => void;
-  userClan?: Clan | null;
 }
 
 export default function ProfileDropdown({
   onInviteFriend,
-  onCreateClan,
-  onViewMyClan,
-  userClan,
 }: ProfileDropdownProps) {
   const { user, hasProfile } = useAuth();
-  const router = useRouter();
+
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -171,29 +164,6 @@ export default function ProfileDropdown({
                 <UserPlus className="w-4 h-4" />
                 <span className="text-sm font-medium">Найзаа урих</span>
               </motion.button>
-
-              {/* Clan Management */}
-              {userClan ? (
-                <motion.button
-                  onClick={() => handleItemClick(onViewMyClan)}
-                  whileHover={{ backgroundColor: "rgba(124, 58, 237, 0.1)" }}
-                  className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
-                >
-                  <Crown className="w-4 h-4" />
-                  <span className="text-sm font-medium">Миний Клан</span>
-                </motion.button>
-              ) : (
-                onCreateClan && (
-                  <motion.button
-                    onClick={() => handleItemClick(onCreateClan)}
-                    whileHover={{ backgroundColor: "rgba(124, 58, 237, 0.1)" }}
-                    className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
-                  >
-                    <Crown className="w-4 h-4" />
-                    <span className="text-sm font-medium">Клан үүсгэх</span>
-                  </motion.button>
-                )
-              )}
             </div>
           </motion.div>
         )}

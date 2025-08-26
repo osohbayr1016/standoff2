@@ -43,20 +43,11 @@ export const API_ENDPOINTS = {
     LIST: (playerId: string) => `${API_BASE_URL}/api/messages/${playerId}`,
     SEND: `${API_BASE_URL}/api/messages`,
   },
-  CLANS: {
-    ALL: `${API_BASE_URL}/api/clans`,
-    GET: (id: string) => `${API_BASE_URL}/api/clans/${id}`,
-    CREATE: `${API_BASE_URL}/api/clans`,
-    UPDATE: (id: string) => `${API_BASE_URL}/api/clans/${id}`,
-    INVITE: (id: string) => `${API_BASE_URL}/api/clans/${id}/invite`,
-    ACCEPT: (id: string) => `${API_BASE_URL}/api/clans/${id}/accept`,
-    DECLINE: (id: string) => `${API_BASE_URL}/api/clans/${id}/decline`,
-    LEAVE: (id: string) => `${API_BASE_URL}/api/clans/${id}/leave`,
-    REMOVE_MEMBER: (id: string, memberId: string) =>
-      `${API_BASE_URL}/api/clans/${id}/members/${memberId}`,
-    USER_CLAN: `${API_BASE_URL}/api/clans/user/me`,
-    USER_INVITATIONS: `${API_BASE_URL}/api/clans/user/invitations`,
+
+  STATS: {
+    OVERVIEW: `${API_BASE_URL}/api/stats/overview`,
   },
+
   HEALTH: `${API_BASE_URL}/health`,
 };
 

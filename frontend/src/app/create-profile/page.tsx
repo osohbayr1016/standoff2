@@ -33,70 +33,6 @@ interface GameOption {
 
 const gameOptions: GameOption[] = [
   {
-    id: "dota2",
-    name: "Dota 2",
-    category: "PC",
-    roles: ["Carry", "Support", "Mid", "Offlane", "Hard Support"],
-    ranks: [
-      "Herald",
-      "Guardian",
-      "Crusader",
-      "Archon",
-      "Legend",
-      "Ancient",
-      "Divine",
-      "Immortal",
-    ],
-  },
-  {
-    id: "cs2",
-    name: "CS2",
-    category: "PC",
-    roles: ["AWPer", "Rifler", "IGL", "Entry Fragger", "Lurker"],
-    ranks: [
-      "Silver",
-      "Gold Nova",
-      "Master Guardian",
-      "Distinguished",
-      "Legendary Eagle",
-      "Supreme",
-      "Global Elite",
-    ],
-  },
-  {
-    id: "valorant",
-    name: "Valorant",
-    category: "PC",
-    roles: ["Duelist", "Initiator", "Controller", "Sentinel"],
-    ranks: [
-      "Iron",
-      "Bronze",
-      "Silver",
-      "Gold",
-      "Platinum",
-      "Diamond",
-      "Ascendant",
-      "Immortal",
-      "Radiant",
-    ],
-  },
-  {
-    id: "pubg",
-    name: "PUBG",
-    category: "PC",
-    roles: ["IGL", "Fragger", "Support", "Sniper"],
-    ranks: [
-      "Bronze",
-      "Silver",
-      "Gold",
-      "Platinum",
-      "Diamond",
-      "Crown",
-      "Ace",
-      "Conqueror",
-    ],
-  },
-  {
     id: "mobile-legends",
     name: "Mobile Legends",
     category: "Mobile",
@@ -111,38 +47,6 @@ const gameOptions: GameOption[] = [
       "Mythic",
       "Mythical Glory",
       "+Mythical Immortal",
-    ],
-  },
-  {
-    id: "pubg-mobile",
-    name: "PUBG Mobile",
-    category: "Mobile",
-    roles: ["IGL", "Fragger", "Support", "Sniper"],
-    ranks: [
-      "Bronze",
-      "Silver",
-      "Gold",
-      "Platinum",
-      "Diamond",
-      "Crown",
-      "Ace",
-      "Conqueror",
-    ],
-  },
-  {
-    id: "standoff2",
-    name: "Standoff 2",
-    category: "Mobile",
-    roles: ["AWPer", "Rifler", "IGL", "Entry Fragger"],
-    ranks: [
-      "Bronze",
-      "Silver",
-      "Gold",
-      "Platinum",
-      "Diamond",
-      "Legend",
-      "Supreme",
-      "Global Elite",
     ],
   },
 ];
@@ -188,8 +92,8 @@ export default function CreateProfilePage() {
   const [selectedGame, setSelectedGame] = useState<GameOption | null>(null);
 
   const [formData, setFormData] = useState<ProfileFormData>({
-    category: "PC",
-    game: "",
+    category: "Mobile",
+    game: "Mobile Legends",
     role: "",
     realName: "",
     inGameName: "",
@@ -435,48 +339,22 @@ export default function CreateProfilePage() {
             </motion.div>
 
             <form onSubmit={handleSubmit}>
-              {/* Game Selection */}
+              {/* Game Selection: fixed to Mobile Legends */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8"
               >
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                  Choose Your Game
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  Game
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {gameOptions.map((game) => (
-                    <motion.button
-                      key={game.id}
-                      type="button"
-                      onClick={() => handleGameSelect(game)}
-                      className={`p-6 rounded-xl border-2 transition-all duration-200 ${
-                        selectedGame?.id === game.id
-                          ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
-                          : "border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-green-300"
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex items-center space-x-3 mb-3">
-                        {getCategoryIcon(game.category)}
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {game.category}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                        {game.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        {game.roles.length} roles available
-                      </p>
-                    </motion.button>
-                  ))}
-                </div>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Mobile Legends
+                </p>
               </motion.div>
 
               {/* Profile Details */}
-              {selectedGame && (
+              {true && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -493,7 +371,7 @@ export default function CreateProfilePage() {
                         Role *
                       </label>
                       <div className="grid grid-cols-2 gap-2">
-                        {selectedGame.roles.map((role) => (
+                        {gameOptions[0].roles.map((role) => (
                           <button
                             key={role}
                             type="button"
@@ -529,7 +407,7 @@ export default function CreateProfilePage() {
                         required
                       >
                         <option value="">Select Rank</option>
-                        {selectedGame.ranks.map((rank) => (
+                        {gameOptions[0].ranks.map((rank) => (
                           <option key={rank} value={rank}>
                             {rank}
                           </option>

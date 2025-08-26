@@ -122,8 +122,8 @@ import playerProfileRoutes from "./routes/playerProfileRoutes";
 import organizationProfileRoutes from "./routes/organizationProfileRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
-import clanRoutes from "./routes/clanRoutes";
 import { NotificationService } from "./utils/notificationService";
+import statsRoutes from "./routes/statsRoutes";
 
 // API routes
 app.use("/api/auth", authRoutes);
@@ -132,12 +132,12 @@ app.use("/api/player-profiles", playerProfileRoutes);
 app.use("/api/organization-profiles", organizationProfileRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api", notificationRoutes);
+app.use("/api", statsRoutes);
 
 // Import and set up message routes after socket manager is initialized
 import messageRoutes, { setSocketManager } from "./routes/messageRoutes";
 setSocketManager(socketManager);
 app.use("/api", messageRoutes);
-app.use("/api/clans", clanRoutes);
 app.get("/api/v1", (req: any, res: any) => {
   res.json({ message: "E-Sport Connection API v1" });
 });

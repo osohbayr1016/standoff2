@@ -8,7 +8,7 @@ const router = Router();
 // Get all player profiles (public endpoint)
 router.get("/profiles", async (req: Request, res: Response) => {
   try {
-    const profiles = await PlayerProfile.find()
+    const profiles = await PlayerProfile.find({ game: "Mobile Legends" })
       .populate("userId", "name avatar email")
       .lean();
 
@@ -165,8 +165,6 @@ router.post(
       }
 
       const {
-        category,
-        game,
         role,
         inGameName,
         rank,
@@ -189,25 +187,17 @@ router.post(
       console.log("🔍 Debug - Avatar Public ID received:", avatarPublicId);
 
       // Validate required fields
-      if (
-        !category ||
-        !game ||
-        !role ||
-        !inGameName ||
-        !rank ||
-        !experience ||
-        !bio
-      ) {
+      if (!role || !inGameName || !rank || !experience || !bio) {
         return res.status(400).json({
           message:
-            "Missing required fields: category, game, role, inGameName, rank, experience, bio",
+            "Missing required fields: role, inGameName, rank, experience, bio",
         });
       }
 
       const newProfile = new PlayerProfile({
         userId,
-        category,
-        game,
+        category: "Mobile",
+        game: "Mobile Legends",
         role,
         inGameName,
         rank,

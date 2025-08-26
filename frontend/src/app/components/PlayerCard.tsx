@@ -35,18 +35,12 @@ interface PlayerCardProps {
   player: Player;
   index: number;
   onOpenChat: (player: Player) => void;
-  canInviteToClan?: boolean;
-  onInviteToClan?: (player: Player) => void;
-  invitingPlayer?: string | null;
 }
 
 export default function PlayerCard({
   player,
   index,
   onOpenChat,
-  canInviteToClan,
-  onInviteToClan,
-  invitingPlayer,
 }: PlayerCardProps) {
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -174,27 +168,6 @@ export default function PlayerCard({
               Зурвас
             </button>
           </div>
-
-          {/* Second Row - Clan Invitation (only for clan leaders) */}
-          {canInviteToClan && onInviteToClan && (
-            <button
-              onClick={() => onInviteToClan(player)}
-              disabled={invitingPlayer === player.id}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 dark:from-yellow-500 dark:to-orange-500 text-white rounded-lg font-medium hover:from-orange-600 hover:to-red-600 dark:hover:from-yellow-600 dark:hover:to-orange-600 transition-all duration-200 transform hover:scale-105 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-            >
-              {invitingPlayer === player.id ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Урилга илгээж байна...</span>
-                </>
-              ) : (
-                <>
-                  <Crown className="w-4 h-4" />
-                  <span>Кланд Урих</span>
-                </>
-              )}
-            </button>
-          )}
         </div>
       </div>
     </motion.div>

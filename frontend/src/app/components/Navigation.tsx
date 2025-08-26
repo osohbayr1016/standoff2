@@ -6,7 +6,6 @@ import { useDarkMode } from "../contexts/DarkModeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useSocket } from "../contexts/SocketContext";
 import { API_ENDPOINTS } from "../../config/api";
-import { Clan } from "../../types/clan";
 import {
   Sun,
   Moon,
@@ -22,7 +21,6 @@ import Link from "next/link";
 import NotificationCenter from "./NotificationCenter";
 import ProfileDropdown from "./ProfileDropdown";
 import InviteFriendModal from "./InviteFriendModal";
-import CreateClanModal from "./CreateClanModal";
 
 export default function Navigation() {
   const { isDarkMode, toggleDarkMode, isLoaded } = useDarkMode();
@@ -30,13 +28,10 @@ export default function Navigation() {
   const { isConnected } = useSocket();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isInviteFriendModalOpen, setIsInviteFriendModalOpen] = useState(false);
-  const [isCreateClanModalOpen, setIsCreateClanModalOpen] = useState(false);
-  const [userClan, setUserClan] = useState<Clan | null>(null);
 
   const navItems = [
     { name: "Нүүр", href: "/" },
     { name: "Тоглогчид", href: "/players" },
-    { name: "Кланууд", href: "/clans" },
     { name: "Тэмцээнүүд", href: "/tournaments" },
     { name: "Бидний тухай", href: "/about" },
   ];
@@ -44,48 +39,6 @@ export default function Navigation() {
   const handleInviteFriend = () => {
     setIsInviteFriendModalOpen(true);
   };
-
-  const handleCreateClan = () => {
-    setIsCreateClanModalOpen(true);
-  };
-
-  const handleClanCreated = (clan: Clan) => {
-    setIsCreateClanModalOpen(false);
-    setUserClan(clan); // Update user's clan when created
-    console.log("Clan created:", clan);
-  };
-
-  const handleViewMyClan = () => {
-    if (userClan) {
-      window.location.href = `/clans/${userClan._id}`;
-    }
-  };
-
-  // Fetch user's clan when component mounts or user changes
-  useEffect(() => {
-    const fetchUserClan = async () => {
-      if (user) {
-        try {
-          const response = await fetch(API_ENDPOINTS.CLANS.USER_CLAN, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            credentials: "include",
-          });
-          if (response.ok) {
-            const data = await response.json();
-            setUserClan(data.clan || null);
-          }
-        } catch (error) {
-          console.error("Error fetching user clan:", error);
-        }
-      } else {
-        setUserClan(null);
-      }
-    };
-
-    fetchUserClan();
-  }, [user]);
 
   return (
     <>
@@ -169,12 +122,7 @@ export default function Navigation() {
 
               {user ? (
                 <div className="flex items-center space-x-2">
-                  <ProfileDropdown
-                    onInviteFriend={handleInviteFriend}
-                    onCreateClan={handleCreateClan}
-                    onViewMyClan={handleViewMyClan}
-                    userClan={userClan}
-                  />
+                  <ProfileDropdown onInviteFriend={handleInviteFriend} />
                   <motion.button
                     onClick={logout}
                     whileHover={{ scale: 1.05 }}
@@ -325,11 +273,6 @@ export default function Navigation() {
       <InviteFriendModal
         isOpen={isInviteFriendModalOpen}
         onClose={() => setIsInviteFriendModalOpen(false)}
-      />
-      <CreateClanModal
-        isOpen={isCreateClanModalOpen}
-        onClose={() => setIsCreateClanModalOpen(false)}
-        onClanCreated={handleClanCreated}
       />
     </>
   );
