@@ -99,9 +99,6 @@ export class NotificationService {
         { status: NotificationStatus.DELETED }
       );
 
-      console.log(
-        `🧹 Cleaned up ${result.modifiedCount} old notifications (7+ days old)`
-      );
       return result.modifiedCount;
     } catch (error) {
       console.error("Error cleaning up old notifications:", error);

@@ -58,13 +58,6 @@ router.post(
       // Send invite email
       // Email sending disabled
 
-      // Log invitation for tracking (optional)
-      console.log(
-        `Invite sent: ${
-          user.email
-        } -> ${recipientEmail} at ${new Date().toISOString()}`
-      );
-
       res.status(200).json({
         success: true,
         message: "Урилга амжилттай илгээгдлээ",

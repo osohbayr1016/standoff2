@@ -26,22 +26,15 @@ const allowedOrigins = [
     "http://127.0.0.1:3001",
     "https://e-sport-connection.vercel.app",
 ];
-console.log("🔧 CORS Configuration:");
-console.log("Allowed origins:", allowedOrigins);
-console.log("Frontend URL from env:", process.env.FRONTEND_URL);
 app.use((0, cors_1.default)({
     origin: function (origin, callback) {
-        console.log("🌐 CORS request from origin:", origin);
         if (!origin) {
-            console.log("✅ Allowing request with no origin");
             return callback(null, true);
         }
         if (allowedOrigins.indexOf(origin) !== -1) {
-            console.log("✅ CORS allowed for origin:", origin);
             callback(null, true);
         }
         else {
-            console.log("❌ CORS blocked origin:", origin);
             callback(new Error("Not allowed by CORS"));
         }
     },
@@ -63,11 +56,8 @@ const sessionConfig = {
     },
 };
 if (process.env.NODE_ENV === "production") {
-    console.log("🔐 Using production session configuration");
-    console.log("⚠️  Warning: Using MemoryStore in production. Consider using Redis or MongoDB for session storage.");
 }
 else {
-    console.log("🔐 Using development session configuration");
 }
 app.use((0, express_session_1.default)(sessionConfig));
 app.use(passport_1.default.initialize());
@@ -138,13 +128,7 @@ const startServer = async () => {
             }
         }, 24 * 60 * 60 * 1000);
         server.listen(PORT, () => {
-            console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`📊 Health check: http://localhost:${PORT}/health`);
-            console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-            console.log(`🔐 OAuth: Google & Facebook enabled`);
-            console.log(`🔌 WebSocket: Real-time chat enabled`);
-            console.log(`🧹 Notification cleanup: Every 24 hours (7+ days old)`);
-            console.log(`🌐 Server bound to 0.0.0.0:${PORT}`);
+            console.log(`Server running on port ${PORT}`);
         });
     }
     catch (error) {

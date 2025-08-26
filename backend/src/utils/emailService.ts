@@ -20,7 +20,6 @@ class EmailService {
       };
 
       // Email sending disabled in this environment
-      console.log("Email send stub called");
       return true;
     } catch (error) {
       console.error("Error sending email:", error);
@@ -243,7 +242,6 @@ class EmailService {
 
   async testConnection(): Promise<boolean> {
     try {
-      console.log("Email service stub: connection OK");
       return true;
     } catch (error) {
       console.error("Email service connection failed:", error);

@@ -181,11 +181,6 @@ router.post(
         languages,
       } = req.body;
 
-      // Debug: Log the received data
-      console.log("🔍 Debug - Create profile request body:", req.body);
-      console.log("🔍 Debug - Avatar URL received:", avatar);
-      console.log("🔍 Debug - Avatar Public ID received:", avatarPublicId);
-
       // Validate required fields
       if (!role || !inGameName || !rank || !experience || !bio) {
         return res.status(400).json({
@@ -220,19 +215,7 @@ router.post(
         languages: languages || ["Mongolian"],
       });
 
-      // Debug: Log the profile object before saving
-      console.log("🔍 Debug - Profile object before saving:", {
-        avatar: newProfile.avatar,
-        avatarPublicId: newProfile.avatarPublicId,
-      });
-
       await newProfile.save();
-
-      // Debug: Log the saved profile
-      console.log("🔍 Debug - Profile saved successfully:", {
-        avatar: newProfile.avatar,
-        avatarPublicId: newProfile.avatarPublicId,
-      });
 
       // Populate user data for response
       await newProfile.populate("userId", "name avatar email");
@@ -297,12 +280,6 @@ router.put(
 
       const updateData = req.body;
 
-      console.log("🔍 Debug - Update request body:", req.body);
-      console.log(
-        "🔍 Debug - Highlight video in request:",
-        req.body.highlightVideo
-      );
-
       // Remove userId from update data to prevent unauthorized changes
       delete updateData.userId;
 
@@ -311,11 +288,6 @@ router.put(
         updateData,
         { new: true, runValidators: true }
       ).populate("userId", "name avatar email");
-
-      console.log(
-        "🔍 Debug - Updated profile highlight video:",
-        updatedProfile?.highlightVideo
-      );
 
       const transformedProfile = {
         id: (updatedProfile as any).userId._id,

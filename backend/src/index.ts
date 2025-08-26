@@ -32,26 +32,17 @@ const allowedOrigins = [
   "https://e-sport-connection.vercel.app",
 ];
 
-console.log("🔧 CORS Configuration:");
-console.log("Allowed origins:", allowedOrigins);
-console.log("Frontend URL from env:", process.env.FRONTEND_URL);
-
 app.use(
   cors({
     origin: function (origin, callback) {
-      console.log("🌐 CORS request from origin:", origin);
-
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) {
-        console.log("✅ Allowing request with no origin");
         return callback(null, true);
       }
 
       if (allowedOrigins.indexOf(origin) !== -1) {
-        console.log("✅ CORS allowed for origin:", origin);
         callback(null, true);
       } else {
-        console.log("❌ CORS blocked origin:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -80,14 +71,10 @@ const sessionConfig: any = {
 
 // Use MemoryStore only in development
 if (process.env.NODE_ENV === "production") {
-  console.log("🔐 Using production session configuration");
   // In production, you might want to use Redis or MongoDB for session storage
   // For now, we'll use MemoryStore but with a warning
-  console.log(
-    "⚠️  Warning: Using MemoryStore in production. Consider using Redis or MongoDB for session storage."
-  );
 } else {
-  console.log("🔐 Using development session configuration");
+  // Development session configuration
 }
 
 app.use(session(sessionConfig));
@@ -186,13 +173,7 @@ const startServer = async () => {
 
     // Listen on the specified port
     server.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-      console.log(`🔐 OAuth: Google & Facebook enabled`);
-      console.log(`🔌 WebSocket: Real-time chat enabled`);
-      console.log(`🧹 Notification cleanup: Every 24 hours (7+ days old)`);
-      console.log(`🌐 Server bound to 0.0.0.0:${PORT}`);
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);

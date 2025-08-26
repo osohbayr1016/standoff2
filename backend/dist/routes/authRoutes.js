@@ -41,46 +41,7 @@ const passport_1 = __importDefault(require("passport"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = __importStar(require("../models/User"));
 const auth_1 = require("../middleware/auth");
-const mongoose_1 = __importDefault(require("mongoose"));
 const router = (0, express_1.Router)();
-router.get("/debug", async (req, res) => {
-    try {
-        const dbState = mongoose_1.default.connection.readyState;
-        const dbStates = {
-            0: "disconnected",
-            1: "connected",
-            2: "connecting",
-            3: "disconnecting",
-        };
-        const userCount = await User_1.default.countDocuments();
-        res.json({
-            success: true,
-            database: {
-                state: dbStates[dbState],
-                readyState: dbState,
-                userCount,
-            },
-            environment: {
-                nodeEnv: process.env.NODE_ENV,
-                hasJwtSecret: !!process.env.JWT_SECRET,
-                hasSessionSecret: !!process.env.SESSION_SECRET,
-                frontendUrl: process.env.FRONTEND_URL,
-            },
-        });
-    }
-    catch (error) {
-        console.error("Debug endpoint error:", error);
-        res.status(500).json({
-            success: false,
-            error: error instanceof Error ? error.message : "Unknown error",
-            stack: process.env.NODE_ENV === "development"
-                ? error instanceof Error
-                    ? error.stack
-                    : undefined
-                : undefined,
-        });
-    }
-});
 const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -119,12 +80,6 @@ router.get("/facebook/callback", passport_1.default.authenticate("facebook", { f
 });
 router.post("/register", async (req, res) => {
     try {
-        console.log("🔍 Registration request received:", {
-            email: req.body.email,
-            name: req.body.name,
-            role: req.body.role,
-            hasPassword: !!req.body.password,
-        });
         const { email, password, name } = req.body;
         if (!email || !password || !name) {
             return res.status(400).json({
