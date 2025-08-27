@@ -4,12 +4,12 @@ import { useState } from "react";
 import { API_ENDPOINTS } from "../../config/api";
 
 export default function TestApiPage() {
-  const [testResults, setTestResults] = useState<any>({});
+  const [testResults, setTestResults] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(false);
 
   const runTests = async () => {
     setLoading(true);
-    const results: any = {};
+    const results: Record<string, unknown> = {};
 
     try {
       // Test 1: Health check
@@ -100,30 +100,37 @@ export default function TestApiPage() {
         {Object.keys(testResults).length > 0 && (
           <div className="space-y-4">
             {Object.entries(testResults).map(
-              ([testName, result]: [string, any]) => (
-                <div
-                  key={testName}
-                  className="bg-white dark:bg-gray-800 rounded-lg p-6"
-                >
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {testName.toUpperCase()} Test
-                  </h3>
-                  <div className="space-y-2">
-                    <p>
-                      <strong>Status:</strong> {result.status}
-                    </p>
-                    <p>
-                      <strong>OK:</strong> {result.ok ? "✅" : "❌"}
-                    </p>
-                    <p>
-                      <strong>Data:</strong>
-                    </p>
-                    <pre className="bg-gray-100 dark:bg-gray-700 p-4 rounded text-sm overflow-auto">
-                      {JSON.stringify(result.data, null, 2)}
-                    </pre>
+              ([testName, result]: [string, unknown]) => {
+                const typedResult = result as {
+                  status: number;
+                  ok: boolean;
+                  data: unknown;
+                };
+                return (
+                  <div
+                    key={testName}
+                    className="bg-white dark:bg-gray-800 rounded-lg p-6"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      {testName.toUpperCase()} Test
+                    </h3>
+                    <div className="space-y-2">
+                      <p>
+                        <strong>Status:</strong> {typedResult.status}
+                      </p>
+                      <p>
+                        <strong>OK:</strong> {typedResult.ok ? "✅" : "❌"}
+                      </p>
+                      <p>
+                        <strong>Data:</strong>
+                      </p>
+                      <pre className="bg-gray-100 dark:bg-gray-700 p-4 rounded text-sm overflow-auto">
+                        {JSON.stringify(typedResult.data, null, 2)}
+                      </pre>
+                    </div>
                   </div>
-                </div>
-              )
+                );
+              }
             )}
           </div>
         )}

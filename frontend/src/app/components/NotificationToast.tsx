@@ -131,7 +131,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
     };
 
     // Error handling for socket events
-    const handleSocketError = (error: any) => {
+    const handleSocketError = (error: Error) => {
       console.error("🔌 Socket error in notification system:", error);
     };
 

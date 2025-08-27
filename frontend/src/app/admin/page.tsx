@@ -84,11 +84,13 @@ export default function AdminDashboard() {
 
         if (activityData.success) {
           const activities: RecentActivity[] = activityData.activities.map(
-            (item: any) => ({
-              id: item.id,
-              type: item.type,
-              title: item.title,
-              timestamp: new Date(item.timestamp).toLocaleDateString(),
+            (item: Record<string, unknown>) => ({
+              id: item.id as string,
+              type: item.type as string,
+              title: item.title as string,
+              timestamp: new Date(
+                item.timestamp as string
+              ).toLocaleDateString(),
               icon:
                 item.icon === "newspaper" ? (
                   <Plus className="w-4 h-4" />
@@ -169,7 +171,7 @@ export default function AdminDashboard() {
                 Access Denied
               </h1>
               <p className="text-gray-400 mb-6">
-                You don't have permission to access the admin panel.
+                You don&apos;t have permission to access the admin panel.
               </p>
               <Link
                 href="/"

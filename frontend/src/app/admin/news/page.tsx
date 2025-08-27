@@ -63,6 +63,49 @@ export default function AdminNewsPage() {
 
   // Add error boundary
   const [error, setError] = useState<string | null>(null);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [showForm, setShowForm] = useState(false);
+  const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [categories] = useState(["Game Updates", "E-Sport", "Other"]);
+  const [formData, setFormData] = useState<NewsFormData>({
+    title: "",
+    description: "",
+    content: "",
+    image: "",
+    type: "update",
+    category: "Game Updates",
+    author: "",
+    featured: false,
+    readTime: "3 min read",
+    tags: [],
+  });
+
+  // Check admin access
+  useEffect(() => {
+    console.log("User:", user);
+    const isAdmin =
+      user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
+    console.log("Is admin:", isAdmin);
+    if (!user || !isAdmin) {
+      console.log("Redirecting to home - not admin");
+      router.push("/");
+      return;
+    }
+  }, [user, router]);
+
+  // Fetch news data
+  useEffect(() => {
+    const isAdmin =
+      user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
+    console.log("Fetch news effect - user:", user, "isAdmin:", isAdmin);
+    if (user && isAdmin) {
+      fetchNews();
+    }
+  }, [user]);
 
   if (error) {
     return (
@@ -90,50 +133,6 @@ export default function AdminNewsPage() {
       </div>
     );
   }
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [showForm, setShowForm] = useState(false);
-  const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [categories] = useState(["Game Updates", "E-Sport", "Other"]);
-
-  // Check admin access
-  useEffect(() => {
-    console.log("User:", user);
-    const isAdmin =
-      user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
-    console.log("Is admin:", isAdmin);
-    if (!user || !isAdmin) {
-      console.log("Redirecting to home - not admin");
-      router.push("/");
-      return;
-    }
-  }, [user, router]);
-
-  const [formData, setFormData] = useState<NewsFormData>({
-    title: "",
-    description: "",
-    content: "",
-    image: "",
-    type: "update",
-    category: "Game Updates",
-    author: "",
-    featured: false,
-    readTime: "3 min read",
-    tags: [],
-  });
-
-  // Fetch news data
-  useEffect(() => {
-    const isAdmin =
-      user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
-    console.log("Fetch news effect - user:", user, "isAdmin:", isAdmin);
-    if (user && isAdmin) {
-      fetchNews();
-    }
-  }, [user]);
 
   const fetchNews = async () => {
     try {
@@ -270,7 +269,10 @@ export default function AdminNewsPage() {
     }
   };
 
-  const handleInputChange = (field: keyof NewsFormData, value: any) => {
+  const handleInputChange = (
+    field: keyof NewsFormData,
+    value: string | boolean
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -362,7 +364,7 @@ export default function AdminNewsPage() {
                 Access Denied
               </h1>
               <p className="text-gray-400 mb-6">
-                You don't have permission to access the admin panel.
+                You don&apos;t have permission to access the admin panel.
               </p>
               <p className="text-gray-500 text-sm mb-4">
                 Current user: {user.email} (Role: {user.role})
@@ -577,7 +579,7 @@ export default function AdminNewsPage() {
                 <p className="text-gray-400">
                   {searchTerm || selectedCategory !== "All"
                     ? "Try adjusting your search terms or category filter"
-                    : "Create your first news article by clicking 'Add News'"}
+                    : "Create your first news article by clicking &apos;Add News&apos;"}
                 </p>
               </div>
             )}

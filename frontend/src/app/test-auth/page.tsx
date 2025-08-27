@@ -5,7 +5,11 @@ import { useAuth } from "../contexts/AuthContext";
 
 export default function TestAuthPage() {
   const { user, loading, isAuthenticated, getToken } = useAuth();
-  const [localStorageData, setLocalStorageData] = useState<any>(null);
+  const [localStorageData, setLocalStorageData] = useState<{
+    token: string | null;
+    user: { name: string } | null;
+    hasProfile: string | null;
+  } | null>(null);
 
   useEffect(() => {
     // Get localStorage data
@@ -128,8 +132,8 @@ export default function TestAuthPage() {
             <li>Refresh the page (F5 or Ctrl+R)</li>
             <li>Check if the authentication state persists</li>
             <li>
-              Both "AuthContext State" and "LocalStorage Data" should show the
-              same user information
+              Both &quot;AuthContext State&quot; and &quot;LocalStorage
+              Data&quot; should show the same user information
             </li>
           </ol>
         </div>

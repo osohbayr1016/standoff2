@@ -232,8 +232,8 @@ export default function PlayerDetailPage({
                 Player not found
               </h1>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                The player profile you're looking for doesn't exist or has been
-                removed.
+                The player profile you&apos;re looking for doesn&apos;t exist or
+                has been removed.
               </p>
               <div className="space-y-4">
                 <Link

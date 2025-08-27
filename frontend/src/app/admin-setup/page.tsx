@@ -142,10 +142,12 @@ export default function AdminSetupPage() {
               </h3>
               <ol className="text-sm text-gray-400 space-y-1">
                 <li>1. Enter the email address you used to register</li>
-                <li>2. Click "Make Me Admin"</li>
+                <li>2. Click &quot;Make Me Admin&quot;</li>
                 <li>3. Log out and log back in</li>
-                <li>4. You should now see "Admin" in the navigation</li>
-                <li>5. Click "Admin" to access the admin panel</li>
+                <li>
+                  4. You should now see &quot;Admin&quot; in the navigation
+                </li>
+                <li>5. Click &quot;Admin&quot; to access the admin panel</li>
               </ol>
             </div>
 
