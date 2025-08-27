@@ -3,7 +3,7 @@ services:
     name: e-sport-connection-backend
     env: node
     plan: free
-    buildCommand: chmod +x build.sh && ./build.sh
+    buildCommand: npm install --production=false && npm run build
     startCommand: node dist/index.js
     healthCheckPath: /health
     envVars:
