@@ -1,5 +1,5 @@
 declare module '@fastify/multipart' {
-  import { FastifyPluginAsync } from 'fastify';
+  import { FastifyPluginAsync, FastifyRequest } from 'fastify';
 
   interface MultipartOptions {
     limits?: {
@@ -12,6 +12,19 @@ declare module '@fastify/multipart' {
     };
     attachFieldsToBody?: boolean;
     throwFileSizeLimit?: boolean;
+  }
+
+  interface MultipartFile {
+    toBuffer(): Promise<Buffer>;
+    file: {
+      bytesRead: number;
+    };
+    mimetype: string;
+    filename: string;
+  }
+
+  interface FastifyRequestWithFile extends FastifyRequest {
+    file(): Promise<MultipartFile | undefined>;
   }
 
   const multipart: FastifyPluginAsync<MultipartOptions>;

@@ -40,7 +40,7 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     {
       preHandler: authenticateToken,
     },
-    async (request, reply) => {
+    async (request: any, reply) => {
       try {
         console.log("🔧 Image upload endpoint called");
 
@@ -114,7 +114,7 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     {
       preHandler: authenticateToken,
     },
-    async (request, reply) => {
+    async (request: any, reply) => {
       try {
         const { publicId } = request.params as { publicId: string };
         console.log("🔧 Delete image endpoint called for:", publicId);
