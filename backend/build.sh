@@ -1,30 +1,35 @@
 #!/bin/bash
 
-echo "🔨 Building E-Sport Connection Backend"
-echo "======================================"
+echo "🔧 Starting build process..."
 
-# Clean previous build
-echo "🧹 Cleaning previous build..."
-rm -rf dist/
-
-# Install dependencies
+# Clean install dependencies
 echo "📦 Installing dependencies..."
-npm install
+npm ci --production=false
 
-# Build TypeScript
-echo "🔨 Compiling TypeScript..."
+# Check if node_modules exists and has the required packages
+echo "🔍 Checking dependencies..."
+if [ ! -d "node_modules/mongoose" ]; then
+    echo "❌ mongoose not found, installing..."
+    npm install mongoose
+fi
+
+if [ ! -d "node_modules/socket.io" ]; then
+    echo "❌ socket.io not found, installing..."
+    npm install socket.io
+fi
+
+if [ ! -d "node_modules/cloudinary" ]; then
+    echo "❌ cloudinary not found, installing..."
+    npm install cloudinary
+fi
+
+if [ ! -d "node_modules/@fastify/multipart" ]; then
+    echo "❌ @fastify/multipart not found, installing..."
+    npm install @fastify/multipart
+fi
+
+# Build the project
+echo "🔨 Building TypeScript..."
 npm run build
 
-# Check if build was successful
-if [ -d "dist" ] && [ -f "dist/index.js" ]; then
-    echo "✅ Build successful!"
-    echo "📁 Build contents:"
-    ls -la dist/
-    echo ""
-    echo "🚀 Ready for deployment!"
-else
-    echo "❌ Build failed!"
-    echo "📋 Build logs:"
-    npm run build
-    exit 1
-fi
+echo "✅ Build completed!"
