@@ -41,8 +41,10 @@ export default function AboutPage() {
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 leading-tight">
                   Бидний тухай
                 </h1>
-                <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto px-4 sm:px-0 leading-relaxed">
-                  Монголын E-Sport дэлхийд мандан бадраг, хамтдаа хөгжье
+                <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
+                  Монголын Mobile Legends тоглоомын чансааг дараагийн түвшинд
+                  хүргэж, шинээр гарч ирж буй тоглогчид болон багуудын шинэ
+                  тэмцээнээр тасрахгүй байх
                 </p>
               </div>
             </motion.div>
@@ -62,10 +64,16 @@ export default function AboutPage() {
                   <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
                     Бидний эрхэм зорилго
                   </h2>
-                  <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4 sm:px-0 leading-relaxed">
-                    Монголд хамгийн том, хамгийн дэлгэрэнгүй E-Sport платформ
-                    бүтээж, тоглогчид, багууд, байгууллагууд болон фенүүдийг
-                    холбон, хөгжилтэй тоглоомын хамт олонг бий болгох.
+                  <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
+                    Манай website нь Монголын Mobile Legends тоглоомын чансааг
+                    дараагийн түвшинд хүргэж, шинээр гарч ирж буй тоглогчид
+                    болон багуудын шинэ тэмцээнээр тасрахгүй байх, цаашлаад шинэ
+                    багт орох хүмүүсийн хараанд өртөх, coach болон caster-уудын
+                    түрээс үйлчилгээг нэвтрүүлэх. Mobile Legends тоглоомны шинэ
+                    update, шинэ баатар болон шинэ тэмцээн уралдаан мэдээнүүдийг
+                    нэг дороос нь бэлтгэж, бүгдийг чанартай тоглогчдод ээлтэй
+                    байдлаар шинэ мэдээллээс хоцруулахгүй байх үүднээс үйл
+                    ажиллагаа явуулж буй website юм.
                   </p>
                 </div>
 
@@ -75,11 +83,13 @@ export default function AboutPage() {
                       <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                      Хамт олон дээрээ
+                      Шинэ тоглогчид олох
                     </h3>
                     <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-                      Тоглогчид холбогдож, суралцаж, хамтдаа хөгжих боломжтой
-                      хүчтэй, дэмжлэгтэй хамт олонг бүтээх.
+                      Манай website-г ашиглан шинэ тоглогчид олох, уралдаан
+                      тэмцээнд шууд website-аа ашиглан бүртгүүлэх гэж мэт маш
+                      олон шинэ шинэ боломжуудыг олгодгоороо Монголд ганц байдаг
+                      MLBB тоглоомны цогц website гэдгээрээ онцлогтой.
                     </p>
                   </div>
 
@@ -88,11 +98,13 @@ export default function AboutPage() {
                       <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                      Төгс байдал
+                      Цогц үйлчилгээ
                     </h3>
                     <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-                      Тоглоомын төгс байдлыг дэмжиж, тоглогчид өрсөлдөөнт
-                      тоглоомд бүрэн боломжоо хэрэгжүүлэхэд тусална.
+                      Coach болон caster-уудын түрээс үйлчилгээг нэвтрүүлэх,
+                      Mobile Legends тоглоомны шинэ update, шинэ баатар болон
+                      шинэ тэмцээн уралдаан мэдээнүүдийг нэг дороос нь бэлтгэж
+                      өгөх.
                     </p>
                   </div>
                 </div>
@@ -112,12 +124,13 @@ export default function AboutPage() {
                     <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
-                    Бидний алсын хараа
+                    Бидний онцлог
                   </h2>
-                  <p className="text-base sm:text-lg text-white/90 max-w-2xl mx-auto px-4 sm:px-0 leading-relaxed">
-                    Азийн тэргүүлэх E-Sport платформ болж, Монголын авъяас
-                    чадварыг дэлхийн боломжуудтай холбон, Монголыг дэлхийн
-                    тоглоомын газрын зуй дээр байрлуулах.
+                  <p className="text-base sm:text-lg text-white/90 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
+                    Монголд ганц байдаг MLBB тоглоомны цогц website гэдгээрээ
+                    онцлогтой. Манай website-г ашиглан шинэ тоглогчид олох,
+                    уралдаан тэмцээнд шууд website-аа ашиглан бүртгүүлэх гэж мэт
+                    маш олон шинэ шинэ боломжуудыг олгодгоороо онцлогтой.
                   </p>
                 </div>
 
@@ -127,11 +140,12 @@ export default function AboutPage() {
                       <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <h3 className="text-lg sm:text-xl font-semibold mb-2">
-                      Шинэчлэл
+                      Шинэ мэдээ
                     </h3>
                     <p className="text-sm sm:text-base text-white/80 leading-relaxed">
-                      Хамгийн сайн тоглоомын туршлага болон хэрэгслүүдийг
-                      өгөхийн тулд тасралтгүй шинэчлэл хийх.
+                      Mobile Legends тоглоомны шинэ update, шинэ баатар болон
+                      шинэ тэмцээн уралдаан мэдээнүүдийг нэг дороос нь бэлтгэж
+                      өгөх.
                     </p>
                   </div>
 
@@ -140,11 +154,11 @@ export default function AboutPage() {
                       <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <h3 className="text-lg sm:text-xl font-semibold mb-2">
-                      Халуун сэтгэл
+                      Цаашлаад хөгжих
                     </h3>
                     <p className="text-sm sm:text-base text-white/80 leading-relaxed">
-                      Тоглоомын талаарх бидний халуун сэтгэл болон хамт олонд
-                      хандах үүрэг биелүүлэхэд удирдуулна.
+                      Шинэ багт орох хүмүүсийн хараанд өртөх, coach болон
+                      caster-уудын түрээс үйлчилгээг нэвтрүүлэх.
                     </p>
                   </div>
 
@@ -153,11 +167,12 @@ export default function AboutPage() {
                       <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <h3 className="text-lg sm:text-xl font-semibold mb-2">
-                      Итгэл
+                      Чанартай үйлчилгээ
                     </h3>
                     <p className="text-sm sm:text-base text-white/80 leading-relaxed">
-                      Ил тод байдал, аюулгүй байдал, найдвартай үйлчилгээгээр
-                      итгэл бүтээх.
+                      Бүгдийг чанартай тоглогчдод ээлтэй байдлаар шинэ
+                      мэдээллээс хоцруулахгүй байх үүднээс үйл ажиллагаа явуулж
+                      буй website юм.
                     </p>
                   </div>
                 </div>
@@ -175,9 +190,9 @@ export default function AboutPage() {
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
                   Бидний санал болгож буй зүйлс
                 </h2>
-                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4 sm:px-0 leading-relaxed">
-                  E-Sport экосистемийн бүх хэсгийг дэмжих дэлгэрэнгүй хэрэгслүүд
-                  болон онцлогууд
+                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
+                  Mobile Legends тоглоомны бүх хэсгийг дэмжих дэлгэрэнгүй
+                  хэрэгслүүд болон онцлогууд
                 </p>
               </div>
 
@@ -198,7 +213,7 @@ export default function AboutPage() {
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
                     Таны ур чадвар, амжилтууд, тоглоомын түүхийг харуулсан
-                    дэлгэрэнгүй профайл үүсгэх.
+                    дэлгэрэнгүй профайл үүсгэх. Шинэ тоглогчид олох боломж.
                   </p>
                 </motion.div>
 
@@ -214,11 +229,11 @@ export default function AboutPage() {
                     <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                    Баг бүрдүүлэлт
+                    Тэмцээн бүртгэл
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-                    Төгс багийн гишүүдээ олж, тэмцээнд зориулсан өрсөлдөөнт
-                    багуудг бүтээх.
+                    Уралдаан тэмцээнд шууд website-аа ашиглан бүртгүүлэх боломж.
+                    Шинэ тэмцээн уралдаан мэдээнүүд.
                   </p>
                 </motion.div>
 
@@ -234,11 +249,11 @@ export default function AboutPage() {
                     <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                    Тэмцээний платформ
+                    Шинэ мэдээ
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-                    Мэргэжлийн удирдлагын хэрэгслүүдтэй тэмцээн зохион
-                    байгуулах, оролцох боломж.
+                    Mobile Legends тоглоомны шинэ update, шинэ баатар болон шинэ
+                    тэмцээн уралдаан мэдээнүүдийг нэг дороос нь бэлтгэж өгөх.
                   </p>
                 </motion.div>
 
@@ -254,11 +269,11 @@ export default function AboutPage() {
                     <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                    Коучинг үйлчилгээ
+                    Coach & Caster
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-                    Мэргэжлийн коучуудтай холбогдож, ур чадвар болон стратегиа
-                    сайжруулах боломж.
+                    Coach болон caster-уудын түрээс үйлчилгээг нэвтрүүлэх. Шинэ
+                    багт орох хүмүүсийн хараанд өртөх боломж.
                   </p>
                 </motion.div>
 
@@ -274,11 +289,11 @@ export default function AboutPage() {
                     <Target className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                    Гүйцэтгэлийн шинжилгээ
+                    Цогц үйлчилгээ
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-                    Дэлгэрэнгүй шинжилгээ болон гүйцэтгэлийн хэмжүүрүүдээр явцыг
-                    хянах боломж.
+                    Монголд ганц байдаг MLBB тоглоомны цогц website гэдгээрээ
+                    онцлогтой. Бүх үйлчилгээг нэг дороос авах боломж.
                   </p>
                 </motion.div>
 
@@ -294,11 +309,12 @@ export default function AboutPage() {
                     <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                    Хамт олны төв
+                    Чанартай үйлчилгээ
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-                    Хэлэлцүүлэгт оролцож, туршлагаа хуваалцаж, бусад
-                    тоглогчидтой холбогдох боломж.
+                    Бүгдийг чанартай тоглогчдод ээлтэй байдлаар шинэ мэдээллээс
+                    хоцруулахгүй байх үүднээс үйл ажиллагаа явуулж буй website
+                    юм.
                   </p>
                 </motion.div>
               </div>
@@ -314,47 +330,47 @@ export default function AboutPage() {
               <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8 lg:p-12">
                 <div className="text-center mb-8 sm:mb-12">
                   <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                    Бидний нөлөө
+                    Бидний онцлог
                   </h2>
                   <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">
-                    Монголын E-Sport хамт олныг хөгжүүлэх
+                    Монголд ганц байдаг MLBB тоглоомны цогц website
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
                   <div className="text-center">
                     <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-purple-600 dark:text-green-400 mb-2">
-                      ...
+                      MLBB
                     </div>
                     <div className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                      Идэвхтэй тоглогчид
+                      Тоглоомын төв
                     </div>
                   </div>
 
                   <div className="text-center">
                     <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-600 mb-2">
-                      ...
+                      Шинэ
                     </div>
                     <div className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                      Багууд
+                      Мэдээ & Update
                     </div>
                   </div>
 
                   <div className="text-center">
                     <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-600 mb-2">
-                      ...
+                      Тэмцээн
                     </div>
                     <div className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                      Тэмцээнүүд
+                      Бүртгэл & Уралдаан
                     </div>
                   </div>
 
                   <div className="text-center">
                     <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-yellow-600 mb-2">
-                      ...
+                      Coach
                     </div>
                     <div className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                      Хамт олон удирдсан
+                      & Caster үйлчилгээ
                     </div>
                   </div>
                 </div>
@@ -372,10 +388,12 @@ export default function AboutPage() {
                 <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
                   Манай хамт олонд нэгдээрэй
                 </h2>
-                <p className="text-base sm:text-lg text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto px-4 sm:px-0 leading-relaxed">
-                  Монголын хамгийн хурдан хөгжиж буй E-Sport платформын хэсэг
-                  болоорой. Тоглогчидтой холбогдож, багууд бүтээж, хамгийн өндөр
-                  түвшинд өрсөлдөөрэй.
+                <p className="text-base sm:text-lg text-white/90 mb-6 sm:mb-8 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
+                  Монголын Mobile Legends тоглоомын чансааг дараагийн түвшинд
+                  хүргэж, шинээр гарч ирж буй тоглогчид болон багуудын шинэ
+                  тэмцээнээр тасрахгүй байх, цаашлаад шинэ багт орох хүмүүсийн
+                  хараанд өртөх, coach болон caster-уудын түрээс үйлчилгээг
+                  нэвтрүүлэх.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">

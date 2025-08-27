@@ -25,6 +25,26 @@ export const API_ENDPOINTS = {
     UPDATE: `${API_BASE_URL}/api/player-profiles/update-profile`,
     HAS_PROFILE: `${API_BASE_URL}/api/player-profiles/has-profile`,
   },
+  NEWS: {
+    ALL: `${API_BASE_URL}/api/news`,
+    GET: (id: string) => `${API_BASE_URL}/api/news/${id}`,
+    FEATURED: `${API_BASE_URL}/api/news/featured`,
+    CATEGORIES: `${API_BASE_URL}/api/news/categories/list`,
+    TYPES: `${API_BASE_URL}/api/news/types/list`,
+  },
+  TOURNAMENTS: {
+    ALL: `${API_BASE_URL}/api/tournaments`,
+    GET: (id: string) => `${API_BASE_URL}/api/tournaments/${id}`,
+    GAMES: `${API_BASE_URL}/api/tournaments/games/list`,
+    ORGANIZERS: `${API_BASE_URL}/api/tournaments/organizers/list`,
+    REGISTER: (id: string) => `${API_BASE_URL}/api/tournaments/${id}/register`,
+    UNREGISTER: (id: string) =>
+      `${API_BASE_URL}/api/tournaments/${id}/unregister`,
+  },
+  DASHBOARD: {
+    STATS: `${API_BASE_URL}/api/dashboard/stats`,
+    ACTIVITY: `${API_BASE_URL}/api/dashboard/activity`,
+  },
   ORGANIZATION_PROFILES: {
     ALL: `${API_BASE_URL}/api/organization-profiles/profiles`,
     GET: (id: string) =>
@@ -42,6 +62,17 @@ export const API_ENDPOINTS = {
   MESSAGES: {
     LIST: (playerId: string) => `${API_BASE_URL}/api/messages/${playerId}`,
     SEND: `${API_BASE_URL}/api/messages`,
+    MARK_READ: `${API_BASE_URL}/api/messages/read`,
+    UNREAD_COUNT: `${API_BASE_URL}/api/messages/unread/count`,
+  },
+  NOTIFICATIONS: {
+    ALL: `${API_BASE_URL}/api/notifications`,
+    UNREAD_COUNT: `${API_BASE_URL}/api/notifications/unread/count`,
+    MARK_READ: (notificationId: string) =>
+      `${API_BASE_URL}/api/notifications/${notificationId}/read`,
+    MARK_ALL_READ: `${API_BASE_URL}/api/notifications/read-all`,
+    DELETE: (notificationId: string) =>
+      `${API_BASE_URL}/api/notifications/${notificationId}`,
   },
 
   STATS: {

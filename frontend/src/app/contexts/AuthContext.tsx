@@ -34,6 +34,7 @@ interface AuthContextType {
   refreshToken: () => Promise<void>;
   checkProfileStatus: () => Promise<void>;
   getToken: () => string | null;
+  validateToken: () => Promise<boolean>;
   isAuthenticated: boolean;
 }
 
@@ -116,15 +117,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         tokenLength: token?.length || 0,
       });
 
+      // Always set user from localStorage first to prevent logout on refresh
+      if (token && userData) {
+        setUser(userData);
+        setHasProfile(storedHasProfile);
+      }
+
+      // Only validate token if we have both token and user data
       if (token && userData) {
         try {
-          console.log("🔍 AuthContext: Validating token with server...");
-          // Validate token with server
-          const response = await fetch(API_ENDPOINTS.AUTH.ME, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+          console.log("🔍 AuthContext: Checking backend connectivity...");
+          // First check if backend is accessible
+          const healthResponse = await fetch(API_ENDPOINTS.HEALTH, {
+            signal: AbortSignal.timeout(3000), // 3 second timeout
           });
+
+          if (!healthResponse.ok) {
+            console.log(
+              "🔍 AuthContext: Backend not accessible, keeping user logged in"
+            );
+            // Keep user logged in if backend is not accessible
+            // Don't return, continue with token validation but be more lenient
+          }
+
+          console.log("🔍 AuthContext: Validating token with server...");
+          // Validate token with server in the background with retry
+          let response;
+          let retryCount = 0;
+          const maxRetries = 2;
+
+          while (retryCount < maxRetries) {
+            try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+              response = await fetch(API_ENDPOINTS.AUTH.ME, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+                signal: controller.signal,
+              });
+
+              clearTimeout(timeoutId);
+              break; // Success, exit retry loop
+            } catch (error) {
+              retryCount++;
+              console.log(
+                `🔍 AuthContext: Token validation attempt ${retryCount} failed:`,
+                error
+              );
+              if (retryCount >= maxRetries) {
+                console.log(
+                  "🔍 AuthContext: Max retries reached, keeping user logged in"
+                );
+                return; // Keep user logged in after max retries
+              }
+              // Wait a bit before retrying
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          }
+
+          // If we get here without a response, keep user logged in
+          if (!response) {
+            console.log(
+              "🔍 AuthContext: No response received, keeping user logged in"
+            );
+            return;
+          }
 
           console.log(
             "🔍 AuthContext: Token validation response:",
@@ -134,31 +193,79 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (response.ok) {
             const data = await response.json();
             console.log(
-              "🔍 AuthContext: Token valid, setting user:",
-              data.user
+              "🔍 AuthContext: Token valid, updating user:",
+              data.data?.user || data.user
             );
-            setUser(data.user);
-            setHasProfile(storedHasProfile);
+
+            // Update user with fresh data from server
+            const freshUser = data.data?.user || data.user;
+            if (freshUser) {
+              setUser(freshUser);
+              setStoredUser(freshUser);
+            }
 
             // If user is a player or organization, check profile status
             if (
-              data.user.role === "PLAYER" ||
-              data.user.role === "ORGANIZATION"
+              freshUser?.role === "PLAYER" ||
+              freshUser?.role === "ORGANIZATION"
             ) {
-              await checkProfileStatus();
+              // Check profile status after setting user
+              setTimeout(() => {
+                checkProfileStatus();
+              }, 100);
+            }
+          } else if (response.status === 401 || response.status === 403) {
+            console.log("🔍 AuthContext: Token invalid, attempting refresh...");
+            // Try to refresh the token first
+            try {
+              const refreshResponse = await fetch(API_ENDPOINTS.AUTH.REFRESH, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+                signal: AbortSignal.timeout(5000),
+              });
+
+              if (refreshResponse.ok) {
+                const refreshData = await refreshResponse.json();
+                console.log("🔍 AuthContext: Token refreshed successfully");
+                setStoredToken(refreshData.token);
+                setStoredUser(refreshData.user);
+                setUser(refreshData.user);
+              } else {
+                console.log(
+                  "🔍 AuthContext: Token refresh failed, clearing storage"
+                );
+                removeStoredToken();
+                setUser(null);
+                setHasProfile(false);
+              }
+            } catch (refreshError) {
+              console.log(
+                "🔍 AuthContext: Token refresh error, clearing storage"
+              );
+              removeStoredToken();
+              setUser(null);
+              setHasProfile(false);
             }
           } else {
-            console.log("🔍 AuthContext: Token invalid, clearing storage");
-            // Token is invalid, clear storage
+            console.log("🔍 AuthContext: Server error, keeping user logged in");
+            // For other server errors, keep the user logged in
+            // This includes 500, 502, 503, etc.
+          }
+        } catch (error) {
+          console.error("🔍 AuthContext: Error validating token:", error);
+          // On network error, keep the user logged in with stored data
+          // Only clear if it's a specific authentication error
+          if (
+            error instanceof Error &&
+            (error.message.includes("401") || error.message.includes("403"))
+          ) {
             removeStoredToken();
             setUser(null);
             setHasProfile(false);
           }
-        } catch (error) {
-          console.error("🔍 AuthContext: Error validating token:", error);
-          removeStoredToken();
-          setUser(null);
-          setHasProfile(false);
+          // For network errors, keep the user logged in
         }
       } else {
         console.log("🔍 AuthContext: No stored token or user data");
@@ -347,6 +454,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return token;
   };
 
+  const validateToken = async (): Promise<boolean> => {
+    const token = getStoredToken();
+    if (!token) return false;
+
+    try {
+      const response = await fetch(API_ENDPOINTS.AUTH.ME, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error("Token validation error:", error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
 
@@ -364,7 +489,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, refreshToken, logout]);
 
   const checkProfileStatus = useCallback(async () => {
-    if (!user || (user.role !== "PLAYER" && user.role !== "ORGANIZATION")) {
+    const currentUser = user || getStoredUser();
+    if (
+      !currentUser ||
+      (currentUser.role !== "PLAYER" && currentUser.role !== "ORGANIZATION")
+    ) {
       setHasProfile(false);
       setStoredHasProfile(false);
       return;
@@ -375,7 +504,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!token) return;
 
       const endpoint =
-        user.role === "PLAYER"
+        currentUser.role === "PLAYER"
           ? API_ENDPOINTS.PLAYER_PROFILES.HAS_PROFILE
           : API_ENDPOINTS.ORGANIZATION_PROFILES.HAS_PROFILE;
 
@@ -392,14 +521,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Error checking profile status:", error);
-      setHasProfile(false);
-      setStoredHasProfile(false);
+      // Don't set hasProfile to false on network errors, keep the stored value
+      if (error instanceof Error && error.message.includes("401")) {
+        setHasProfile(false);
+        setStoredHasProfile(false);
+      }
     }
   }, [user]);
 
+  // Only check profile status when user changes and is not null
   useEffect(() => {
-    checkProfileStatus();
-  }, [checkProfileStatus]);
+    if (user && (user.role === "PLAYER" || user.role === "ORGANIZATION")) {
+      checkProfileStatus();
+    }
+  }, [user?.id, user?.role]); // Only depend on user ID and role changes
 
   const value = {
     user,
@@ -412,6 +547,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshToken,
     checkProfileStatus,
     getToken,
+    validateToken,
     isAuthenticated: !!user,
   };
 

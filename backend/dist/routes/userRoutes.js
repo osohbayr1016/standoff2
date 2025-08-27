@@ -1,7 +1,17 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const User_1 = __importDefault(require("../models/User"));
 const getRandomGame = () => {
-    const games = ["Valorant", "CS:GO", "League of Legends", "Dota 2", "Overwatch"];
+    const games = [
+        "Valorant",
+        "CS:GO",
+        "League of Legends",
+        "Dota 2",
+        "Overwatch",
+    ];
     return games[Math.floor(Math.random() * games.length)];
 };
 const getRandomRole = () => {
@@ -23,6 +33,48 @@ const getRandomDescription = (name) => {
     return descriptions[Math.floor(Math.random() * descriptions.length)];
 };
 const userRoutes = async (fastify) => {
+    fastify.put("/update-role", async (request, reply) => {
+        try {
+            const { email, role } = request.body;
+            if (!email || !role) {
+                return reply.status(400).send({
+                    success: false,
+                    message: "Email and role are required",
+                });
+            }
+            const validRoles = ["PLAYER", "COACH", "ORGANIZATION", "ADMIN"];
+            if (!validRoles.includes(role)) {
+                return reply.status(400).send({
+                    success: false,
+                    message: "Invalid role. Must be one of: PLAYER, COACH, ORGANIZATION, ADMIN",
+                });
+            }
+            const user = await User_1.default.findOneAndUpdate({ email: email.toLowerCase() }, { role }, { new: true });
+            if (!user) {
+                return reply.status(404).send({
+                    success: false,
+                    message: "User not found",
+                });
+            }
+            return reply.status(200).send({
+                success: true,
+                message: `User role updated to ${role}`,
+                user: {
+                    id: user._id,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                },
+            });
+        }
+        catch (error) {
+            console.error("Error updating user role:", error);
+            return reply.status(500).send({
+                success: false,
+                message: "Error updating user role",
+            });
+        }
+    });
     fastify.get("/players", async (request, reply) => {
         try {
             const mockPlayers = [

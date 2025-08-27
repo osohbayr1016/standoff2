@@ -26,22 +26,27 @@
   "license": "ISC",
   "description": "Backend API for e-sport connection application",
   "dependencies": {
-    "fastify": "^4.29.1",
     "@fastify/cors": "^9.0.1",
-    "dotenv": "^16.3.1",
-    "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3",
+    "@fastify/multipart": "^8.0.0",
+    "@types/socket.io": "^3.0.1",
     "axios": "^1.11.0",
-    "node-cron": "^3.0.3"
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.7.0",
+    "dotenv": "^16.3.1",
+    "fastify": "^4.29.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "node-cron": "^3.0.3",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "@types/node": "^20.10.5",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.10.5",
     "@types/node-cron": "^3.0.11",
-    "typescript": "^5.3.3",
+    "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
-    "nodemon": "^3.1.10"
+    "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=18.0.0"

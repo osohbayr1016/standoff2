@@ -42,8 +42,10 @@ interface PlayerProfile {
   category: "PC" | "Mobile";
   game: string;
   role: string;
+  preferredRoles?: string[];
   inGameName: string;
   rank: string;
+  rankStars?: number;
   experience: string;
   bio: string;
   socialLinks: {
@@ -170,7 +172,10 @@ export default function ProfilePage() {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (
+    field: string,
+    value: string | number | string[] | undefined
+  ) => {
     setEditData((prev) => {
       if (field.includes(".")) {
         const [parent, child] = field.split(".");
@@ -468,6 +473,15 @@ export default function ProfilePage() {
                         {profile.role}
                       </span>
                     </div>
+                    {profile.preferredRoles &&
+                      profile.preferredRoles.length > 0 && (
+                        <>
+                          <span className="text-gray-300">•</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            Also: {profile.preferredRoles.join(", ")}
+                          </span>
+                        </>
+                      )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -492,21 +506,46 @@ export default function ProfilePage() {
                     </div>
                     <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                       <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                        Rank
+                        Highest Rank
                       </h3>
                       {isEditing ? (
-                        <input
-                          type="text"
-                          value={editData.rank || ""}
-                          onChange={(e) =>
-                            handleInputChange("rank", e.target.value)
-                          }
-                          className="text-lg font-semibold text-purple-600 dark:text-green-400 bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-green-500 outline-none w-full"
-                        />
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={editData.rank || ""}
+                            onChange={(e) =>
+                              handleInputChange("rank", e.target.value)
+                            }
+                            className="text-lg font-semibold text-purple-600 dark:text-green-400 bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-green-500 outline-none w-full"
+                          />
+                          {editData.rank === "+Mythical Immortal" && (
+                            <input
+                              type="number"
+                              min="100"
+                              value={editData.rankStars || ""}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "rankStars",
+                                  parseInt(e.target.value) || undefined
+                                )
+                              }
+                              className="text-sm text-yellow-600 dark:text-yellow-400 bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-yellow-500 outline-none w-full"
+                              placeholder="Stars (100+)"
+                            />
+                          )}
+                        </div>
                       ) : (
-                        <p className="text-lg font-semibold text-purple-600 dark:text-green-400">
-                          {profile.rank}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-lg font-semibold text-purple-600 dark:text-green-400">
+                            {profile.rank}
+                          </p>
+                          {profile.rank === "+Mythical Immortal" &&
+                            profile.rankStars && (
+                              <span className="text-yellow-500 text-sm">
+                                ⭐ {profile.rankStars}
+                              </span>
+                            )}
+                        </div>
                       )}
                     </div>
                     <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
@@ -529,6 +568,57 @@ export default function ProfilePage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Preferred Roles Section - Only show in edit mode */}
+                  {isEditing && (
+                    <div className="mt-6">
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+                        Preferred Roles (Select up to 2)
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {[
+                          "Tank",
+                          "Fighter",
+                          "Assassin",
+                          "Mage",
+                          "Marksman",
+                          "Support",
+                        ].map((role) => (
+                          <button
+                            key={role}
+                            type="button"
+                            onClick={() => {
+                              const currentRoles =
+                                editData.preferredRoles || [];
+                              if (currentRoles.includes(role)) {
+                                // Remove role if already selected
+                                handleInputChange(
+                                  "preferredRoles",
+                                  currentRoles.filter((r) => r !== role)
+                                );
+                              } else if (currentRoles.length < 2) {
+                                // Add role if less than 2 selected
+                                handleInputChange("preferredRoles", [
+                                  ...currentRoles,
+                                  role,
+                                ]);
+                              }
+                            }}
+                            className={`p-2 rounded-lg border-2 transition-all duration-200 text-sm ${
+                              editData.preferredRoles?.includes(role)
+                                ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
+                                : "border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-green-300"
+                            }`}
+                          >
+                            {role}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        Selected: {editData.preferredRoles?.length || 0}/2
+                      </p>
+                    </div>
+                  )}
 
                   <div className="flex items-center space-x-4">
                     {profile.isLookingForTeam && (

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { API_ENDPOINTS } from "../../../config/api";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function AuthCallbackPage() {
         localStorage.setItem("token", token);
 
         // Fetch user data
-        const response = await fetch("/api/auth/me", {
+        const response = await fetch(API_ENDPOINTS.AUTH.ME, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -55,12 +56,12 @@ export default function AuthCallbackPage() {
           setStatus("success");
           setMessage("Амжилттай нэвтэрлээ!");
 
-          // Check if user is a player and redirect accordingly
+          // Check if user is a player or organization and redirect accordingly
           if (data.user.role === "PLAYER") {
             // Check if player has a profile
             try {
               const profileResponse = await fetch(
-                "/api/player-profiles/has-profile",
+                API_ENDPOINTS.PLAYER_PROFILES.HAS_PROFILE,
                 {
                   headers: {
                     Authorization: `Bearer ${token}`,
@@ -94,8 +95,46 @@ export default function AuthCallbackPage() {
                 router.push("/");
               }, 1500);
             }
+          } else if (data.user.role === "ORGANIZATION") {
+            // Check if organization has a profile
+            try {
+              const profileResponse = await fetch(
+                API_ENDPOINTS.ORGANIZATION_PROFILES.HAS_PROFILE,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+
+              if (profileResponse.ok) {
+                const profileData = await profileResponse.json();
+                if (profileData.hasProfile) {
+                  // Organization has profile, redirect to home
+                  setTimeout(() => {
+                    router.push("/");
+                  }, 1500);
+                } else {
+                  // Organization doesn't have profile, redirect to create organization profile
+                  setTimeout(() => {
+                    router.push("/create-organization-profile");
+                  }, 1500);
+                }
+              } else {
+                // Error checking profile, redirect to home
+                setTimeout(() => {
+                  router.push("/");
+                }, 1500);
+              }
+            } catch (error) {
+              console.error("Error checking organization profile:", error);
+              // Error checking profile, redirect to home
+              setTimeout(() => {
+                router.push("/");
+              }, 1500);
+            }
           } else {
-            // Non-player user, redirect to home
+            // Other user types, redirect to home
             setTimeout(() => {
               router.push("/");
             }, 1500);

@@ -18,9 +18,10 @@ interface Player {
   avatarPublicId?: string;
   category: "PC" | "Mobile";
   game: string;
-  role: string;
+  roles: string[];
   inGameName?: string;
   rank: string;
+  rankStars?: number;
   experience: string;
   bio?: string;
   description?: string;
@@ -52,6 +53,7 @@ export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<"Mobile">("Mobile");
+  const [selectedRole, setSelectedRole] = useState("Бүх Үүргүүд");
   const [loading, setLoading] = useState(true);
   const [gameDataState, setGameDataState] = useState(gameData);
 
@@ -83,12 +85,28 @@ export default function PlayersPage() {
     fetchPlayers();
   }, []);
 
+  // Filter players based on search term and role
+  const filteredPlayers = players.filter((player) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (player.bio || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (player.inGameName || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+    const matchesRole =
+      selectedRole === "Бүх Үүргүүд" || player.roles.includes(selectedRole);
+
+    return matchesSearch && matchesRole;
+  });
+
   useEffect(() => {
     const updatedGameData = { ...gameData };
 
     Object.keys(updatedGameData).forEach((category) => {
       updatedGameData[category as keyof typeof gameData].forEach((game) => {
-        const count = players.filter(
+        const count = filteredPlayers.filter(
           (player) => player.game === game.name
         ).length;
         game.playerCount = count;
@@ -96,7 +114,7 @@ export default function PlayersPage() {
     });
 
     setGameDataState(updatedGameData);
-  }, [players]);
+  }, [filteredPlayers]);
 
   const getCategoryIcon = (category: "PC" | "Mobile") => {
     return category === "PC" ? (
@@ -151,7 +169,34 @@ export default function PlayersPage() {
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
                 />
               </div>
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+              >
+                <option value="Бүх Үүргүүд">Бүх Үүргүүд</option>
+                <option value="Tank">Tank</option>
+                <option value="Fighter">Fighter</option>
+                <option value="Assassin">Assassin</option>
+                <option value="Mage">Mage</option>
+                <option value="Marksman">Marksman</option>
+                <option value="Support">Support</option>
+              </select>
             </div>
+            {/* Clear Filters Button */}
+            {(searchTerm || selectedRole !== "Бүх Үүргүүд") && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedRole("Бүх Үүргүүд");
+                  }}
+                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                >
+                  Шүүлтүүрүүдийг цэвэрлэх
+                </button>
+              </div>
+            )}
           </ScrollReveal>
 
           <ScrollReveal className="mb-8">

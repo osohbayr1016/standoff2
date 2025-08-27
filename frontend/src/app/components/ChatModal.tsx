@@ -80,28 +80,45 @@ export default function ChatModal({
       setError("");
       const token = localStorage.getItem("token");
 
+      if (!token) {
+        setError("Authentication required. Please log in again.");
+        return;
+      }
+
       console.log("🔍 Debug - Fetching messages for player:", playerId);
-      console.log("🔍 Debug - Token:", token ? "Present" : "Missing");
 
       const response = await fetch(API_ENDPOINTS.MESSAGES.LIST(playerId), {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 
       console.log("🔍 Debug - Fetch response status:", response.status);
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setError("Authentication expired. Please log in again.");
+          return;
+        }
+
         const errorData = await response.json().catch(() => ({}));
         console.log("🔍 Debug - Fetch error response:", errorData);
-        throw new Error(`Failed to fetch messages (${response.status})`);
+        throw new Error(
+          errorData.message || `Failed to fetch messages (${response.status})`
+        );
       }
 
       const data = await response.json();
       console.log("🔍 Debug - Fetch success response:", data);
-      setMessages(data.messages || []);
-      // Scroll to bottom after loading messages
-      setTimeout(() => scrollToBottom("auto"), 100);
+
+      if (data.success) {
+        setMessages(data.messages || []);
+        // Scroll to bottom after loading messages
+        setTimeout(() => scrollToBottom("auto"), 100);
+      } else {
+        throw new Error(data.message || "Failed to load messages");
+      }
     } catch (error) {
       console.error("Error fetching messages:", error);
       setError(
@@ -236,6 +253,12 @@ export default function ChatModal({
 
       // Fallback to REST API if WebSocket is not connected
       const token = localStorage.getItem("token");
+
+      if (!token) {
+        setError("Authentication required. Please log in again.");
+        return;
+      }
+
       const response = await fetch(API_ENDPOINTS.MESSAGES.SEND, {
         method: "POST",
         headers: {
@@ -249,6 +272,11 @@ export default function ChatModal({
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setError("Authentication expired. Please log in again.");
+          return;
+        }
+
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           errorData.message || `Failed to send message (${response.status})`
@@ -256,10 +284,15 @@ export default function ChatModal({
       }
 
       const data = await response.json();
-      setMessages((prev) => [...prev, data.data]);
-      setNewMessage("");
-      // Scroll to bottom immediately after sending
-      setTimeout(() => scrollToBottom("smooth"), 50);
+
+      if (data.success) {
+        setMessages((prev) => [...prev, data.data]);
+        setNewMessage("");
+        // Scroll to bottom immediately after sending
+        setTimeout(() => scrollToBottom("smooth"), 50);
+      } else {
+        throw new Error(data.message || "Failed to send message");
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       setError(

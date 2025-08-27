@@ -1,13 +1,10 @@
-// Cloudinary disabled; provide a minimal stub to avoid import errors
-const cloudinary = {
-  uploader: {
-    async upload() {
-      throw new Error("Cloudinary is disabled");
-    },
-    async destroy() {
-      throw new Error("Cloudinary is disabled");
-    },
-  },
-};
+import { v2 as cloudinary } from "cloudinary";
 
-export default cloudinary as any;
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export default cloudinary;

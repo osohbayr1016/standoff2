@@ -38,9 +38,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
 
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      console.log("🔌 No token available for socket connection");
+      return;
+    }
 
-    // Create socket connection
+    // Create socket connection with better error handling
     const socket = io(
       process.env.NEXT_PUBLIC_WS_URL || "http://localhost:8000",
       {
@@ -49,6 +52,11 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         },
         transports: ["websocket", "polling"],
         autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000,
       }
     );
 
@@ -56,17 +64,45 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Connection events
     socket.on("connect", () => {
-      console.log("🔌 Socket connected");
+      console.log("🔌 Socket connected successfully");
       setIsConnected(true);
     });
 
-    socket.on("disconnect", () => {
-      console.log("🔌 Socket disconnected");
+    socket.on("disconnect", (reason) => {
+      console.log("🔌 Socket disconnected:", reason);
       setIsConnected(false);
+
+      // Attempt to reconnect if it wasn't a manual disconnect
+      if (reason === "io server disconnect") {
+        console.log("🔌 Server disconnected, attempting to reconnect...");
+        socket.connect();
+      }
     });
 
     socket.on("connect_error", (error) => {
       console.error("🔌 Socket connection error:", error);
+      setIsConnected(false);
+
+      // Handle specific error types
+      if (error.message === "Authentication error") {
+        console.error("🔌 Authentication failed, clearing token");
+        localStorage.removeItem("token");
+        // You might want to redirect to login here
+      }
+    });
+
+    socket.on("reconnect", (attemptNumber) => {
+      console.log("🔌 Socket reconnected after", attemptNumber, "attempts");
+      setIsConnected(true);
+    });
+
+    socket.on("reconnect_error", (error) => {
+      console.error("🔌 Socket reconnection error:", error);
+      setIsConnected(false);
+    });
+
+    socket.on("reconnect_failed", () => {
+      console.error("🔌 Socket reconnection failed after all attempts");
       setIsConnected(false);
     });
 

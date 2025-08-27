@@ -78,9 +78,10 @@ export default function Footer() {
             </h4>
             <ul className="space-y-3">
               {[
-                { name: "Бидний тухай", href: "#" },
-                { name: "Тоглогчид", href: "#" },
-                { name: "Тэмцээнүүд", href: "#" },
+                { name: "Бидний тухай", href: "/about" },
+                { name: "Тоглогчид", href: "/games/mobile-legends" },
+                { name: "Мэдээ", href: "/news" },
+                { name: "Тэмцээнүүд", href: "/tournaments" },
               ].map((link) => (
                 <li key={link.name}>
                   <a

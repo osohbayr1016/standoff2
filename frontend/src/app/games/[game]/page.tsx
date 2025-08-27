@@ -18,9 +18,10 @@ interface Player {
   avatarPublicId?: string;
   category: "PC" | "Mobile";
   game: string;
-  role: string;
+  roles: string[];
   inGameName?: string;
   rank: string;
+  rankStars?: number;
   experience: string;
   bio?: string;
   description?: string;
@@ -86,6 +87,8 @@ export default function GamePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState("Бүх Үүргүүд");
   const [selectedRank, setSelectedRank] = useState("Бүх Ранкууд");
+  const [minStars, setMinStars] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<"stars" | "name" | "rank">("name");
   const [loading, setLoading] = useState(true);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
@@ -141,7 +144,7 @@ export default function GamePage() {
     }
   }, [game]);
 
-  // Filter players
+  // Filter and sort players
   useEffect(() => {
     let filtered = players;
 
@@ -158,7 +161,9 @@ export default function GamePage() {
 
     // Filter by role
     if (selectedRole !== "Бүх Үүргүүд") {
-      filtered = filtered.filter((player) => player.role === selectedRole);
+      filtered = filtered.filter((player) =>
+        player.roles.includes(selectedRole)
+      );
     }
 
     // Filter by rank
@@ -166,8 +171,58 @@ export default function GamePage() {
       filtered = filtered.filter((player) => player.rank === selectedRank);
     }
 
+    // Filter by minimum stars for Mythical Glory
+    if (minStars !== null && minStars > 0) {
+      filtered = filtered.filter((player) => {
+        if (player.rank === "Mythical Glory" && player.rankStars) {
+          return player.rankStars >= minStars;
+        }
+        return true; // Include players with other ranks
+      });
+    }
+
+    // Sort players
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "stars":
+          // Sort by stars (highest first), then by rank
+          const aStars = a.rank === "Mythical Glory" ? a.rankStars || 0 : 0;
+          const bStars = b.rank === "Mythical Glory" ? b.rankStars || 0 : 0;
+          if (aStars !== bStars) {
+            return bStars - aStars; // Higher stars first
+          }
+          // If same stars, sort by rank
+          return getRankValue(b.rank) - getRankValue(a.rank);
+
+        case "rank":
+          // Sort by rank (highest first)
+          return getRankValue(b.rank) - getRankValue(a.rank);
+
+        case "name":
+        default:
+          // Sort by name alphabetically
+          return a.name.localeCompare(b.name);
+      }
+    });
+
     setFilteredPlayers(filtered);
-  }, [players, searchTerm, selectedRole, selectedRank]);
+  }, [players, searchTerm, selectedRole, selectedRank, minStars, sortBy]);
+
+  // Helper function to get rank value for sorting
+  const getRankValue = (rank: string): number => {
+    const rankValues: { [key: string]: number } = {
+      Warrior: 1,
+      Elite: 2,
+      Master: 3,
+      Grandmaster: 4,
+      Epic: 5,
+      Legend: 6,
+      Mythic: 7,
+      "Mythical Glory": 8,
+      "+Mythical Immortal": 9,
+    };
+    return rankValues[rank] || 0;
+  };
 
   const getCategoryIcon = (category: "PC" | "Mobile") => {
     return category === "PC" ? (
@@ -264,7 +319,7 @@ export default function GamePage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 mb-8"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
               {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -304,7 +359,62 @@ export default function GamePage() {
                   </option>
                 ))}
               </select>
+
+              {/* Star Counter Filter (only show when Mythical Glory is selected) */}
+              {selectedRank === "Mythical Glory" && (
+                <div className="relative">
+                  <input
+                    type="number"
+                    placeholder="Мин. Од"
+                    min="1"
+                    max="999"
+                    value={minStars || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setMinStars(value ? parseInt(value) : null);
+                    }}
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
+                    ⭐
+                  </div>
+                </div>
+              )}
+
+              {/* Sort By */}
+              <select
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(e.target.value as "stars" | "name" | "rank")
+                }
+                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+              >
+                <option value="name">Нэрээр эрэмбэлэх</option>
+                <option value="rank">Ранкаар эрэмбэлэх</option>
+                <option value="stars">Одоор эрэмбэлэх</option>
+              </select>
             </div>
+
+            {/* Clear Filters Button */}
+            {(searchTerm ||
+              selectedRole !== "Бүх Үүргүүд" ||
+              selectedRank !== "Бүх Ранкууд" ||
+              minStars !== null) && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedRole("Бүх Үүргүүд");
+                    setSelectedRank("Бүх Ранкууд");
+                    setMinStars(null);
+                    setSortBy("name");
+                  }}
+                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                >
+                  Шүүлтүүрүүдийг цэвэрлэх
+                </button>
+              </div>
+            )}
           </motion.div>
 
           {/* Results Count */}
@@ -314,13 +424,34 @@ export default function GamePage() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="mb-6"
           >
-            <p className="text-gray-600 dark:text-gray-300">
-              Олдсон{" "}
-              <span className="font-semibold text-purple-600 dark:text-green-400">
-                {filteredPlayers.length}
-              </span>{" "}
-              тоглогч
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <p className="text-gray-600 dark:text-gray-300">
+                Олдсон{" "}
+                <span className="font-semibold text-purple-600 dark:text-green-400">
+                  {filteredPlayers.length}
+                </span>{" "}
+                тоглогч
+              </p>
+
+              {/* Active Filters Display */}
+              <div className="flex flex-wrap gap-2 text-sm">
+                {selectedRank === "Mythical Glory" && minStars !== null && (
+                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full">
+                    ⭐ {minStars}+ одтой Mythical Glory
+                  </span>
+                )}
+                {sortBy === "stars" && (
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full">
+                    Одоор эрэмбэлэгдсэн
+                  </span>
+                )}
+                {sortBy === "rank" && (
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full">
+                    Ранкаар эрэмбэлэгдсэн
+                  </span>
+                )}
+              </div>
+            </div>
           </motion.div>
 
           {/* Players Grid */}

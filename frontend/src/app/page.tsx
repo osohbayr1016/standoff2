@@ -78,7 +78,7 @@ export default function Home() {
                         ТЭМЦЭЭНҮҮД
                       </button>
                     </Link>
-                    <Link href="/players">
+                    <Link href="/games/mobile-legends">
                       <button className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 backdrop-blur-sm transition-colors">
                         ТОГЛОГЧИД
                       </button>
@@ -101,29 +101,81 @@ export default function Home() {
           </div>
         </div>
 
-        {/* MLBB Heroes Soft Marquee */}
-        <section className="py-10 bg-black/80">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* MLBB Heroes Section - Seamless gradient continuation */}
+        <section className="relative py-16 bg-gradient-to-b from-black via-blue-900/80 to-black">
+          {/* Background pattern overlay */}
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          />
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <ScrollReveal>
+              <div className="text-center mb-12">
+                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                  MOBILE LEGENDS HEROES
+                </h2>
+                <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+                  Discover the most powerful heroes in the Land of Dawn
+                </p>
+              </div>
+            </ScrollReveal>
+
             <ScrollReveal>
               <HeroesMarquee
                 heroes={[
-                  { src: "https://i.imgur.com/fXk3eGT.png", alt: "Alucard" },
-                  { src: "https://i.imgur.com/2PjQ4m7.png", alt: "Gusion" },
-                  { src: "https://i.imgur.com/1p0uM1J.png", alt: "Kagura" },
-                  { src: "https://i.imgur.com/X3j2y1Q.png", alt: "Layla" },
-                  { src: "https://i.imgur.com/4rYwQmY.png", alt: "Miya" },
-                  { src: "https://i.imgur.com/2PjQ4m7.png", alt: "Gusion" },
-                  { src: "https://i.imgur.com/fXk3eGT.png", alt: "Alucard" },
+                  {
+                    src: "https://static.wikia.nocookie.net/mobile-legends/images/8/8c/Alucard_skin_1.png",
+                    alt: "Alucard - The Dark Knight",
+                  },
+                  {
+                    src: "https://static.wikia.nocookie.net/mobile-legends/images/2/2c/Gusion_skin_1.png",
+                    alt: "Gusion - The Mystic Blade",
+                  },
+                  {
+                    src: "https://static.wikia.nocookie.net/mobile-legends/images/4/4c/Kagura_skin_1.png",
+                    alt: "Kagura - The Onmyoji Master",
+                  },
+                  {
+                    src: "https://static.wikia.nocookie.net/mobile-legends/images/7/7c/Layla_skin_1.png",
+                    alt: "Layla - The Malefic Gunner",
+                  },
+                  {
+                    src: "https://static.wikia.nocookie.net/mobile-legends/images/5/5c/Miya_skin_1.png",
+                    alt: "Miya - The Moonlight Archer",
+                  },
+                  {
+                    src: "https://static.wikia.nocookie.net/mobile-legends/images/3/3c/Franco_skin_1.png",
+                    alt: "Franco - The Frozen Warrior",
+                  },
+                  {
+                    src: "https://static.wikia.nocookie.net/mobile-legends/images/1/1c/Angela_skin_1.png",
+                    alt: "Angela - The Sacred Oath",
+                  },
+                  {
+                    src: "https://static.wikia.nocookie.net/mobile-legends/images/9/9c/Bruno_skin_1.png",
+                    alt: "Bruno - The Mecha Legions",
+                  },
+                  {
+                    src: "https://static.wikia.nocookie.net/mobile-legends/images/6/6c/Cyclops_skin_1.png",
+                    alt: "Cyclops - The Master of Magic",
+                  },
+                  {
+                    src: "https://static.wikia.nocookie.net/mobile-legends/images/0/0c/Estes_skin_1.png",
+                    alt: "Estes - The Elf King",
+                  },
                 ]}
-                height={100}
-                speed={40}
+                height={120}
+                speed={30}
               />
             </ScrollReveal>
           </div>
         </section>
 
         {/* Featured Section */}
-        <section className="py-20 bg-gray-900">
+        <section className="py-20 bg-gradient-to-b from-black/90 to-gray-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <ScrollReveal className="mb-10">
               <h2 className="text-3xl sm:text-4xl font-bold text-white">
@@ -132,10 +184,34 @@ export default function Home() {
             </ScrollReveal>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <ScrollReveal>
-                <div className="aspect-[16/9] rounded-2xl overflow-hidden border border-white/10 bg-[url('/mlbb/featured-1.png')] bg-cover bg-center shadow-xl" />
+                <div className="aspect-[16/9] rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-purple-600/20 to-blue-600/20 shadow-xl relative group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-blue-900/30 to-black/60" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center text-white">
+                      <h3 className="text-2xl font-bold mb-2">
+                        Tournament Highlights
+                      </h3>
+                      <p className="text-gray-300">
+                        Watch the best plays from recent tournaments
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </ScrollReveal>
               <ScrollReveal>
-                <div className="aspect-[16/9] rounded-2xl overflow-hidden border border-white/10 bg-[url('/mlbb/featured-2.png')] bg-cover bg-center shadow-xl" />
+                <div className="aspect-[16/9] rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-green-600/20 to-teal-600/20 shadow-xl relative group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-900/40 via-teal-900/30 to-black/60" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center text-white">
+                      <h3 className="text-2xl font-bold mb-2">
+                        Pro Player Spotlights
+                      </h3>
+                      <p className="text-gray-300">
+                        Meet the top players in the community
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </ScrollReveal>
             </div>
           </div>

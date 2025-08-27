@@ -1,4 +1,12 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
+import {
+  login,
+  register,
+  getCurrentUser,
+  logout,
+  refreshToken,
+} from "../controllers/authController";
+import { authenticateToken } from "../middleware/auth";
 
 const authRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   // Health check for auth
@@ -10,21 +18,20 @@ const authRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     };
   });
 
-  // Placeholder login endpoint
-  fastify.post("/login", async (request, reply) => {
-    return {
-      success: false,
-      message: "Authentication temporarily disabled - debug elimination in progress",
-    };
-  });
+  // Login endpoint
+  fastify.post("/login", login);
 
-  // Placeholder register endpoint
-  fastify.post("/register", async (request, reply) => {
-    return {
-      success: false,
-      message: "Registration temporarily disabled - debug elimination in progress",
-    };
-  });
+  // Register endpoint
+  fastify.post("/register", register);
+
+  // Get current user (protected)
+  fastify.get("/me", { preHandler: authenticateToken }, getCurrentUser);
+
+  // Logout endpoint (protected)
+  fastify.post("/logout", { preHandler: authenticateToken }, logout);
+
+  // Refresh token endpoint (protected)
+  fastify.post("/refresh", { preHandler: authenticateToken }, refreshToken);
 };
 
 export default authRoutes;

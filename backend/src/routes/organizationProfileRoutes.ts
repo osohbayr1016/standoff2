@@ -1,6 +1,8 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
 
-const organizationProfileRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
+const organizationProfileRoutes: FastifyPluginAsync = async (
+  fastify: FastifyInstance
+) => {
   // Health check
   fastify.get("/health", async (request, reply) => {
     return {

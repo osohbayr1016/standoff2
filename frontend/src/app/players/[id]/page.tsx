@@ -34,9 +34,10 @@ interface Player {
   avatarPublicId?: string;
   category: "PC" | "Mobile";
   game: string;
-  role: string;
+  roles: string[];
   inGameName: string;
   rank: string;
+  rankStars?: number;
   experience: string;
   bio: string;
   socialLinks: {
@@ -50,7 +51,6 @@ interface Player {
   highlightVideo?: string;
   isLookingForTeam: boolean;
   achievements?: string[];
-  preferredRoles?: string[];
   availability?: {
     weekdays: boolean;
     weekends: boolean;
@@ -80,7 +80,35 @@ export default function PlayerDetailPage({
         setLoading(true);
 
         // Use the specific player endpoint
-        const response = await fetch(API_ENDPOINTS.PLAYER_PROFILES.GET(id));
+        const apiUrl = API_ENDPOINTS.PLAYER_PROFILES.GET(id);
+        console.log("🔍 Fetching player from:", apiUrl);
+
+        // Try the main API endpoint first
+        let response = await fetch(apiUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        // If the main endpoint fails, try a fallback
+        if (!response.ok && response.status !== 404) {
+          console.log("🔍 Main endpoint failed, trying fallback...");
+          const fallbackUrl = `${
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+          }/api/player-profiles/profiles/${id}`;
+          console.log("🔍 Trying fallback URL:", fallbackUrl);
+
+          response = await fetch(fallbackUrl, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+        }
+
+        console.log("🔍 Response status:", response.status);
+        console.log("🔍 Response headers:", response.headers);
 
         if (response.ok) {
           const data = await response.json();
@@ -99,7 +127,7 @@ export default function PlayerDetailPage({
           console.error("🔍 Failed to fetch player, status:", response.status);
           const errorData = await response.json().catch(() => ({}));
           console.error("🔍 Error response:", errorData);
-          throw new Error("Failed to fetch player");
+          throw new Error(`Failed to fetch player: ${response.status}`);
         }
       } catch (error) {
         console.error("Failed to fetch player:", error);
@@ -109,7 +137,12 @@ export default function PlayerDetailPage({
       }
     };
 
-    fetchPlayer();
+    if (id) {
+      fetchPlayer();
+    } else {
+      console.error("🔍 No player ID provided");
+      setLoading(false);
+    }
   }, [id]);
 
   const getRoleIcon = (role: string) => {
@@ -177,6 +210,9 @@ export default function PlayerDetailPage({
               <p className="mt-4 text-gray-600 dark:text-gray-300">
                 Loading player details...
               </p>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Player ID: {id}
+              </p>
             </div>
           </div>
         </main>
@@ -195,13 +231,26 @@ export default function PlayerDetailPage({
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                 Player not found
               </h1>
-              <Link
-                href="/players"
-                className="inline-flex items-center space-x-2 text-purple-600 dark:text-green-400 hover:underline"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Players</span>
-              </Link>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                The player profile you're looking for doesn't exist or has been
+                removed.
+              </p>
+              <div className="space-y-4">
+                <Link
+                  href="/players"
+                  className="inline-flex items-center space-x-2 text-purple-600 dark:text-green-400 hover:underline"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to Players</span>
+                </Link>
+                <br />
+                <Link
+                  href="/games/mobile-legends"
+                  className="inline-flex items-center space-x-2 text-purple-600 dark:text-green-400 hover:underline"
+                >
+                  <span>Browse Mobile Legends Players</span>
+                </Link>
+              </div>
             </div>
           </div>
         </main>
@@ -282,9 +331,9 @@ export default function PlayerDetailPage({
                   </span>
                   <span className="text-gray-300">•</span>
                   <div className="flex items-center space-x-2">
-                    {getRoleIcon(player.role)}
+                    {getRoleIcon(player.roles[0])}
                     <span className="text-lg text-gray-600 dark:text-gray-400">
-                      {player.role}
+                      {player.roles.join(", ")}
                     </span>
                   </div>
                 </div>
@@ -300,11 +349,19 @@ export default function PlayerDetailPage({
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      Rank
+                      Highest Rank
                     </h3>
-                    <p className="text-lg font-semibold text-purple-600 dark:text-green-400">
-                      {player.rank}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg font-semibold text-purple-600 dark:text-green-400">
+                        {player.rank}
+                      </p>
+                      {player.rank === "+Mythical Immortal" &&
+                        player.rankStars && (
+                          <span className="text-yellow-500 text-sm">
+                            ⭐ {player.rankStars}
+                          </span>
+                        )}
+                    </div>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">

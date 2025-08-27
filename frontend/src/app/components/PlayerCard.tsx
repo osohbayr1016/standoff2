@@ -21,8 +21,9 @@ interface Player {
   avatar?: string;
   category: "PC" | "Mobile";
   game: string;
-  role: string;
+  roles: string[];
   rank: string;
+  rankStars?: number;
   experience: string;
   isLookingForTeam: boolean;
   clan?: {
@@ -108,9 +109,9 @@ export default function PlayerCard({
               </div>
               <span className="text-gray-300 hidden sm:inline">•</span>
               <div className="flex items-center space-x-1">
-                {getRoleIcon(player.role)}
+                {getRoleIcon(player.roles[0])}
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {player.role}
+                  {player.roles.join(", ")}
                 </span>
               </div>
             </div>
@@ -119,8 +120,11 @@ export default function PlayerCard({
 
         {/* Status Badges */}
         <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
-          <span className="px-3 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full">
+          <span className="px-3 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full flex items-center gap-1">
             {player.rank}
+            {player.rank === "+Mythical Immortal" && player.rankStars && (
+              <span className="text-yellow-500">⭐ {player.rankStars}</span>
+            )}
           </span>
           {player.isLookingForTeam && (
             <span className="px-3 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">

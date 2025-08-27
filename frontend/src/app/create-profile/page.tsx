@@ -36,7 +36,15 @@ const gameOptions: GameOption[] = [
     id: "mobile-legends",
     name: "Mobile Legends",
     category: "Mobile",
-    roles: ["Tank", "Fighter", "Assassin", "Mage", "Marksman", "Support"],
+    roles: [
+      "Tank",
+      "Fighter",
+      "Assassin",
+      "Mage",
+      "Marksman",
+      "Support",
+      "FILL",
+    ],
     ranks: [
       "Warrior",
       "Elite",
@@ -54,10 +62,11 @@ const gameOptions: GameOption[] = [
 interface ProfileFormData {
   category: "PC" | "Mobile";
   game: string;
-  role: string;
+  roles: string[];
   realName: string;
   inGameName: string;
   rank: string;
+  rankStars?: number;
   experience: string;
   bio: string;
   avatar?: string;
@@ -73,7 +82,6 @@ interface ProfileFormData {
   highlightVideo?: string;
   isLookingForTeam: boolean;
   achievements: string[];
-  preferredRoles: string[];
   availability: {
     weekdays: boolean;
     weekends: boolean;
@@ -94,17 +102,17 @@ export default function CreateProfilePage() {
   const [formData, setFormData] = useState<ProfileFormData>({
     category: "Mobile",
     game: "Mobile Legends",
-    role: "",
+    roles: [],
     realName: "",
     inGameName: "",
     rank: "",
+    rankStars: undefined,
     experience: "",
     bio: "",
     socialLinks: {},
     highlightVideo: "",
     isLookingForTeam: true,
     achievements: [],
-    preferredRoles: [],
     availability: {
       weekdays: true,
       weekends: true,
@@ -134,6 +142,9 @@ export default function CreateProfilePage() {
       }));
     }
 
+    // Set the selected game since it's hardcoded to Mobile Legends
+    setSelectedGame(gameOptions[0]);
+
     // Double-check profile status from server
     checkProfileStatus().then(() => {
       if (hasProfile) {
@@ -148,7 +159,7 @@ export default function CreateProfilePage() {
       ...prev,
       category: game.category,
       game: game.name,
-      role: "",
+      roles: [],
       rank: "",
     }));
   };
@@ -208,6 +219,46 @@ export default function CreateProfilePage() {
       console.log("🔍 Debug - Avatar URL:", formData.avatar);
       console.log("🔍 Debug - Avatar Public ID:", formData.avatarPublicId);
 
+      // Validate required fields before submission
+      const requiredFields = [
+        "category",
+        "game",
+        "roles",
+        "inGameName",
+        "rank",
+        "experience",
+        "bio",
+      ];
+      const missingFields = requiredFields.filter(
+        (field) => !formData[field as keyof ProfileFormData]
+      );
+
+      // Additional validation for Mythical Immortal stars
+      if (formData.rank === "+Mythical Immortal" && !formData.rankStars) {
+        setError("Please enter your stars for Mythical Immortal rank");
+        setLoading(false);
+        return;
+      }
+
+      // Validate roles (should have at least 1, max 2)
+      if (!formData.roles || formData.roles.length === 0) {
+        setError("Please select at least one primary role");
+        setLoading(false);
+        return;
+      }
+
+      if (formData.roles.length > 2) {
+        setError("You can only select up to 2 primary roles");
+        setLoading(false);
+        return;
+      }
+
+      if (missingFields.length > 0) {
+        setError(`Missing required fields: ${missingFields.join(", ")}`);
+        setLoading(false);
+        return;
+      }
+
       // Ensure avatar data is included in the request
       const requestData = {
         ...formData,
@@ -226,6 +277,9 @@ export default function CreateProfilePage() {
         body: JSON.stringify(requestData),
       });
 
+      console.log("🔍 Debug - Response status:", response.status);
+      console.log("🔍 Debug - Response headers:", response.headers);
+
       const data = await response.json();
 
       if (response.ok) {
@@ -236,7 +290,10 @@ export default function CreateProfilePage() {
           router.push("/profile");
         }, 2000);
       } else {
-        setError(data.message || "Profile creation failed");
+        const errorMessage =
+          data.message || data.errors?.join(", ") || "Profile creation failed";
+        setError(errorMessage);
+        console.error("🔍 Debug - Server error:", data);
       }
     } catch (error) {
       console.error("Error creating profile:", error);
@@ -264,6 +321,8 @@ export default function CreateProfilePage() {
       case "Initiator":
       case "Controller":
         return <Zap className="w-5 h-5" />;
+      case "FILL":
+        return <Gamepad2 className="w-5 h-5" />;
       default:
         return <Gamepad2 className="w-5 h-5" />;
     }
@@ -365,19 +424,34 @@ export default function CreateProfilePage() {
                   </h2>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Role Selection */}
+                    {/* Primary Roles Selection */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Role *
+                        Primary Roles * (Select up to 2)
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         {gameOptions[0].roles.map((role) => (
                           <button
                             key={role}
                             type="button"
-                            onClick={() => handleInputChange("role", role)}
+                            onClick={() => {
+                              const currentRoles = formData.roles || [];
+                              if (currentRoles.includes(role)) {
+                                // Remove role if already selected
+                                handleInputChange(
+                                  "roles",
+                                  currentRoles.filter((r) => r !== role)
+                                );
+                              } else if (currentRoles.length < 2) {
+                                // Add role if less than 2 selected
+                                handleInputChange("roles", [
+                                  ...currentRoles,
+                                  role,
+                                ]);
+                              }
+                            }}
                             className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                              formData.role === role
+                              formData.roles?.includes(role)
                                 ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
                                 : "border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-green-300"
                             }`}
@@ -391,28 +465,62 @@ export default function CreateProfilePage() {
                           </button>
                         ))}
                       </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        Selected: {formData.roles?.length || 0}/2
+                      </p>
                     </div>
 
-                    {/* Rank Selection */}
+                    {/* Highest Rank Selection */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Rank *
+                        Highest Rank *
                       </label>
                       <select
                         value={formData.rank}
-                        onChange={(e) =>
-                          handleInputChange("rank", e.target.value)
-                        }
+                        onChange={(e) => {
+                          handleInputChange("rank", e.target.value);
+                          // Reset stars when rank changes
+                          if (e.target.value !== "+Mythical Immortal") {
+                            handleInputChange("rankStars", undefined);
+                          }
+                        }}
                         className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
                         required
                       >
-                        <option value="">Select Rank</option>
+                        <option value="">Select Highest Rank</option>
                         {gameOptions[0].ranks.map((rank) => (
                           <option key={rank} value={rank}>
                             {rank}
                           </option>
                         ))}
                       </select>
+
+                      {/* Stars input for Mythical Immortal */}
+                      {formData.rank === "+Mythical Immortal" && (
+                        <div className="mt-3">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Stars *
+                          </label>
+                          <input
+                            type="number"
+                            min="100"
+                            value={formData.rankStars || ""}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "rankStars",
+                                parseInt(e.target.value) || undefined
+                              )
+                            }
+                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                            placeholder="Enter your stars (100+)"
+                            required
+                          />
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            How many stars do you have in Mythical Immortal?
+                            (Minimum 100)
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Real Name */}

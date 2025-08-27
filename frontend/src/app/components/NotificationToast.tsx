@@ -50,25 +50,40 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       }>;
       count: number;
     }) => {
-      console.log("📬 Pending notifications received:", data);
+      try {
+        console.log("📬 Pending notifications received:", data);
 
-      // Show toast for each new notification
-      data.notifications.forEach((notification) => {
-        const toast = {
-          id: notification._id,
-          title: notification.title,
-          content: notification.content,
-          senderName: notification.senderId?.name || "Unknown",
-          timestamp: new Date().toISOString(),
-        };
+        // Validate data structure
+        if (!data.notifications || !Array.isArray(data.notifications)) {
+          console.warn("📬 Invalid notifications data structure:", data);
+          return;
+        }
 
-        setToasts((prev) => [...prev, toast]);
+        // Show toast for each new notification
+        data.notifications.forEach((notification) => {
+          if (!notification._id || !notification.title) {
+            console.warn("📬 Invalid notification data:", notification);
+            return;
+          }
 
-        // Auto-remove toast after 5 seconds
-        setTimeout(() => {
-          setToasts((prev) => prev.filter((t) => t.id !== toast.id));
-        }, 5000);
-      });
+          const toast = {
+            id: notification._id,
+            title: notification.title,
+            content: notification.content || "",
+            senderName: notification.senderId?.name || "Unknown",
+            timestamp: new Date().toISOString(),
+          };
+
+          setToasts((prev) => [...prev, toast]);
+
+          // Auto-remove toast after 5 seconds
+          setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== toast.id));
+          }, 5000);
+        });
+      } catch (error) {
+        console.error("📬 Error handling pending notifications:", error);
+      }
     };
 
     // Listen for new messages (for real-time chat notifications)
@@ -81,36 +96,53 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       senderName: string;
       senderAvatar?: string;
     }) => {
-      console.log("📨 New message notification received:", data);
+      try {
+        console.log("📨 New message notification received:", data);
 
-      // Only show notification if the message is for the current user
-      if (data.receiverId === user?.id || data.receiverId === undefined) {
-        const toast = {
-          id: data.id || Date.now().toString(),
-          title: `${data.senderName} чам руу чат бичсэн байна`,
-          content:
-            data.content.length > 50
-              ? data.content.substring(0, 50) + "..."
-              : data.content,
-          senderName: data.senderName,
-          timestamp: data.timestamp || new Date().toISOString(),
-        };
+        // Validate data structure
+        if (!data.content || !data.senderId) {
+          console.warn("📨 Invalid message data structure:", data);
+          return;
+        }
 
-        setToasts((prev) => [...prev, toast]);
+        // Only show notification if the message is for the current user
+        if (data.receiverId === user?.id || data.receiverId === undefined) {
+          const toast = {
+            id: data.id || Date.now().toString(),
+            title: `${data.senderName || "Someone"} чам руу чат бичсэн байна`,
+            content:
+              data.content.length > 50
+                ? data.content.substring(0, 50) + "..."
+                : data.content,
+            senderName: data.senderName || "Unknown",
+            timestamp: data.timestamp || new Date().toISOString(),
+          };
 
-        // Auto-remove toast after 5 seconds
-        setTimeout(() => {
-          setToasts((prev) => prev.filter((t) => t.id !== toast.id));
-        }, 5000);
+          setToasts((prev) => [...prev, toast]);
+
+          // Auto-remove toast after 5 seconds
+          setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== toast.id));
+          }, 5000);
+        }
+      } catch (error) {
+        console.error("📨 Error handling new message notification:", error);
       }
+    };
+
+    // Error handling for socket events
+    const handleSocketError = (error: any) => {
+      console.error("🔌 Socket error in notification system:", error);
     };
 
     socket.on("pending_notifications", handlePendingNotifications);
     socket.on("new_message", handleNewMessage);
+    socket.on("error", handleSocketError);
 
     return () => {
       socket.off("pending_notifications", handlePendingNotifications);
       socket.off("new_message", handleNewMessage);
+      socket.off("error", handleSocketError);
     };
   }, [socket, user]);
 

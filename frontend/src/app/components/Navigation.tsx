@@ -31,10 +31,18 @@ export default function Navigation() {
 
   const navItems = [
     { name: "Нүүр", href: "/" },
-    { name: "Тоглогчид", href: "/players" },
+    { name: "Тоглогчид", href: "/games/mobile-legends" },
+    { name: "Мэдээ", href: "/news" },
     { name: "Тэмцээнүүд", href: "/tournaments" },
     { name: "Бидний тухай", href: "/about" },
   ];
+
+  // Add admin link if user is admin
+  const isAdmin =
+    user?.role === "ADMIN" || user?.email === "admin@esport-connection.com"; // Replace with your admin email
+  if (isAdmin) {
+    navItems.push({ name: "Admin", href: "/admin" });
+  }
 
   const handleInviteFriend = () => {
     setIsInviteFriendModalOpen(true);
@@ -228,7 +236,9 @@ export default function Navigation() {
                         href={
                           user.role === "PLAYER" && hasProfile
                             ? "/profile"
-                            : "/create-profile"
+                            : user.role === "PLAYER"
+                            ? "/create-profile"
+                            : "/create-organization-profile"
                         }
                         onClick={() => setIsMobileMenuOpen(false)}
                         className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
@@ -237,7 +247,9 @@ export default function Navigation() {
                         <span>
                           {user.role === "PLAYER" && hasProfile
                             ? "Profile"
-                            : "Create Profile"}
+                            : user.role === "PLAYER"
+                            ? "Create Profile"
+                            : "Create Organization Profile"}
                         </span>
                       </Link>
                       <button

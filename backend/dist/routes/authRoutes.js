@@ -1,5 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const authController_1 = require("../controllers/authController");
+const auth_1 = require("../middleware/auth");
 const authRoutes = async (fastify) => {
     fastify.get("/health", async (request, reply) => {
         return {
@@ -8,17 +10,10 @@ const authRoutes = async (fastify) => {
             timestamp: new Date().toISOString(),
         };
     });
-    fastify.post("/login", async (request, reply) => {
-        return {
-            success: false,
-            message: "Authentication temporarily disabled - debug elimination in progress",
-        };
-    });
-    fastify.post("/register", async (request, reply) => {
-        return {
-            success: false,
-            message: "Registration temporarily disabled - debug elimination in progress",
-        };
-    });
+    fastify.post("/login", authController_1.login);
+    fastify.post("/register", authController_1.register);
+    fastify.get("/me", { preHandler: auth_1.authenticateToken }, authController_1.getCurrentUser);
+    fastify.post("/logout", { preHandler: auth_1.authenticateToken }, authController_1.logout);
+    fastify.post("/refresh", { preHandler: auth_1.authenticateToken }, authController_1.refreshToken);
 };
 exports.default = authRoutes;

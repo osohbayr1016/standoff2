@@ -35,8 +35,8 @@ const roleOptions: RoleOption[] = [
   },
   {
     id: "ORGANIZATION",
-    name: "Байгууллага",
-    description: "E-sport байгууллагын төлөөлөгч",
+    name: "Organization",
+    description: "E-sport organization",
     icon: <Building className="w-6 h-6" />,
     color: "from-orange-500 to-red-600",
   },
@@ -159,7 +159,7 @@ export default function RegisterPage() {
               whileHover={{ scale: 1.05 }}
               className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-green-400 dark:to-blue-400 bg-clip-text text-transparent mb-2"
             >
-              E-Sport Хаб
+              E-Sport Connection
             </motion.h1>
           </Link>
           <p className="text-gray-600 dark:text-gray-300">
