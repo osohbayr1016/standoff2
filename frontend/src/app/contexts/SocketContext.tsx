@@ -8,6 +8,7 @@ import React, {
   useRef,
 } from "react";
 import { io, Socket } from "socket.io-client";
+import { API_ENDPOINTS } from "@/config/api";
 import { useAuth } from "./AuthContext";
 
 interface SocketContextType {
@@ -45,7 +46,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Create socket connection with better error handling
     const socket = io(
-      process.env.NEXT_PUBLIC_WS_URL || "http://localhost:8000",
+      API_ENDPOINTS.HEALTH.replace('/health', ''),
       {
         auth: {
           token: token,

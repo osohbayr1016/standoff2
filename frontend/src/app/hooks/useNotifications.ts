@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useSocket } from "../contexts/SocketContext";
+import { API_ENDPOINTS } from "@/config/api";
 
 interface Notification {
   _id: string;
@@ -33,7 +34,7 @@ export const useNotifications = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications`,
+        `${API_ENDPOINTS.NOTIFICATIONS.ALL}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -64,7 +65,7 @@ export const useNotifications = () => {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications/unread/count`,
+        `${API_ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -88,7 +89,7 @@ export const useNotifications = () => {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications/${notificationId}/seen`,
+        `${API_ENDPOINTS.NOTIFICATIONS.MARK_READ(notificationId)}`,
         {
           method: "PATCH",
           headers: {
@@ -117,7 +118,7 @@ export const useNotifications = () => {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications/seen/all`,
+        `${API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ}`,
         {
           method: "PATCH",
           headers: {
@@ -144,7 +145,7 @@ export const useNotifications = () => {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications/${notificationId}`,
+        `${API_ENDPOINTS.NOTIFICATIONS.DELETE(notificationId)}`,
         {
           method: "DELETE",
           headers: {

@@ -1,6 +1,13 @@
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+    ? 'https://e-sport-connection.onrender.com' 
+    : 'http://localhost:8000');
+
+const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || 
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+    ? 'https://e-sport-connection.onrender.com' 
+    : 'http://localhost:8000');
 
 export const API_ENDPOINTS = {
   AUTH: {

@@ -58,7 +58,10 @@ export default function AdminUsersPage() {
         setLoading(true);
         const response = await fetch(
           `${
-            process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+            process.env.NEXT_PUBLIC_API_URL || 
+            (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+              ? 'https://e-sport-connection.onrender.com' 
+              : 'http://localhost:8000')
           }/api/users`
         );
         const data = await response.json();
@@ -82,10 +85,13 @@ export default function AdminUsersPage() {
 
   const handleUpdateUserRole = async (userId: string, newRole: string) => {
     try {
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-        }/api/users/update-role`,
+              const response = await fetch(
+          `${
+            process.env.NEXT_PUBLIC_API_URL || 
+            (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+              ? 'https://e-sport-connection.onrender.com' 
+              : 'http://localhost:8000')
+          }/api/users/update-role`,
         {
           method: "PUT",
           headers: {
@@ -116,10 +122,13 @@ export default function AdminUsersPage() {
     }
 
     try {
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-        }/api/users/${userId}`,
+              const response = await fetch(
+          `${
+            process.env.NEXT_PUBLIC_API_URL || 
+            (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+              ? 'https://e-sport-connection.onrender.com' 
+              : 'http://localhost:8000')
+          }/api/users/${userId}`,
         {
           method: "DELETE",
         }

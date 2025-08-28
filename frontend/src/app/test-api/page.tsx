@@ -33,9 +33,7 @@ export default function TestApiPage() {
       // Test 3: Test endpoint
       console.log("Testing test endpoint...");
       const testResponse = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-        }/api/player-profiles/test`
+        `${API_BASE_URL}/api/player-profiles/test`
       );
       results.test = {
         status: testResponse.status,
@@ -46,9 +44,7 @@ export default function TestApiPage() {
       // Test 4: CORS test
       console.log("Testing CORS endpoint...");
       const corsResponse = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-        }/api/test-cors`
+        `${API_BASE_URL}/api/test-cors`
       );
       results.cors = {
         status: corsResponse.status,
@@ -62,6 +58,11 @@ export default function TestApiPage() {
     setTestResults(results);
     setLoading(false);
   };
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 
+    (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+      ? 'https://e-sport-connection.onrender.com' 
+      : 'http://localhost:8000');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-8">
@@ -77,7 +78,7 @@ export default function TestApiPage() {
           <div className="space-y-2 text-sm">
             <p>
               <strong>API Base URL:</strong>{" "}
-              {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}
+              {API_BASE_URL}
             </p>
             <p>
               <strong>Health Endpoint:</strong> {API_ENDPOINTS.HEALTH}

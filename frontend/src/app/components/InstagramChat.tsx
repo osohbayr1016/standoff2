@@ -14,6 +14,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useSocket } from "../contexts/SocketContext";
 import { useNotifications } from "../hooks/useNotifications";
 import Image from "next/image";
+import { API_ENDPOINTS } from "@/config/api";
 
 interface Message {
   _id: string;
@@ -84,7 +85,7 @@ const InstagramChat: React.FC = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/conversations`,
+        `${API_ENDPOINTS.MESSAGES.LIST("conversations")}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -112,7 +113,7 @@ const InstagramChat: React.FC = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/messages/${partnerId}`,
+          `${API_ENDPOINTS.MESSAGES.LIST(partnerId)}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -143,7 +144,7 @@ const InstagramChat: React.FC = () => {
     try {
       setSending(true);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/messages`,
+        `${API_ENDPOINTS.MESSAGES.SEND}`,
         {
           method: "POST",
           headers: {
