@@ -78,7 +78,7 @@ export default function Home() {
                         ТЭМЦЭЭНҮҮД
                       </button>
                     </Link>
-                    <Link href="/games/mobile-legends">
+                    <Link href="/players">
                       <button className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 backdrop-blur-sm transition-colors">
                         ТОГЛОГЧИД
                       </button>

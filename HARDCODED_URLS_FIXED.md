@@ -92,12 +92,12 @@ process.env.NEXT_PUBLIC_WS_URL || "http://localhost:8000";
 
    - Go to https://vercel.com/dashboard
    - Select your project → Settings → Environment Variables
-   - Add: `NEXT_PUBLIC_API_URL` = `https://e-sport-connection.onrender.com`
-   - Add: `NEXT_PUBLIC_WS_URL` = `https://e-sport-connection.onrender.com`
+   - Add: `NEXT_PUBLIC_API_URL` = `https://e-sport-connection-0596.onrender.com`
+   - Add: `NEXT_PUBLIC_WS_URL` = `https://e-sport-connection-0596.onrender.com`
 
 3. **Test the debug page:**
    - After deployment, visit: `https://your-vercel-url.vercel.app/debug-api`
-   - Should show: `API_BASE_URL: https://e-sport-connection.onrender.com`
+   - Should show: `API_BASE_URL: https://e-sport-connection-0596.onrender.com`
 
 ## 🎉 **Expected Results:**
 

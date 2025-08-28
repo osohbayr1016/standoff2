@@ -52,7 +52,7 @@ The **database issue is fixed**, but we need to deploy the updated backend code 
 1. **Test Registration Endpoint:**
 
    ```bash
-   curl -X POST https://e-sport-connection.onrender.com/api/auth/register \
+   curl -X POST https://e-sport-connection-0596.onrender.com/api/auth/register \
      -H "Content-Type: application/json" \
      -d '{"name":"Test User","email":"test@example.com","password":"password123","role":"PLAYER"}'
    ```

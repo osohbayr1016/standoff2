@@ -173,6 +173,11 @@ async function registerRoutes() {
         console.log("🔧 Dashboard routes imported:", !!dashboardRoutes.default);
         fastify.register(dashboardRoutes.default, { prefix: "/api/dashboard" });
         console.log("🔧 Dashboard routes registered with prefix /api/dashboard");
+        console.log("🔧 Registering pro player routes...");
+        const proPlayerRoutes = await Promise.resolve().then(() => __importStar(require("./routes/proPlayerRoutes")));
+        console.log("🔧 Pro player routes imported:", !!proPlayerRoutes.default);
+        fastify.register(proPlayerRoutes.default, { prefix: "/api/pro-players" });
+        console.log("🔧 Pro player routes registered with prefix /api/pro-players");
         console.log("✅ All routes registered successfully");
     }
     catch (error) {

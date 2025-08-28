@@ -224,6 +224,15 @@ export default function AdminDashboard() {
       stats: stats.profiles,
     },
     {
+      id: "pro-players",
+      title: "Pro Player Applications",
+      description:
+        "Review and approve professional player applications for account boosting",
+      icon: <Trophy className="w-8 h-8" />,
+      href: "/admin/pro-players",
+      color: "from-yellow-500 to-orange-500",
+    },
+    {
       id: "analytics",
       title: "Analytics & Reports",
       description: "View platform statistics and generate reports",

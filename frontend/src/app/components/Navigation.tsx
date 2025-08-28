@@ -31,9 +31,10 @@ export default function Navigation() {
 
   const navItems = [
     { name: "Нүүр", href: "/" },
-    { name: "Тоглогчид", href: "/games/mobile-legends" },
+    { name: "Тоглогчид", href: "/players" },
     { name: "Мэдээ", href: "/news" },
     { name: "Тэмцээнүүд", href: "/tournaments" },
+    { name: "Account Boosting", href: "/account-boosting" },
     { name: "Бидний тухай", href: "/about" },
   ];
 

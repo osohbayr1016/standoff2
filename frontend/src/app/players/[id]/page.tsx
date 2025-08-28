@@ -98,7 +98,7 @@ export default function PlayerDetailPage({
             process.env.NEXT_PUBLIC_API_URL ||
             (typeof window !== "undefined" &&
             window.location.hostname !== "localhost"
-              ? "https://e-sport-connection.onrender.com"
+              ? "https://e-sport-connection-0596.onrender.com"
               : "http://localhost:8000")
           }/api/player-profiles/profiles/${id}`;
           console.log("🔍 Trying fallback URL:", fallbackUrl);
@@ -249,7 +249,7 @@ export default function PlayerDetailPage({
                 </Link>
                 <br />
                 <Link
-                  href="/games/mobile-legends"
+                  href="/players"
                   className="inline-flex items-center space-x-2 text-purple-600 dark:text-green-400 hover:underline"
                 >
                   <span>Browse Mobile Legends Players</span>

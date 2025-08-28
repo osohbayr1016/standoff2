@@ -77,7 +77,7 @@ export default function LoginPage() {
               whileHover={{ scale: 1.05 }}
               className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-green-400 dark:to-blue-400 bg-clip-text text-transparent mb-2"
             >
-              E-Sport Хаб
+              E-Sport Connection
             </motion.h1>
           </Link>
           <p className="text-gray-600 dark:text-gray-300">

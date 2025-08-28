@@ -79,7 +79,7 @@ export default function Footer() {
             <ul className="space-y-3">
               {[
                 { name: "Бидний тухай", href: "/about" },
-                { name: "Тоглогчид", href: "/games/mobile-legends" },
+                { name: "Тоглогчид", href: "/players" },
                 { name: "Мэдээ", href: "/news" },
                 { name: "Тэмцээнүүд", href: "/tournaments" },
               ].map((link) => (

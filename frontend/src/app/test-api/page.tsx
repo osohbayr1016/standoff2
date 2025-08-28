@@ -43,9 +43,7 @@ export default function TestApiPage() {
 
       // Test 4: CORS test
       console.log("Testing CORS endpoint...");
-      const corsResponse = await fetch(
-        `${API_BASE_URL}/api/test-cors`
-      );
+      const corsResponse = await fetch(`${API_BASE_URL}/api/test-cors`);
       results.cors = {
         status: corsResponse.status,
         ok: corsResponse.ok,
@@ -59,10 +57,11 @@ export default function TestApiPage() {
     setLoading(false);
   };
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 
-    (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
-      ? 'https://e-sport-connection.onrender.com' 
-      : 'http://localhost:8000');
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL ||
+    (typeof window !== "undefined" && window.location.hostname !== "localhost"
+      ? "https://e-sport-connection-0596.onrender.com"
+      : "http://localhost:8000");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-8">
@@ -77,8 +76,7 @@ export default function TestApiPage() {
           </h2>
           <div className="space-y-2 text-sm">
             <p>
-              <strong>API Base URL:</strong>{" "}
-              {API_BASE_URL}
+              <strong>API Base URL:</strong> {API_BASE_URL}
             </p>
             <p>
               <strong>Health Endpoint:</strong> {API_ENDPOINTS.HEALTH}

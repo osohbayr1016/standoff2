@@ -14,7 +14,7 @@ Your backend is now **READY FOR DEPLOYMENT** to Render!
 
 ## 🌐 Render Deployment URL
 
-**Backend URL**: https://e-sport-connection.onrender.com
+**Backend URL**: https://e-sport-connection-0596.onrender.com
 
 ## ⚙️ Render Configuration
 
@@ -39,7 +39,7 @@ Your `render.yaml` is configured with:
 
 Your frontend is configured to use:
 
-- **Production API URL**: https://e-sport-connection.onrender.com
+- **Production API URL**: https://e-sport-connection-0596.onrender.com
 - **Environment file**: `.env.production` created
 
 ## 🔥 Deployment Steps
@@ -80,8 +80,8 @@ git push origin main
 
 Once deployed, test these endpoints:
 
-- **Health Check**: https://e-sport-connection.onrender.com/health
-- **API Test**: https://e-sport-connection.onrender.com/api/test-cors
+- **Health Check**: https://e-sport-connection-0596.onrender.com/health
+- **API Test**: https://e-sport-connection-0596.onrender.com/api/test-cors
 
 ## 🔧 Environment Variables to Update
 

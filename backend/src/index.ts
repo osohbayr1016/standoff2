@@ -164,12 +164,12 @@ async function registerRoutes() {
     fastify.register(testRoutes.default, { prefix: "/api/test" });
     console.log("🔧 Test routes registered with prefix /api/test");
 
-    // Upload routes
-    console.log("🔧 Registering upload routes...");
-    const uploadRoutes = await import("./routes/uploadRoutes");
-    console.log("🔧 Upload routes imported:", !!uploadRoutes.default);
-    fastify.register(uploadRoutes.default, { prefix: "/api/upload" });
-    console.log("🔧 Upload routes registered with prefix /api/upload");
+    // Upload routes - temporarily disabled due to Cloudinary issues
+    // console.log("🔧 Registering upload routes...");
+    // const uploadRoutes = await import("./routes/uploadRoutes");
+    // console.log("🔧 Upload routes imported:", !!uploadRoutes.default);
+    // fastify.register(uploadRoutes.default, { prefix: "/api/upload" });
+    // console.log("🔧 Upload routes registered with prefix /api/upload");
 
     // Message routes
     console.log("🔧 Registering message routes...");
@@ -198,6 +198,13 @@ async function registerRoutes() {
     console.log("🔧 Dashboard routes imported:", !!dashboardRoutes.default);
     fastify.register(dashboardRoutes.default, { prefix: "/api/dashboard" });
     console.log("🔧 Dashboard routes registered with prefix /api/dashboard");
+
+    // Pro player routes
+    console.log("🔧 Registering pro player routes...");
+    const proPlayerRoutes = await import("./routes/proPlayerRoutes");
+    console.log("🔧 Pro player routes imported:", !!proPlayerRoutes.default);
+    fastify.register(proPlayerRoutes.default, { prefix: "/api/pro-players" });
+    console.log("🔧 Pro player routes registered with prefix /api/pro-players");
 
     console.log("✅ All routes registered successfully");
   } catch (error) {

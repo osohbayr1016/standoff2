@@ -11,7 +11,7 @@ Request URL: http://localhost:8000/api/auth/login
 But it should show:
 
 ```
-Request URL: https://e-sport-connection.onrender.com/api/auth/login
+Request URL: https://e-sport-connection-0596.onrender.com/api/auth/login
 ```
 
 ## ✅ Root Cause
@@ -26,8 +26,8 @@ Your Vercel deployment is using an **old build** that still has localhost URLs c
 2. Select your `e-sport-connection` project
 3. Go to **Settings** → **Environment Variables**
 4. Add these variables for **Production** environment:
-   - `NEXT_PUBLIC_API_URL` = `https://e-sport-connection.onrender.com`
-   - `NEXT_PUBLIC_WS_URL` = `https://e-sport-connection.onrender.com`
+   - `NEXT_PUBLIC_API_URL` = `https://e-sport-connection-0596.onrender.com`
+   - `NEXT_PUBLIC_WS_URL` = `https://e-sport-connection-0596.onrender.com`
 
 ### Step 2: Deploy Debug Page (Test Current Setup)
 
@@ -70,7 +70,7 @@ Status: Failed
 **After Fix:**
 
 ```
-Request URL: https://e-sport-connection.onrender.com/api/auth/login
+Request URL: https://e-sport-connection-0596.onrender.com/api/auth/login
 Status: Success (should get proper auth response)
 ```
 
@@ -87,7 +87,7 @@ Visit `/debug-api` on your deployed site to see:
 Your backend is working! I tested:
 
 ```bash
-curl -X POST https://e-sport-connection.onrender.com/api/auth/login \
+curl -X POST https://e-sport-connection-0596.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@test.com","password":"test"}'
 ```
