@@ -37,25 +37,7 @@ interface Player {
   highlightVideo?: string;
 }
 
-interface Team {
-  id: string;
-  name: string;
-  tag: string;
-  logo: string;
-  game: string;
-  gameIcon: string;
-  createdBy: string;
-  members: TeamMember[];
-  createdAt: string;
-}
 
-interface TeamMember {
-  id: string;
-  name: string;
-  avatar: string;
-  status: "pending" | "accepted" | "declined";
-  invitedAt: string;
-}
 
 // Game information (MLBB only)
 const gameInfo = {
@@ -125,11 +107,35 @@ export default function GamePage() {
         const data = await response.json();
         const allPlayers = data.profiles || [];
 
-        // Filter players for this specific game
-        const gamePlayers = allPlayers.filter(
-          (player: Player) => player.game === game.name
-        );
+        // Validate and filter players for this specific game
+        const gamePlayers = allPlayers
+          .filter((player: Partial<Player>) => {
+            // Ensure player has required properties
+            return player && 
+                   player.game === game.name && 
+                   player.name && 
+                   typeof player.name === 'string';
+          })
+          .map((player: Partial<Player>): Player => ({
+            id: player.id || '',
+            name: player.name || 'Unknown Player',
+            avatar: player.avatar,
+            avatarPublicId: player.avatarPublicId,
+            category: player.category || 'Mobile',
+            game: player.game || game.name,
+            roles: Array.isArray(player.roles) ? player.roles : [],
+            inGameName: player.inGameName,
+            rank: player.rank || 'Unknown',
+            rankStars: player.rankStars,
+            experience: player.experience || 'Unknown',
+            bio: player.bio,
+            description: player.description,
+            isLookingForTeam: Boolean(player.isLookingForTeam),
+            socialLinks: player.socialLinks,
+            highlightVideo: player.highlightVideo
+          }));
 
+        console.log(`Found ${gamePlayers.length} valid players for ${game.name}`);
         setPlayers(gamePlayers);
       } catch (error) {
         console.error("Error fetching players:", error);
@@ -151,59 +157,81 @@ export default function GamePage() {
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(
-        (player) =>
-          player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (player.bio || player.description || "")
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())
+        (player) => {
+          const playerName = player.name || '';
+          const playerBio = player.bio || player.description || '';
+          const searchLower = searchTerm.toLowerCase();
+          
+          return playerName.toLowerCase().includes(searchLower) ||
+                 playerBio.toLowerCase().includes(searchLower);
+        }
       );
     }
 
     // Filter by role
     if (selectedRole !== "Бүх Үүргүүд") {
-      filtered = filtered.filter((player) =>
-        player.roles.includes(selectedRole)
-      );
+      filtered = filtered.filter((player) => {
+        const playerRoles = player.roles || [];
+        return Array.isArray(playerRoles) && playerRoles.includes(selectedRole);
+      });
     }
 
     // Filter by rank
     if (selectedRank !== "Бүх Ранкууд") {
-      filtered = filtered.filter((player) => player.rank === selectedRank);
+      filtered = filtered.filter((player) => {
+        const playerRank = player.rank || '';
+        return playerRank === selectedRank;
+      });
     }
 
     // Filter by minimum stars for Mythical Glory
     if (minStars !== null && minStars > 0) {
       filtered = filtered.filter((player) => {
-        if (player.rank === "Mythical Glory" && player.rankStars) {
-          return player.rankStars >= minStars;
+        const playerRank = player.rank || '';
+        const playerStars = player.rankStars || 0;
+        
+        if (playerRank === "Mythical Glory" && playerStars > 0) {
+          return playerStars >= minStars;
         }
         return true; // Include players with other ranks
       });
     }
 
-    // Sort players
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "stars":
-          // Sort by stars (highest first), then by rank
-          const aStars = a.rank === "Mythical Glory" ? a.rankStars || 0 : 0;
-          const bStars = b.rank === "Mythical Glory" ? b.rankStars || 0 : 0;
-          if (aStars !== bStars) {
-            return bStars - aStars; // Higher stars first
-          }
-          // If same stars, sort by rank
-          return getRankValue(b.rank) - getRankValue(a.rank);
+    // Sort players with error handling
+    try {
+      filtered.sort((a, b) => {
+        switch (sortBy) {
+          case "stars":
+            // Sort by stars (highest first), then by rank
+            const aRank = a.rank || '';
+            const bRank = b.rank || '';
+            const aStars = aRank === "Mythical Glory" ? (a.rankStars || 0) : 0;
+            const bStars = bRank === "Mythical Glory" ? (b.rankStars || 0) : 0;
+            if (aStars !== bStars) {
+              return bStars - aStars; // Higher stars first
+            }
+            // If same stars, sort by rank
+            return getRankValue(bRank) - getRankValue(aRank);
 
-        case "rank":
-          // Sort by rank (highest first)
-          return getRankValue(b.rank) - getRankValue(a.rank);
+          case "rank":
+            // Sort by rank (highest first)
+            const aRankForSort = a.rank || '';
+            const bRankForSort = b.rank || '';
+            return getRankValue(bRankForSort) - getRankValue(aRankForSort);
 
-        case "name":
-        default:
-          // Sort by name alphabetically
-          return a.name.localeCompare(b.name);
-      }
-    });
+          case "name":
+          default:
+            // Sort by name alphabetically with null safety
+            const aName = a.name || '';
+            const bName = b.name || '';
+            return aName.localeCompare(bName);
+        }
+      });
+    } catch (error) {
+      console.error('Error sorting players:', error);
+      // If sorting fails, keep original order
+      console.log('Keeping original player order due to sorting error');
+    }
 
     setFilteredPlayers(filtered);
   }, [players, searchTerm, selectedRole, selectedRank, minStars, sortBy]);
