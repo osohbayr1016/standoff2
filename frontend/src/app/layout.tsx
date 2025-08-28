@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import Footer from "./components/Footer";
 import { DarkModeProvider } from "./contexts/DarkModeContext";
@@ -59,6 +60,7 @@ export default function RootLayout({
             </SocketProvider>
           </AuthProvider>
         </DarkModeProvider>
+        <Analytics />
       </body>
     </html>
   );
