@@ -37,6 +37,64 @@ interface Player {
   highlightVideo?: string;
 }
 
+// Flexible interface for incoming API data that might have different field names
+interface FlexiblePlayerData {
+  id?: string;
+  _id?: string;
+  playerId?: string;
+  name?: string;
+  username?: string;
+  displayName?: string;
+  playerName?: string;
+  avatar?: string;
+  avatarUrl?: string;
+  profilePicture?: string;
+  avatarPublicId?: string;
+  avatarId?: string;
+  category?: string;
+  platform?: string;
+  game?: string;
+  gameType?: string;
+  gameName?: string;
+  roles?: string[];
+  role?: string | string[];
+  inGameName?: string;
+  ign?: string;
+  gameUsername?: string;
+  rank?: string;
+  rankLevel?: string;
+  rankStars?: number;
+  stars?: number;
+  experience?: string;
+  exp?: string;
+  level?: string;
+  bio?: string;
+  description?: string;
+  about?: string;
+  isLookingForTeam?: boolean;
+  lookingForTeam?: boolean;
+  teamStatus?: boolean;
+  socialLinks?: {
+    twitter?: string;
+    instagram?: string;
+    youtube?: string;
+    twitch?: string;
+    discord?: string;
+    website?: string;
+  };
+  social?: {
+    twitter?: string;
+    instagram?: string;
+    youtube?: string;
+    twitch?: string;
+    discord?: string;
+    website?: string;
+  };
+  highlightVideo?: string;
+  video?: string;
+  clip?: string;
+}
+
 
 
 // Game information (MLBB only)
@@ -111,50 +169,61 @@ export default function GamePage() {
         console.log('🎮 Looking for game:', game.name);
         console.log('🎮 Game ID from URL:', gameId);
 
-        // Validate and filter players for this specific game
+        // First, let's see what the actual player data structure looks like
+        console.log('🔍 First player data structure:', allPlayers[0]);
+        console.log('🔍 Player keys:', allPlayers[0] ? Object.keys(allPlayers[0]) : 'No players');
+        
+        // Accept ANY player object and try to extract useful information
         const gamePlayers = allPlayers
-          .filter((player: Partial<Player>) => {
-            // Ensure player has required properties
-            const hasRequiredProps = player && 
-                   player.name && 
-                   typeof player.name === 'string';
-            
-            if (!hasRequiredProps) {
-              console.log('❌ Player missing required props:', player);
+          .filter((player: FlexiblePlayerData) => {
+            // Accept any player object
+            if (!player || typeof player !== 'object') {
+              console.log('❌ Player is not an object:', player);
               return false;
             }
-
-            // Check if player matches this game (case-insensitive and flexible matching)
-            const playerGame = player.game || '';
+            
+            // Try to find a name field (could be 'name', 'username', 'displayName', etc.)
+            const playerName = player.name || player.username || player.displayName || player.playerName || 'Unknown Player';
+            console.log(`🎮 Player found: "${playerName}"`, player);
+            
+            // Check if player matches this game (very flexible matching)
+            const playerGame = player.game || player.gameType || player.gameName || player.category || '';
             const gameName = game.name || '';
             const gameIdLower = gameId.toLowerCase();
             
-            const matchesGame = playerGame.toLowerCase().includes(gameIdLower) ||
+            // Very flexible game matching
+            const matchesGame = !playerGame || // If no game specified, include them
+                               playerGame.toLowerCase().includes(gameIdLower) ||
                                gameName.toLowerCase().includes(playerGame.toLowerCase()) ||
                                playerGame.toLowerCase().includes('mobile') ||
-                               playerGame.toLowerCase().includes('legends');
+                               playerGame.toLowerCase().includes('legends') ||
+                               playerGame.toLowerCase().includes('moba') ||
+                               gameIdLower.includes('mobile') ||
+                               gameIdLower.includes('legends');
             
-            console.log(`🎮 Player "${player.name}" game: "${playerGame}" matches "${gameName}": ${matchesGame}`);
+            console.log(`🎮 Player "${playerName}" game: "${playerGame}" matches "${gameName}": ${matchesGame}`);
             
-            return matchesGame;
+            return true; // Accept all players for now to see what we have
           })
-          .map((player: Partial<Player>): Player => ({
-            id: player.id || '',
-            name: player.name || 'Unknown Player',
-            avatar: player.avatar,
-            avatarPublicId: player.avatarPublicId,
-            category: player.category || 'Mobile',
-            game: player.game || game.name,
-            roles: Array.isArray(player.roles) ? player.roles : [],
-            inGameName: player.inGameName,
-            rank: player.rank || 'Unknown',
-            rankStars: player.rankStars,
-            experience: player.experience || 'Unknown',
-            bio: player.bio,
-            description: player.description,
-            isLookingForTeam: Boolean(player.isLookingForTeam),
-            socialLinks: player.socialLinks,
-            highlightVideo: player.highlightVideo
+          .map((player: FlexiblePlayerData): Player => ({
+            id: player.id || player._id || player.playerId || '',
+            name: player.name || player.username || player.displayName || player.playerName || 'Unknown Player',
+            avatar: player.avatar || player.avatarUrl || player.profilePicture,
+            avatarPublicId: player.avatarPublicId || player.avatarId,
+            category: (player.category === 'PC' || player.platform === 'PC') ? 'PC' : 'Mobile',
+            game: player.game || player.gameType || player.gameName || game.name,
+            roles: Array.isArray(player.roles) ? player.roles : 
+                   Array.isArray(player.role) ? player.role : 
+                   player.role ? [player.role] : [],
+            inGameName: player.inGameName || player.ign || player.gameUsername,
+            rank: player.rank || player.rankLevel || 'Unknown',
+            rankStars: player.rankStars || player.stars || 0,
+            experience: player.experience || player.exp || player.level || 'Unknown',
+            bio: player.bio || player.description || player.about,
+            description: player.description || player.bio || player.about,
+            isLookingForTeam: Boolean(player.isLookingForTeam || player.lookingForTeam || player.teamStatus),
+            socialLinks: player.socialLinks || player.social || {},
+            highlightVideo: player.highlightVideo || player.video || player.clip
           }));
 
         console.log(`✅ Found ${gamePlayers.length} valid players for ${game.name}:`, gamePlayers);
@@ -163,24 +232,26 @@ export default function GamePage() {
         if (gamePlayers.length === 0 && allPlayers.length > 0) {
           console.log('⚠️ No players found for specific game, showing all players for debugging');
           const allValidPlayers = allPlayers
-            .filter((player: Partial<Player>) => player && player.name && typeof player.name === 'string')
-            .map((player: Partial<Player>): Player => ({
-              id: player.id || '',
-              name: player.name || 'Unknown Player',
-              avatar: player.avatar,
-              avatarPublicId: player.avatarPublicId,
-              category: player.category || 'Mobile',
-              game: player.game || 'Unknown',
-              roles: Array.isArray(player.roles) ? player.roles : [],
-              inGameName: player.inGameName,
-              rank: player.rank || 'Unknown',
-              rankStars: player.rankStars,
-              experience: player.experience || 'Unknown',
-              bio: player.bio,
-              description: player.description,
-              isLookingForTeam: Boolean(player.isLookingForTeam),
-              socialLinks: player.socialLinks,
-              highlightVideo: player.highlightVideo
+            .filter((player: FlexiblePlayerData) => player && typeof player === 'object')
+            .map((player: FlexiblePlayerData): Player => ({
+              id: player.id || player._id || player.playerId || '',
+              name: player.name || player.username || player.displayName || player.playerName || 'Unknown Player',
+              avatar: player.avatar || player.avatarUrl || player.profilePicture,
+              avatarPublicId: player.avatarPublicId || player.avatarId,
+              category: (player.category === 'PC' || player.platform === 'PC') ? 'PC' : 'Mobile',
+              game: player.game || player.gameType || player.gameName || 'Unknown',
+              roles: Array.isArray(player.roles) ? player.roles : 
+                     Array.isArray(player.role) ? player.role : 
+                     player.role ? [player.role] : [],
+              inGameName: player.inGameName || player.ign || player.gameUsername,
+              rank: player.rank || player.rankLevel || 'Unknown',
+              rankStars: player.rankStars || player.stars || 0,
+              experience: player.experience || player.exp || player.level || 'Unknown',
+              bio: player.bio || player.description || player.about,
+              description: player.description || player.bio || player.about,
+              isLookingForTeam: Boolean(player.isLookingForTeam || player.lookingForTeam || player.teamStatus),
+              socialLinks: player.socialLinks || player.social || {},
+              highlightVideo: player.highlightVideo || player.video || player.clip
             }));
           console.log('🔍 All valid players (for debugging):', allValidPlayers);
           setPlayers(allValidPlayers);
