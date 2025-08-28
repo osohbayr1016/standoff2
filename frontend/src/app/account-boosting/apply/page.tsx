@@ -46,11 +46,6 @@ export default function ApplyProPlayerPage() {
     );
   }
 
-  // Don't render the form if not authenticated
-  if (!isAuthenticated) {
-    return null;
-  }
-
   const [formData, setFormData] = useState<CreateProPlayerRequest>({
     game: "Mobile Legends: Bang Bang",
     rank: "",
@@ -65,6 +60,11 @@ export default function ApplyProPlayerPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
   const [stars, setStars] = useState<number>(0);
+
+  // Don't render the form if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -112,20 +112,22 @@ export default function ApplyProPlayerPage() {
       setTimeout(() => {
         router.push("/account-boosting");
       }, 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error creating pro player profile:", err);
 
       // Handle authentication errors
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error occurred";
       if (
-        err.message?.includes("Authentication") ||
-        err.message?.includes("token")
+        errorMessage.includes("Authentication") ||
+        errorMessage.includes("token")
       ) {
         alert("Please log in to submit your application.");
         router.push("/auth/login");
         return;
       }
 
-      alert(err.message || "Failed to create profile. Please try again.");
+      alert(errorMessage || "Failed to create profile. Please try again.");
     } finally {
       setLoading(false);
     }
