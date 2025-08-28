@@ -143,20 +143,17 @@ const InstagramChat: React.FC = () => {
 
     try {
       setSending(true);
-      const response = await fetch(
-        `${API_ENDPOINTS.MESSAGES.SEND}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            receiverId: selectedConversation.partner._id,
-            content: newMessage.trim(),
-          }),
-        }
-      );
+      const response = await fetch(`${API_ENDPOINTS.MESSAGES.SEND}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          receiverId: selectedConversation.partner._id,
+          content: newMessage.trim(),
+        }),
+      });
 
       if (response.ok) {
         const data = await response.json();
