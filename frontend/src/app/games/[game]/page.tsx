@@ -107,14 +107,36 @@ export default function GamePage() {
         const data = await response.json();
         const allPlayers = data.profiles || [];
 
+        console.log('🔍 All players from API:', allPlayers);
+        console.log('🎮 Looking for game:', game.name);
+        console.log('🎮 Game ID from URL:', gameId);
+
         // Validate and filter players for this specific game
         const gamePlayers = allPlayers
           .filter((player: Partial<Player>) => {
             // Ensure player has required properties
-            return player && 
-                   player.game === game.name && 
+            const hasRequiredProps = player && 
                    player.name && 
                    typeof player.name === 'string';
+            
+            if (!hasRequiredProps) {
+              console.log('❌ Player missing required props:', player);
+              return false;
+            }
+
+            // Check if player matches this game (case-insensitive and flexible matching)
+            const playerGame = player.game || '';
+            const gameName = game.name || '';
+            const gameIdLower = gameId.toLowerCase();
+            
+            const matchesGame = playerGame.toLowerCase().includes(gameIdLower) ||
+                               gameName.toLowerCase().includes(playerGame.toLowerCase()) ||
+                               playerGame.toLowerCase().includes('mobile') ||
+                               playerGame.toLowerCase().includes('legends');
+            
+            console.log(`🎮 Player "${player.name}" game: "${playerGame}" matches "${gameName}": ${matchesGame}`);
+            
+            return matchesGame;
           })
           .map((player: Partial<Player>): Player => ({
             id: player.id || '',
@@ -135,8 +157,36 @@ export default function GamePage() {
             highlightVideo: player.highlightVideo
           }));
 
-        console.log(`Found ${gamePlayers.length} valid players for ${game.name}`);
-        setPlayers(gamePlayers);
+        console.log(`✅ Found ${gamePlayers.length} valid players for ${game.name}:`, gamePlayers);
+        
+        // If no players found for this specific game, show all players for debugging
+        if (gamePlayers.length === 0 && allPlayers.length > 0) {
+          console.log('⚠️ No players found for specific game, showing all players for debugging');
+          const allValidPlayers = allPlayers
+            .filter((player: Partial<Player>) => player && player.name && typeof player.name === 'string')
+            .map((player: Partial<Player>): Player => ({
+              id: player.id || '',
+              name: player.name || 'Unknown Player',
+              avatar: player.avatar,
+              avatarPublicId: player.avatarPublicId,
+              category: player.category || 'Mobile',
+              game: player.game || 'Unknown',
+              roles: Array.isArray(player.roles) ? player.roles : [],
+              inGameName: player.inGameName,
+              rank: player.rank || 'Unknown',
+              rankStars: player.rankStars,
+              experience: player.experience || 'Unknown',
+              bio: player.bio,
+              description: player.description,
+              isLookingForTeam: Boolean(player.isLookingForTeam),
+              socialLinks: player.socialLinks,
+              highlightVideo: player.highlightVideo
+            }));
+          console.log('🔍 All valid players (for debugging):', allValidPlayers);
+          setPlayers(allValidPlayers);
+        } else {
+          setPlayers(gamePlayers);
+        }
       } catch (error) {
         console.error("Error fetching players:", error);
         setPlayers([]);
@@ -148,7 +198,7 @@ export default function GamePage() {
     if (game) {
       fetchPlayers();
     }
-  }, [game]);
+  }, [game, gameId]);
 
   // Filter and sort players
   useEffect(() => {
@@ -339,6 +389,30 @@ export default function GamePage() {
               </div>
             </div>
           </motion.div>
+
+          {/* Debug Section - Remove after fixing */}
+          {process.env.NODE_ENV === 'development' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 mb-6"
+            >
+              <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                🐛 Debug Info (Development Only)
+              </h3>
+              <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                <p><strong>Game ID:</strong> {gameId}</p>
+                <p><strong>Game Name:</strong> {game.name}</p>
+                <p><strong>Total Players:</strong> {players.length}</p>
+                <p><strong>Filtered Players:</strong> {filteredPlayers.length}</p>
+                <p><strong>Search Term:</strong> &quot;{searchTerm}&quot;</p>
+                <p><strong>Selected Role:</strong> {selectedRole}</p>
+                <p><strong>Selected Rank:</strong> {selectedRank}</p>
+                <p><strong>Sort By:</strong> {sortBy}</p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Search and Filters */}
           <motion.div
