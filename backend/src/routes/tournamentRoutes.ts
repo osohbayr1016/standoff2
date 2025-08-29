@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
 import Tournament from "../models/Tournament";
+import TournamentRegistration from "../models/TournamentRegistration";
 
 const tournamentRoutes: FastifyPluginAsync = async (
   fastify: FastifyInstance
@@ -303,105 +304,41 @@ const tournamentRoutes: FastifyPluginAsync = async (
     }
   });
 
-  // Register for tournament
-  fastify.post("/:id/register", async (request, reply) => {
+  // Get tournament registrations (for tournament detail page)
+  fastify.get("/:id/registrations", async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
-      const { userId } = request.body as { userId: string };
+      const { page = 1, limit = 10 } = request.query as any;
 
-      const tournament = await Tournament.findById(id);
+      const skip = (parseInt(page) - 1) * parseInt(limit);
 
-      if (!tournament) {
-        return reply.status(404).send({
-          success: false,
-          message: "Tournament not found",
-        });
-      }
-
-      if (tournament.status !== "upcoming") {
-        return reply.status(400).send({
-          success: false,
-          message: "Tournament registration is closed",
-        });
-      }
-
-      if (tournament.currentParticipants >= tournament.maxParticipants) {
-        return reply.status(400).send({
-          success: false,
-          message: "Tournament is full",
-        });
-      }
-
-      if (new Date() > tournament.registrationDeadline) {
-        return reply.status(400).send({
-          success: false,
-          message: "Registration deadline has passed",
-        });
-      }
-
-      if (tournament.participants.includes(userId)) {
-        return reply.status(400).send({
-          success: false,
-          message: "Already registered for this tournament",
-        });
-      }
-
-      tournament.participants.push(userId);
-      tournament.currentParticipants += 1;
-      await tournament.save();
+      const [registrations, total] = await Promise.all([
+        TournamentRegistration.find({ tournament: id })
+          .populate("squad", "name tag logo")
+          .populate("squadLeader", "name email avatar")
+          .populate("squadMembers", "name email avatar")
+          .sort({ registrationDate: -1 })
+          .skip(skip)
+          .limit(parseInt(limit))
+          .lean(),
+        TournamentRegistration.countDocuments({ tournament: id }),
+      ]);
 
       return reply.status(200).send({
         success: true,
-        message: "Successfully registered for tournament",
-        tournament,
+        registrations,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit)),
+        },
       });
     } catch (error) {
-      console.error("Register for tournament error:", error);
+      console.error("Get tournament registrations error:", error);
       return reply.status(500).send({
         success: false,
-        message: "Failed to register for tournament",
-      });
-    }
-  });
-
-  // Unregister from tournament
-  fastify.post("/:id/unregister", async (request, reply) => {
-    try {
-      const { id } = request.params as { id: string };
-      const { userId } = request.body as { userId: string };
-
-      const tournament = await Tournament.findById(id);
-
-      if (!tournament) {
-        return reply.status(404).send({
-          success: false,
-          message: "Tournament not found",
-        });
-      }
-
-      if (!tournament.participants.includes(userId)) {
-        return reply.status(400).send({
-          success: false,
-          message: "Not registered for this tournament",
-        });
-      }
-
-      tournament.participants = tournament.participants.filter(
-        (participant) => participant.toString() !== userId
-      );
-      tournament.currentParticipants -= 1;
-      await tournament.save();
-
-      return reply.status(200).send({
-        success: true,
-        message: "Successfully unregistered from tournament",
-        tournament,
-      });
-    } catch (error) {
-      console.error("Unregister from tournament error:", error);
-      return reply.status(500).send({
-        success: false,
-        message: "Failed to unregister from tournament",
+        message: "Failed to get tournament registrations",
       });
     }
   });

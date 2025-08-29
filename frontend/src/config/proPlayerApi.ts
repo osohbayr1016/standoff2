@@ -8,8 +8,6 @@ import {
   ProPlayerStats,
 } from "../types/proPlayer";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
-
 class ProPlayerApi {
   private async request<T>(
     endpoint: string,
@@ -26,10 +24,7 @@ class ProPlayerApi {
       ...options,
     };
 
-    const response = await fetch(
-      `${API_BASE_URL}/pro-players${endpoint}`,
-      config
-    );
+    const response = await fetch(`/api/pro-players${endpoint}`, config);
 
     if (!response.ok) {
       const error = await response

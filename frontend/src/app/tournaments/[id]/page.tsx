@@ -38,13 +38,19 @@ interface Tournament {
   endDate: string;
   registrationDeadline: string;
   prizePool: number;
+  prizeDistribution: {
+    firstPlace: number;
+    secondPlace: number;
+    thirdPlace: number;
+  };
   currency: string;
-  tax: number;
-  maxParticipants: number;
-  currentParticipants: number;
+  maxSquads: number;
+  currentSquads: number;
   format: string;
   entryFee: number;
   location: string;
+  bannerImage?: string;
+  organizerLogo?: string;
   status:
     | "upcoming"
     | "registration_open"
@@ -56,174 +62,162 @@ interface Tournament {
   createdAt: string;
 }
 
-// Mock tournament data (same as in tournaments page)
-const mockTournaments: Tournament[] = [
-  {
-    id: "1",
-    name: "Valorant Champions Cup 2024",
-    game: "Valorant",
-    gameIcon: "/games/valorant.png",
-    description:
-      "The ultimate Valorant championship featuring the best teams from around the world. Compete for glory and substantial prize money in this prestigious tournament.",
-    organizer: {
-      id: "org1",
-      name: "Esports Mongolia",
-      logo: "/default-avatar.png",
-      isVerified: true,
-    },
-    startDate: "2024-02-15",
-    endDate: "2024-02-18",
-    registrationDeadline: "2024-02-10",
-    prizePool: 50000,
-    currency: "USD",
-    tax: 10,
-    maxParticipants: 64,
-    currentParticipants: 32,
-    format: "Single Elimination",
-    entryFee: 100,
-    location: "Online",
-    status: "registration_open",
-    requirements: [
-      "Minimum rank: Immortal",
-      "Team of 5 players",
-      "18+ age requirement",
-    ],
-    rules: [
-      "No cheating or exploits",
-      "Professional conduct required",
-      "All matches streamed",
-    ],
-    createdAt: "2024-01-15",
+// Tournament data transformation function
+interface RawTournamentData {
+  _id: string;
+  name: string;
+  game: string;
+  description: string;
+  organizer?: string;
+  organizerLogo?: string;
+  startDate: string;
+  endDate: string;
+  registrationDeadline?: string;
+  prizePool: number;
+  prizeDistribution?: {
+    firstPlace: number;
+    secondPlace: number;
+    thirdPlace: number;
+  };
+  maxSquads?: number;
+  maxParticipants?: number;
+  currentSquads?: number;
+  currentParticipants?: number;
+  format?: string;
+  entryFee?: number;
+  location?: string;
+  bannerImage?: string;
+  status: string;
+  rules?: string;
+  createdAt: string;
+}
+
+const transformTournamentData = (
+  tournament: RawTournamentData
+): Tournament => ({
+  id: tournament._id,
+  name: tournament.name,
+  game: tournament.game,
+  gameIcon: `/games/${tournament.game
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(":", "")}.png`,
+  description: tournament.description,
+  organizer: {
+    id: tournament.organizer || "unknown",
+    name: tournament.organizer || "Unknown Organizer",
+    logo: tournament.organizerLogo || "/default-avatar.png",
+    isVerified: false,
   },
-  {
-    id: "2",
-    name: "CS2 Winter Championship",
-    game: "Counter-Strike 2",
-    gameIcon: "/games/cs2.png",
-    description:
-      "Experience the thrill of Counter-Strike 2 in this winter championship. Professional teams battle it out for the crown.",
-    organizer: {
-      id: "org2",
-      name: "Gaming Arena MN",
-      logo: "/default-avatar.png",
-      isVerified: true,
-    },
-    startDate: "2024-02-20",
-    endDate: "2024-02-25",
-    registrationDeadline: "2024-02-15",
-    prizePool: 75000,
-    currency: "USD",
-    tax: 15,
-    maxParticipants: 32,
-    currentParticipants: 28,
-    format: "Double Elimination",
-    entryFee: 150,
-    location: "Ulaanbaatar Gaming Center",
-    status: "registration_open",
-    requirements: [
-      "Global Elite rank or higher",
-      "Team of 5 players",
-      "Valid passport",
-    ],
-    rules: [
-      "FACEIT Anti-Cheat required",
-      "English communication only",
-      "No map vetoes",
-    ],
-    createdAt: "2024-01-10",
+  startDate: tournament.startDate,
+  endDate: tournament.endDate,
+  registrationDeadline:
+    tournament.registrationDeadline || new Date().toISOString(),
+  prizePool: tournament.prizePool,
+  prizeDistribution: tournament.prizeDistribution || {
+    firstPlace: Math.round(tournament.prizePool * 0.5),
+    secondPlace: Math.round(tournament.prizePool * 0.3),
+    thirdPlace: Math.round(tournament.prizePool * 0.2),
   },
-  {
-    id: "3",
-    name: "PUBG Mobile National Cup",
-    game: "PUBG Mobile",
-    gameIcon: "/games/pubg-mobile.png",
-    description:
-      "Mobile gaming at its finest. Join the biggest PUBG Mobile tournament in Mongolia.",
-    organizer: {
-      id: "org3",
-      name: "Mobile Esports Union",
-      logo: "/default-avatar.png",
-      isVerified: false,
-    },
-    startDate: "2024-03-01",
-    endDate: "2024-03-03",
-    registrationDeadline: "2024-02-25",
-    prizePool: 25000,
-    currency: "USD",
-    tax: 8,
-    maxParticipants: 100,
-    currentParticipants: 45,
-    format: "Round Robin + Playoffs",
-    entryFee: 50,
-    location: "Online",
-    status: "upcoming",
-    requirements: [
-      "Crown tier or above",
-      "Squad of 4 players",
-      "Mongolian residency",
-    ],
-    rules: [
-      "No emulators allowed",
-      "Stock game settings",
-      "Fair play monitoring",
-    ],
-    createdAt: "2024-01-05",
-  },
-  {
-    id: "4",
-    name: "Dota 2 Spring Festival",
-    game: "Dota 2",
-    gameIcon: "/games/dota2.png",
-    description:
-      "Celebrate spring with the most competitive Dota 2 tournament of the season.",
-    organizer: {
-      id: "org4",
-      name: "Pro Gaming League",
-      logo: "/default-avatar.png",
-      isVerified: true,
-    },
-    startDate: "2024-03-15",
-    endDate: "2024-03-20",
-    registrationDeadline: "2024-03-10",
-    prizePool: 100000,
-    currency: "USD",
-    tax: 20,
-    maxParticipants: 16,
-    currentParticipants: 8,
-    format: "Swiss System + Single Elimination",
-    entryFee: 200,
-    location: "Central Sports Palace, Ulaanbaatar",
-    status: "upcoming",
-    requirements: [
-      "Divine rank minimum",
-      "Team of 5 players",
-      "Professional gaming experience",
-    ],
-    rules: ["Captain's Mode only", "Tournament realm", "Live audience"],
-    createdAt: "2024-01-20",
-  },
-];
+  currency: "MNT",
+  maxSquads: tournament.maxSquads || tournament.maxParticipants || 16,
+  currentSquads:
+    tournament.currentSquads || tournament.currentParticipants || 0,
+  format: tournament.format || "Single Elimination",
+  entryFee: tournament.entryFee || 5000,
+  location: tournament.location || "Онлайн",
+  bannerImage: tournament.bannerImage,
+  organizerLogo: tournament.organizerLogo,
+  status:
+    tournament.status === "upcoming"
+      ? "registration_open"
+      : tournament.status === "ongoing"
+      ? "ongoing"
+      : tournament.status === "completed"
+      ? "completed"
+      : "registration_closed",
+  requirements: [], // Default empty requirements
+  rules: tournament.rules ? [tournament.rules] : [],
+  createdAt: tournament.createdAt,
+});
 
 export default function TournamentDetailPage() {
   const params = useParams();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registrationMessage, setRegistrationMessage] = useState<string>("");
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  }>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
     const fetchTournament = async () => {
-      setIsLoading(true);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (!params.id) return;
 
-      const foundTournament = mockTournaments.find((t) => t.id === params.id);
-      setTournament(foundTournament || null);
-      setIsLoading(false);
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/tournaments/${params.id}`);
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.success && data.tournament) {
+            const transformedTournament = transformTournamentData(
+              data.tournament
+            );
+            setTournament(transformedTournament);
+          } else {
+            setTournament(null);
+          }
+        } else {
+          console.error("Failed to fetch tournament:", response.status);
+          setTournament(null);
+        }
+      } catch (error) {
+        console.error("Error fetching tournament:", error);
+        setTournament(null);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    if (params.id) {
-      fetchTournament();
-    }
+    fetchTournament();
   }, [params.id]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!tournament) return;
+
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const deadline = new Date(tournament.registrationDeadline).getTime();
+      const difference = deadline - now;
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor(
+          (difference % (1000 * 60 * 60)) / (1000 * 60)
+        );
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        setTimeLeft({ days, hours, minutes, seconds });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [tournament]);
 
   const getStatusColor = (status: Tournament["status"]) => {
     switch (status) {
@@ -272,12 +266,116 @@ export default function TournamentDetailPage() {
     });
   };
 
-  const calculateNetPrizePool = (prizePool: number, tax: number) => {
-    return prizePool * (1 - tax / 100);
+  const canRegister = (status: Tournament["status"], deadline: string) => {
+    // For testing purposes, allow registration if status is registration_open
+    // In production, you might want to check the deadline: && new Date(deadline) > new Date()
+    return status === "registration_open";
   };
 
-  const canRegister = (status: Tournament["status"], deadline: string) => {
-    return status === "registration_open" && new Date(deadline) > new Date();
+  const isDeadlinePassed = (deadline: string) => {
+    return new Date(deadline) <= new Date();
+  };
+
+  const handleRegistration = async () => {
+    if (!tournament) return;
+
+    setIsRegistering(true);
+    setRegistrationMessage("");
+
+    try {
+      // Step 1: Check if user has authentication (mock for now)
+      const userHasAuth = true; // In real app, check from auth context
+
+      if (!userHasAuth) {
+        setRegistrationMessage("Та нэвтрэх шаардлагатай байна.");
+        return;
+      }
+
+      // Step 2: Check if user has a squad for this game
+      const userSquadsResponse = await fetch(
+        `/api/squads?game=${encodeURIComponent(tournament.game)}`
+      );
+      const userSquadsData = await userSquadsResponse.json();
+
+      if (!userSquadsData.success || userSquadsData.squads.length === 0) {
+        setRegistrationMessage(
+          "Та энэ тоглоомд squad үүсгэх шаардлагатай байна. Squad хуудсанд очоод squad үүсгэнэ үү."
+        );
+        return;
+      }
+
+      const userSquad = userSquadsData.squads[0]; // Get first squad for this game
+
+      // Step 3: Check if squad meets requirements (5-7 members)
+      const squadMemberCount = userSquad.members.length + 1; // +1 for leader
+      if (squadMemberCount < 5 || squadMemberCount > 7) {
+        setRegistrationMessage(
+          `Squad-д ${squadMemberCount} гишүүн байна. Тэмцээнд оролцохын тулд 5-7 гишүүнтэй байх шаардлагатай.`
+        );
+        return;
+      }
+
+      // Step 4: Check if tournament is full
+      if (tournament.currentSquads >= tournament.maxSquads) {
+        setRegistrationMessage("Тэмцээн дүүрэн байна. Бүртгэл хаагдсан.");
+        return;
+      }
+
+      // Step 5: Simulate payment processing
+      setRegistrationMessage("Төлбөр боловсруулж байна...");
+
+      // Simulate payment delay
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Step 6: Register the squad for the tournament
+      const registrationResponse = await fetch(
+        `/api/tournaments/${tournament.id}/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            squadId: userSquad._id,
+            entryFee: tournament.entryFee,
+            currency: tournament.currency,
+          }),
+        }
+      );
+
+      if (!registrationResponse.ok) {
+        throw new Error("Registration failed");
+      }
+
+      const registrationData = await registrationResponse.json();
+
+      if (registrationData.success) {
+        setRegistrationMessage(
+          `🎉 Амжилттай бүртгэгдлээ! "${userSquad.name}" squad таны оролцоотой боллоо.`
+        );
+
+        // Update tournament data to reflect new participant count
+        setTournament((prev) =>
+          prev
+            ? {
+                ...prev,
+                currentSquads: prev.currentSquads + 1,
+              }
+            : null
+        );
+      } else {
+        throw new Error(registrationData.message || "Registration failed");
+      }
+    } catch (error) {
+      console.error("Error registering for tournament:", error);
+      setRegistrationMessage(
+        error instanceof Error
+          ? error.message
+          : "Бүртгэл амжилтгүй боллоо. Дахин оролдоно уу."
+      );
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   if (isLoading) {
@@ -410,28 +508,22 @@ export default function TournamentDetailPage() {
                 </div>
                 <div className="text-sm text-gray-500">Нийт шагнал</div>
                 <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                  Цэвэр:{" "}
-                  {formatPrizePool(
-                    calculateNetPrizePool(tournament.prizePool, tournament.tax),
-                    tournament.currency
-                  )}
+                  Бүртгэлийн төлбөр: {tournament.entryFee} {tournament.currency}
                 </div>
               </div>
 
               <div className="text-center">
                 <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {tournament.currentParticipants}/{tournament.maxParticipants}
+                  {tournament.currentSquads}/{tournament.maxSquads}
                 </div>
-                <div className="text-sm text-gray-500">Оролцогчид</div>
+                <div className="text-sm text-gray-500">Багууд</div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
                   <div
                     className="bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 h-2 rounded-full transition-all duration-300"
                     style={{
                       width: `${
-                        (tournament.currentParticipants /
-                          tournament.maxParticipants) *
-                        100
+                        (tournament.currentSquads / tournament.maxSquads) * 100
                       }%`,
                     }}
                   ></div>
@@ -444,8 +536,8 @@ export default function TournamentDetailPage() {
                   {tournament.entryFee} {tournament.currency}
                 </div>
                 <div className="text-sm text-gray-500">Бүртгэлийн төлбөр</div>
-                <div className="text-sm text-red-600 dark:text-red-400 mt-1">
-                  Татвар: {tournament.tax}%
+                <div className="text-sm text-green-600 dark:text-green-400 mt-1">
+                  Squad бүртгэл
                 </div>
               </div>
             </div>
@@ -516,6 +608,51 @@ export default function TournamentDetailPage() {
                   </li>
                 ))}
               </ul>
+            </motion.div>
+
+            {/* Tournament Schedule */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+            >
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                <Calendar className="w-5 h-5 mr-2" />
+                Тэмцээний хуваарь
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <div className="text-sm text-gray-500 mb-1">
+                    Бүртгэлийн хугацаа
+                  </div>
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    {formatDate(tournament.registrationDeadline)}
+                  </div>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <div className="text-sm text-gray-500 mb-1">
+                    Тэмцээн эхлэх
+                  </div>
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    {formatDate(tournament.startDate)}
+                  </div>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <div className="text-sm text-gray-500 mb-1">
+                    Тэмцээн дуусах
+                  </div>
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    {formatDate(tournament.endDate)}
+                  </div>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <div className="text-sm text-gray-500 mb-1">Формат</div>
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    {tournament.format}
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
 
@@ -597,20 +734,118 @@ export default function TournamentDetailPage() {
                 Бүртгэл
               </h3>
 
+              {/* Countdown Timer */}
+              {canRegister(
+                tournament.status,
+                tournament.registrationDeadline
+              ) && (
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="text-sm text-blue-600 dark:text-blue-400 mb-2 text-center">
+                    {new Date(tournament.registrationDeadline) > new Date()
+                      ? "Бүртгэлийн хугацаа дуусах"
+                      : "Бүртгэл нээлттэй (тестийн горимд)"}
+                  </div>
+                  {new Date(tournament.registrationDeadline) > new Date() ? (
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      <div className="bg-white dark:bg-gray-700 p-2 rounded">
+                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                          {timeLeft.days}
+                        </div>
+                        <div className="text-xs text-gray-500">Хоног</div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-700 p-2 rounded">
+                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                          {timeLeft.hours}
+                        </div>
+                        <div className="text-xs text-gray-500">Цаг</div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-700 p-2 rounded">
+                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                          {timeLeft.minutes}
+                        </div>
+                        <div className="text-xs text-gray-500">Минут</div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-700 p-2 rounded">
+                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                          {timeLeft.seconds}
+                        </div>
+                        <div className="text-xs text-gray-500">Секунд</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-blue-600 dark:text-blue-400 font-medium">
+                      Тестийн горимд бүртгэл нээлттэй
+                    </div>
+                  )}
+
+                  {/* Deadline Warning */}
+                  {isDeadlinePassed(tournament.registrationDeadline) && (
+                    <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                      <div className="text-sm text-yellow-700 dark:text-yellow-300 text-center">
+                        ⚠️ Бүртгэлийн хугацаа дууссан, гэхдээ тестийн горимд
+                        бүртгэл хийх боломжтой
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {canRegister(
                 tournament.status,
                 tournament.registrationDeadline
               ) ? (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-300 mb-4"
-                >
-                  Тэмцээнд бүртгүүлэх
-                </motion.button>
+                <>
+                  <motion.button
+                    onClick={handleRegistration}
+                    disabled={isRegistering}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-300 mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isRegistering ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        {registrationMessage === "Төлбөр боловсруулж байна..."
+                          ? "Төлбөр боловсруулж байна..."
+                          : "Бүртгэж байна..."}
+                      </div>
+                    ) : new Date(tournament.registrationDeadline) >
+                      new Date() ? (
+                      "Squad-аар бүртгүүлэх"
+                    ) : (
+                      "Squad-аар бүртгүүлэх (Тест - Хугацаа дууссан)"
+                    )}
+                  </motion.button>
+
+                  {registrationMessage && (
+                    <div
+                      className={`text-sm p-3 rounded-lg mb-4 ${
+                        registrationMessage.includes("Амжилттай") ||
+                        registrationMessage.includes("🎉")
+                          ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
+                          : registrationMessage.includes("Squad үүсгэх") ||
+                            registrationMessage.includes("гишүүнтэй") ||
+                            registrationMessage.includes("дүүрэн")
+                          ? "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800"
+                          : "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
+                      }`}
+                    >
+                      <div className="mb-2">{registrationMessage}</div>
+                      {registrationMessage.includes("Squad үүсгэх") && (
+                        <Link href="/squads">
+                          <button className="text-purple-600 dark:text-green-400 hover:text-purple-700 dark:hover:text-green-300 underline text-sm">
+                            Squad үүсгэх →
+                          </button>
+                        </Link>
+                      )}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="w-full bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 py-3 px-4 rounded-lg font-medium text-center mb-4">
-                  Бүртгэл хаагдсан
+                  {tournament.status === "registration_closed"
+                    ? "Бүртгэл хаагдсан"
+                    : "Бүртгэл нээлттэй биш"}
                 </div>
               )}
 
@@ -622,17 +857,71 @@ export default function TournamentDetailPage() {
                   </span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span>Татвар:</span>
-                  <span className="font-medium">{tournament.tax}%</span>
+                  <span>Squad шаардлага:</span>
+                  <span className="font-medium">5-7 гишүүн</span>
                 </div>
                 <div className="flex justify-between border-t border-gray-200 dark:border-gray-600 pt-2">
-                  <span>Нийт төлбөр:</span>
+                  <span>Төлбөр:</span>
                   <span className="font-medium">
-                    {Math.round(
-                      tournament.entryFee * (1 + tournament.tax / 100)
-                    )}{" "}
-                    {tournament.currency}
+                    {tournament.entryFee} {tournament.currency}
                   </span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Prize Pool Breakdown */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+            >
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                Шагналын тархалт
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    1-р байр
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {formatPrizePool(
+                      tournament.prizeDistribution.firstPlace,
+                      tournament.currency
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    2-р байр
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {formatPrizePool(
+                      tournament.prizeDistribution.secondPlace,
+                      tournament.currency
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    3-р байр
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {formatPrizePool(
+                      tournament.prizeDistribution.thirdPlace,
+                      tournament.currency
+                    )}
+                  </span>
+                </div>
+                <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      Бүртгэлийн төлбөр
+                    </span>
+                    <span className="font-medium text-green-600 dark:text-green-400">
+                      {tournament.entryFee} {tournament.currency}
+                    </span>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -641,7 +930,7 @@ export default function TournamentDetailPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.4 }}
               className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
             >
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">

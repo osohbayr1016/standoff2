@@ -30,6 +30,22 @@ export default function ApplyProPlayerPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
 
+  // Move all useState hooks to the top before any conditional returns
+  const [formData, setFormData] = useState<CreateProPlayerRequest>({
+    game: "Mobile Legends: Bang Bang",
+    rank: "",
+    currentRank: "",
+    targetRank: "",
+    price: 0,
+    estimatedTime: "",
+    description: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [success, setSuccess] = useState(false);
+  const [stars, setStars] = useState<number>(0);
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -45,21 +61,6 @@ export default function ApplyProPlayerPage() {
       </div>
     );
   }
-
-  const [formData, setFormData] = useState<CreateProPlayerRequest>({
-    game: "Mobile Legends: Bang Bang",
-    rank: "",
-    currentRank: "",
-    targetRank: "",
-    price: 0,
-    estimatedTime: "",
-    description: "",
-  });
-
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [success, setSuccess] = useState(false);
-  const [stars, setStars] = useState<number>(0);
 
   // Don't render the form if not authenticated
   if (!isAuthenticated) {

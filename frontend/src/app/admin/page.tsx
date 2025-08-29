@@ -10,8 +10,6 @@ import {
   BarChart3,
   Shield,
   Plus,
-  Edit,
-  Trash2,
   Calendar,
 } from "lucide-react";
 import Link from "next/link";

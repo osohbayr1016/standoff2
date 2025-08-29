@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { ProPlayer } from "@/types/proPlayer";
 import proPlayerApi from "@/config/proPlayerApi";
 import {
@@ -22,11 +23,7 @@ export default function AccountBoostingPage() {
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string>("");
 
-  useEffect(() => {
-    fetchProPlayers();
-  }, [selectedGame, currentPage]);
-
-  const fetchProPlayers = async () => {
+  const fetchProPlayers = useCallback(async () => {
     try {
       setLoading(true);
       const response = await proPlayerApi.getProPlayers({
@@ -49,7 +46,11 @@ export default function AccountBoostingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedGame, currentPage]);
+
+  useEffect(() => {
+    fetchProPlayers();
+  }, [selectedGame, currentPage, fetchProPlayers]);
 
   const loadMore = () => {
     setCurrentPage((prev) => prev + 1);
@@ -217,13 +218,15 @@ export default function AccountBoostingPage() {
                 <div className="flex items-center mb-4">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl mr-4">
                     {player.userId.avatar ? (
-                      <img
+                      <Image
                         src={player.userId.avatar}
                         alt={player.userId.name}
+                        width={64}
+                        height={64}
                         className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
-                      player.userId.name.charAt(0).toUpperCase()
+                      <span>{player.userId.name.charAt(0).toUpperCase()}</span>
                     )}
                   </div>
                   <div className="flex-1">

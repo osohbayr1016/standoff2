@@ -148,11 +148,6 @@ async function registerRoutes() {
         console.log("🔧 Test routes imported:", !!testRoutes.default);
         fastify.register(testRoutes.default, { prefix: "/api/test" });
         console.log("🔧 Test routes registered with prefix /api/test");
-        console.log("🔧 Registering upload routes...");
-        const uploadRoutes = await Promise.resolve().then(() => __importStar(require("./routes/uploadRoutes")));
-        console.log("🔧 Upload routes imported:", !!uploadRoutes.default);
-        fastify.register(uploadRoutes.default, { prefix: "/api/upload" });
-        console.log("🔧 Upload routes registered with prefix /api/upload");
         console.log("🔧 Registering message routes...");
         const messageRoutes = await Promise.resolve().then(() => __importStar(require("./routes/messageRoutes")));
         console.log("🔧 Message routes imported:", !!messageRoutes.default);
@@ -168,6 +163,25 @@ async function registerRoutes() {
         console.log("🔧 Tournament routes imported:", !!tournamentRoutes.default);
         fastify.register(tournamentRoutes.default, { prefix: "/api/tournaments" });
         console.log("🔧 Tournament routes registered with prefix /api/tournaments");
+        console.log("🔧 Registering squad routes...");
+        const squadRoutes = await Promise.resolve().then(() => __importStar(require("./routes/squadRoutes")));
+        console.log("🔧 Squad routes imported:", !!squadRoutes.default);
+        fastify.register(squadRoutes.default, { prefix: "/api/squads" });
+        console.log("🔧 Squad routes registered with prefix /api/squads");
+        console.log("🔧 Registering tournament registration routes...");
+        const tournamentRegistrationRoutes = await Promise.resolve().then(() => __importStar(require("./routes/tournamentRegistrationRoutes")));
+        console.log("🔧 Tournament registration routes imported:", !!tournamentRegistrationRoutes.default);
+        fastify.register(tournamentRegistrationRoutes.default, {
+            prefix: "/api/tournament-registrations",
+        });
+        console.log("🔧 Tournament registration routes registered with prefix /api/tournament-registrations");
+        console.log("🔧 Registering tournament match routes...");
+        const tournamentMatchRoutes = await Promise.resolve().then(() => __importStar(require("./routes/tournamentMatchRoutes")));
+        console.log("🔧 Tournament match routes imported:", !!tournamentMatchRoutes.default);
+        fastify.register(tournamentMatchRoutes.default, {
+            prefix: "/api/tournament-matches",
+        });
+        console.log("🔧 Tournament match routes registered with prefix /api/tournament-matches");
         console.log("🔧 Registering dashboard routes...");
         const dashboardRoutes = await Promise.resolve().then(() => __importStar(require("./routes/dashboardRoutes")));
         console.log("🔧 Dashboard routes imported:", !!dashboardRoutes.default);

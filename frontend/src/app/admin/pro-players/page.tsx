@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { ProPlayerApplication, ProPlayerStatus } from "@/types/proPlayer";
 import proPlayerApi from "@/config/proPlayerApi";
 import {
@@ -9,7 +10,6 @@ import {
   ClockIcon,
   ExclamationTriangleIcon,
   EyeIcon,
-  ChatBubbleLeftIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 
@@ -43,33 +43,33 @@ export default function AdminProPlayersPage() {
   const [actionLoading, setActionLoading] = useState<string>("");
 
   useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true);
+        const response = await proPlayerApi.getApplications({
+          status: selectedStatus || undefined,
+          page: currentPage,
+          limit: 20,
+        });
+
+        if (currentPage === 1) {
+          setApplications(response.applications);
+        } else {
+          setApplications((prev) => [...prev, ...response.applications]);
+        }
+
+        setHasMore(response.pagination.hasMore);
+        setError("");
+      } catch (err) {
+        setError("Failed to load applications. Please try again.");
+        console.error("Error fetching applications:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchApplications();
   }, [selectedStatus, currentPage]);
-
-  const fetchApplications = async () => {
-    try {
-      setLoading(true);
-      const response = await proPlayerApi.getApplications({
-        status: selectedStatus || undefined,
-        page: currentPage,
-        limit: 20,
-      });
-
-      if (currentPage === 1) {
-        setApplications(response.applications);
-      } else {
-        setApplications((prev) => [...prev, ...response.applications]);
-      }
-
-      setHasMore(response.pagination.hasMore);
-      setError("");
-    } catch (err) {
-      setError("Failed to load applications. Please try again.");
-      console.error("Error fetching applications:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleStatusUpdate = async (
     id: string,
@@ -232,13 +232,17 @@ export default function AdminProPlayersPage() {
                 <div className="flex items-center gap-4 flex-1">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl">
                     {application.userId.avatar ? (
-                      <img
+                      <Image
                         src={application.userId.avatar}
                         alt={application.userId.name}
+                        width={64}
+                        height={64}
                         className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
-                      application.userId.name.charAt(0).toUpperCase()
+                      <span>
+                        {application.userId.name.charAt(0).toUpperCase()}
+                      </span>
                     )}
                   </div>
 
@@ -393,13 +397,17 @@ export default function AdminProPlayersPage() {
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl">
                   {selectedApplication.userId.avatar ? (
-                    <img
+                    <Image
                       src={selectedApplication.userId.avatar}
                       alt={selectedApplication.userId.name}
+                      width={80}
+                      height={80}
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    selectedApplication.userId.name.charAt(0).toUpperCase()
+                    <span>
+                      {selectedApplication.userId.name.charAt(0).toUpperCase()}
+                    </span>
                   )}
                 </div>
 

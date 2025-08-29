@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Users, Monitor, Smartphone } from "lucide-react";
-import Link from "next/link";
 import Navigation from "../components/Navigation";
 import ChatModal from "../components/ChatModal";
 import PlayerCard from "../components/PlayerCard";

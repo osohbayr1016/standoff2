@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDarkMode } from "../contexts/DarkModeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useSocket } from "../contexts/SocketContext";
-import { API_ENDPOINTS } from "../../config/api";
 import {
   Sun,
   Moon,
@@ -15,7 +14,7 @@ import {
   Bell,
   User,
   LogOut,
-  Crown,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import NotificationCenter from "./NotificationCenter";
@@ -28,12 +27,19 @@ export default function Navigation() {
   const { isConnected } = useSocket();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isInviteFriendModalOpen, setIsInviteFriendModalOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
-  const navItems = [
+  // Main navigation items (always visible)
+  const mainNavItems = [
     { name: "Нүүр", href: "/" },
     { name: "Тоглогчид", href: "/players" },
     { name: "Мэдээ", href: "/news" },
+    { name: "Squads", href: "/squads" },
     { name: "Тэмцээнүүд", href: "/tournaments" },
+  ];
+
+  // Additional navigation items (in dropdown)
+  const moreNavItems = [
     { name: "Account Boosting", href: "/account-boosting" },
     { name: "Бидний тухай", href: "/about" },
   ];
@@ -42,7 +48,7 @@ export default function Navigation() {
   const isAdmin =
     user?.role === "ADMIN" || user?.email === "admin@esport-connection.com"; // Replace with your admin email
   if (isAdmin) {
-    navItems.push({ name: "Admin", href: "/admin" });
+    moreNavItems.push({ name: "Admin", href: "/admin" });
   }
 
   const handleInviteFriend = () => {
@@ -66,8 +72,9 @@ export default function Navigation() {
               </Link>
             </motion.div>
 
-            <div className="hidden md:flex items-center space-x-8">
-              {navItems.map((item) => (
+            <div className="hidden md:flex items-center space-x-6">
+              {/* Main Navigation Items */}
+              {mainNavItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
@@ -76,6 +83,45 @@ export default function Navigation() {
                   {item.name}
                 </Link>
               ))}
+
+              {/* More Dropdown */}
+              {moreNavItems.length > 0 && (
+                <div className="relative">
+                  <button
+                    onMouseEnter={() => setIsMoreMenuOpen(true)}
+                    onMouseLeave={() => setIsMoreMenuOpen(false)}
+                    className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium"
+                  >
+                    <span>Илүү</span>
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+
+                  <AnimatePresence>
+                    {isMoreMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        onMouseEnter={() => setIsMoreMenuOpen(true)}
+                        onMouseLeave={() => setIsMoreMenuOpen(false)}
+                        className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50"
+                      >
+                        {moreNavItems.map((item) => (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-gray-700 hover:text-purple-600 dark:hover:text-green-400 transition-colors"
+                            onClick={() => setIsMoreMenuOpen(false)}
+                          >
+                            {item.name}
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
 
             <div className="hidden md:flex items-center space-x-4">
@@ -182,7 +228,8 @@ export default function Navigation() {
                 className="md:hidden overflow-hidden"
               >
                 <div className="py-4 space-y-4 border-t border-gray-200 dark:border-gray-700">
-                  {navItems.map((item) => (
+                  {/* Main Navigation Items */}
+                  {mainNavItems.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
@@ -190,6 +237,18 @@ export default function Navigation() {
                       className="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium"
                     >
                       {item.name}
+                    </Link>
+                  ))}
+
+                  {/* More Navigation Items */}
+                  {moreNavItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium ml-4 text-sm"
+                    >
+                      • {item.name}
                     </Link>
                   ))}
 

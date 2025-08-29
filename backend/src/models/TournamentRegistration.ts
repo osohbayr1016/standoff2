@@ -1,0 +1,127 @@
+import mongoose, { Document, Schema } from "mongoose";
+
+export interface ITournamentRegistration extends Document {
+  tournament: mongoose.Types.ObjectId; // Tournament ID
+  squad: mongoose.Types.ObjectId; // Squad ID
+  squadLeader: mongoose.Types.ObjectId; // User ID of squad leader
+  squadMembers: mongoose.Types.ObjectId[]; // Array of User IDs in the squad
+  registrationFee: number; // Amount paid (5000 MNT)
+  paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  paymentDate?: Date;
+  paymentProof?: string; // URL to payment proof image
+  registrationDate: Date;
+  isApproved: boolean; // Admin approval
+  approvedBy?: mongoose.Types.ObjectId; // Admin ID who approved
+  approvedAt?: Date;
+  status:
+    | "registered"
+    | "active"
+    | "eliminated"
+    | "winner"
+    | "runner_up"
+    | "third_place";
+  tournamentBracket?: any; // Bracket position and matches
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const tournamentRegistrationSchema = new Schema<ITournamentRegistration>(
+  {
+    tournament: {
+      type: Schema.Types.ObjectId,
+      ref: "Tournament",
+      required: true,
+    },
+    squad: {
+      type: Schema.Types.ObjectId,
+      ref: "Squad",
+      required: true,
+    },
+    squadLeader: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    squadMembers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+    ],
+    registrationFee: {
+      type: Number,
+      required: true,
+      default: 5000, // 5000 MNT
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed", "refunded"],
+      default: "pending",
+    },
+    paymentDate: {
+      type: Date,
+    },
+    paymentProof: {
+      type: String,
+    },
+    registrationDate: {
+      type: Date,
+      default: Date.now,
+    },
+    isApproved: {
+      type: Boolean,
+      default: false,
+    },
+    approvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    approvedAt: {
+      type: Date,
+    },
+    status: {
+      type: String,
+      enum: [
+        "registered",
+        "active",
+        "eliminated",
+        "winner",
+        "runner_up",
+        "third_place",
+      ],
+      default: "registered",
+    },
+    tournamentBracket: {
+      type: Schema.Types.Mixed,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Indexes for efficient queries
+tournamentRegistrationSchema.index(
+  { tournament: 1, squad: 1 },
+  { unique: true }
+);
+tournamentRegistrationSchema.index({ tournament: 1 });
+tournamentRegistrationSchema.index({ squad: 1 });
+tournamentRegistrationSchema.index({ squadLeader: 1 });
+tournamentRegistrationSchema.index({ paymentStatus: 1 });
+tournamentRegistrationSchema.index({ isApproved: 1 });
+tournamentRegistrationSchema.index({ status: 1 });
+
+// Validation: Ensure squad leader is in squad members
+tournamentRegistrationSchema.pre("save", function (next) {
+  if (!this.squadMembers.includes(this.squadLeader)) {
+    this.squadMembers.push(this.squadLeader);
+  }
+  next();
+});
+
+export default mongoose.model<ITournamentRegistration>(
+  "TournamentRegistration",
+  tournamentRegistrationSchema
+);

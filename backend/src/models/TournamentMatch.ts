@@ -1,0 +1,126 @@
+import mongoose, { Document, Schema } from "mongoose";
+
+export interface ITournamentMatch extends Document {
+  tournament: mongoose.Types.ObjectId; // Tournament ID
+  matchNumber: number; // Sequential match number
+  round: number; // Tournament round (1, 2, 3, etc.)
+  squad1: mongoose.Types.ObjectId; // Squad ID
+  squad2: mongoose.Types.ObjectId; // Squad ID
+  winner?: mongoose.Types.ObjectId; // Squad ID of winner
+  loser?: mongoose.Types.ObjectId; // Squad ID of loser
+  status: "scheduled" | "in_progress" | "completed" | "cancelled";
+  scheduledTime?: Date; // When the match is scheduled
+  startTime?: Date; // When the match actually started
+  endTime?: Date; // When the match ended
+  score?: {
+    squad1Score: number;
+    squad2Score: number;
+  };
+  adminNotes?: string; // Admin notes about the match
+  isWalkover: boolean; // If one team didn't show up
+  walkoverReason?: string; // Reason for walkover
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const tournamentMatchSchema = new Schema<ITournamentMatch>(
+  {
+    tournament: {
+      type: Schema.Types.ObjectId,
+      ref: "Tournament",
+      required: true,
+    },
+    matchNumber: {
+      type: Number,
+      required: true,
+    },
+    round: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    squad1: {
+      type: Schema.Types.ObjectId,
+      ref: "Squad",
+      required: true,
+    },
+    squad2: {
+      type: Schema.Types.ObjectId,
+      ref: "Squad",
+      required: true,
+    },
+    winner: {
+      type: Schema.Types.ObjectId,
+      ref: "Squad",
+    },
+    loser: {
+      type: Schema.Types.ObjectId,
+      ref: "Squad",
+    },
+    status: {
+      type: String,
+      enum: ["scheduled", "in_progress", "completed", "cancelled"],
+      default: "scheduled",
+    },
+    scheduledTime: {
+      type: Date,
+    },
+    startTime: {
+      type: Date,
+    },
+    endTime: {
+      type: Date,
+    },
+    score: {
+      squad1Score: {
+        type: Number,
+        min: 0,
+      },
+      squad2Score: {
+        type: Number,
+        min: 0,
+      },
+    },
+    adminNotes: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+    isWalkover: {
+      type: Boolean,
+      default: false,
+    },
+    walkoverReason: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Indexes for efficient queries
+tournamentMatchSchema.index({ tournament: 1, round: 1 });
+tournamentMatchSchema.index(
+  { tournament: 1, matchNumber: 1 },
+  { unique: true }
+);
+tournamentMatchSchema.index({ tournament: 1, status: 1 });
+tournamentMatchSchema.index({ squad1: 1 });
+tournamentMatchSchema.index({ squad2: 1 });
+tournamentMatchSchema.index({ scheduledTime: 1 });
+
+// Validation: Ensure squads are different
+tournamentMatchSchema.pre("save", function (next) {
+  if (this.squad1.toString() === this.squad2.toString()) {
+    return next(new Error("Squad1 and Squad2 cannot be the same"));
+  }
+  next();
+});
+
+export default mongoose.model<ITournamentMatch>(
+  "TournamentMatch",
+  tournamentMatchSchema
+);

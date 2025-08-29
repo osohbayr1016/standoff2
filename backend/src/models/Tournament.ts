@@ -7,15 +7,29 @@ export interface ITournament extends Document {
   startDate: Date;
   endDate: Date;
   prizePool: number;
-  maxParticipants: number;
-  currentParticipants: number;
-  status: "upcoming" | "ongoing" | "completed" | "cancelled";
+  prizeDistribution: {
+    firstPlace: number;
+    secondPlace: number;
+    thirdPlace: number;
+  };
+  maxSquads: number; // Maximum number of squads allowed
+  currentSquads: number; // Current number of registered squads
+  status:
+    | "upcoming"
+    | "registration_open"
+    | "registration_closed"
+    | "ongoing"
+    | "completed"
+    | "cancelled";
   location: string;
   organizer: string;
+  organizerLogo?: string; // Organizer profile picture
+  bannerImage?: string; // Tournament banner image
   rules: string;
   registrationDeadline: Date;
-  participants: string[];
-  brackets?: any;
+  entryFee: number; // Registration fee (5000 MNT)
+  format: string; // Tournament format (Single Elimination, Double Elimination, etc.)
+  brackets?: any; // Tournament bracket structure
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,19 +66,43 @@ const tournamentSchema = new Schema<ITournament>(
       required: true,
       min: 0,
     },
-    maxParticipants: {
+    prizeDistribution: {
+      firstPlace: {
+        type: Number,
+        required: true,
+        min: 0,
+      },
+      secondPlace: {
+        type: Number,
+        required: true,
+        min: 0,
+      },
+      thirdPlace: {
+        type: Number,
+        required: true,
+        min: 0,
+      },
+    },
+    maxSquads: {
       type: Number,
       required: true,
       min: 2,
     },
-    currentParticipants: {
+    currentSquads: {
       type: Number,
       default: 0,
       min: 0,
     },
     status: {
       type: String,
-      enum: ["upcoming", "ongoing", "completed", "cancelled"],
+      enum: [
+        "upcoming",
+        "registration_open",
+        "registration_closed",
+        "ongoing",
+        "completed",
+        "cancelled",
+      ],
       default: "upcoming",
     },
     location: {
@@ -77,6 +115,12 @@ const tournamentSchema = new Schema<ITournament>(
       required: true,
       trim: true,
     },
+    organizerLogo: {
+      type: String,
+    },
+    bannerImage: {
+      type: String,
+    },
     rules: {
       type: String,
       trim: true,
@@ -85,12 +129,18 @@ const tournamentSchema = new Schema<ITournament>(
       type: Date,
       required: true,
     },
-    participants: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    entryFee: {
+      type: Number,
+      required: true,
+      default: 5000, // 5000 MNT
+      min: 0,
+    },
+    format: {
+      type: String,
+      required: true,
+      default: "Single Elimination",
+      trim: true,
+    },
     brackets: {
       type: Schema.Types.Mixed,
     },

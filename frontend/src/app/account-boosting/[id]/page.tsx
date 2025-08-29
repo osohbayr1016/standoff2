@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { ProPlayer } from "@/types/proPlayer";
 import proPlayerApi from "@/config/proPlayerApi";
@@ -117,13 +118,15 @@ export default function ProPlayerDetailPage() {
               <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-3xl">
                   {proPlayer.userId.avatar ? (
-                    <img
+                    <Image
                       src={proPlayer.userId.avatar}
                       alt={proPlayer.userId.name}
+                      width={96}
+                      height={96}
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    proPlayer.userId.name.charAt(0).toUpperCase()
+                    <span>{proPlayer.userId.name.charAt(0).toUpperCase()}</span>
                   )}
                 </div>
 
