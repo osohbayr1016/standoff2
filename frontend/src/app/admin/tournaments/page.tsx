@@ -19,7 +19,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "next/navigation";
 
 interface Tournament {
-  _id: string;
+  id: string;
   name: string;
   game: string;
   description: string;
@@ -164,7 +164,7 @@ export default function AdminTournamentsPage() {
 
         if (response.ok) {
           setTournaments(
-            tournaments.filter((tournament) => tournament._id !== id)
+            tournaments.filter((tournament) => tournament.id !== id)
           );
         }
       } catch (error) {
@@ -358,7 +358,7 @@ export default function AdminTournamentsPage() {
               <div className="grid gap-6">
                 {filteredTournaments.map((tournament) => (
                   <motion.div
-                    key={tournament._id}
+                    key={tournament.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 overflow-hidden hover:border-blue-500/50 transition-all duration-300"
@@ -398,6 +398,21 @@ export default function AdminTournamentsPage() {
                         </div>
                       </div>
 
+                      <div className="flex justify-end mb-4">
+                        {tournament.id ? (
+                          <Link
+                            href={`/admin/tournaments/${tournament.id}`}
+                            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg transition-all duration-200 font-medium"
+                          >
+                            <Eye className="w-4 h-4" />
+                            <span>View Details & Teams</span>
+                          </Link>
+                        ) : (
+                          <div className="px-4 py-2 bg-gray-500 text-white rounded-lg cursor-not-allowed opacity-50">
+                            <span>ID Missing</span>
+                          </div>
+                        )}
+                      </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div className="text-center">
                           <div className="text-lg font-bold text-green-400">
@@ -437,7 +452,7 @@ export default function AdminTournamentsPage() {
                             <span>Edit</span>
                           </button>
                           <button
-                            onClick={() => handleDelete(tournament._id)}
+                            onClick={() => handleDelete(tournament.id)}
                             className="flex items-center space-x-1 px-3 py-1.5 bg-red-600/20 text-red-400 hover:bg-red-600/30 rounded-lg transition-colors duration-200"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -445,11 +460,11 @@ export default function AdminTournamentsPage() {
                           </button>
                         </div>
                         <Link
-                          href={`/tournaments/${tournament._id}`}
+                          href={`/admin/tournaments/${tournament.id}`}
                           className="flex items-center space-x-1 px-3 py-1.5 bg-gray-600/20 text-gray-400 hover:bg-gray-600/30 rounded-lg transition-colors duration-200"
                         >
                           <Eye className="w-4 h-4" />
-                          <span>View</span>
+                          <span>View Details</span>
                         </Link>
                       </div>
                     </div>

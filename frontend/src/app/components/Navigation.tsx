@@ -17,6 +17,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import NotificationCenter from "./NotificationCenter";
 import ProfileDropdown from "./ProfileDropdown";
 import InviteFriendModal from "./InviteFriendModal";
@@ -30,17 +31,24 @@ export default function Navigation() {
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   // Main navigation items (always visible)
-  const mainNavItems = [
+  const mainNavItems: Array<{ name: string; href: string; icon?: string }> = [
     { name: "Нүүр", href: "/" },
     { name: "Тоглогчид", href: "/players" },
     { name: "Мэдээ", href: "/news" },
     { name: "Squads", href: "/squads" },
     { name: "Тэмцээнүүд", href: "/tournaments" },
+    { name: "Divisions", href: "/divisions" },
+    {
+      name: "Bounty Coins",
+      href: "/bounty-coins",
+      icon: "https://res.cloudinary.com/djvjsyzgw/image/upload/v1756557908/coin_masl_nzwekq.png",
+    },
   ];
 
   // Additional navigation items (in dropdown)
   const moreNavItems = [
     { name: "Account Boosting", href: "/account-boosting" },
+    { name: "Division Coins Demo", href: "/division-coins-demo" },
     { name: "Бидний тухай", href: "/about" },
   ];
 
@@ -78,9 +86,18 @@ export default function Navigation() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium"
+                  className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium flex items-center space-x-2"
                 >
-                  {item.name}
+                  {item.icon && (
+                    <Image
+                      src={item.icon}
+                      alt={item.name}
+                      width={20}
+                      height={20}
+                      className="rounded-full"
+                    />
+                  )}
+                  <span>{item.name}</span>
                 </Link>
               ))}
 

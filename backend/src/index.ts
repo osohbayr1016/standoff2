@@ -199,6 +199,13 @@ async function registerRoutes() {
     fastify.register(squadRoutes.default, { prefix: "/api/squads" });
     console.log("🔧 Squad routes registered with prefix /api/squads");
 
+    // Division routes
+    console.log("🔧 Registering division routes...");
+    const divisionRoutes = await import("./routes/divisionRoutes");
+    console.log("🔧 Division routes imported:", !!divisionRoutes.default);
+    fastify.register(divisionRoutes.default, { prefix: "/api/divisions" });
+    console.log("🔧 Division routes registered with prefix /api/divisions");
+
     // Tournament registration routes
     console.log("🔧 Registering tournament registration routes...");
     const tournamentRegistrationRoutes = await import(
@@ -213,22 +220,6 @@ async function registerRoutes() {
     });
     console.log(
       "🔧 Tournament registration routes registered with prefix /api/tournament-registrations"
-    );
-
-    // Tournament match routes
-    console.log("🔧 Registering tournament match routes...");
-    const tournamentMatchRoutes = await import(
-      "./routes/tournamentMatchRoutes"
-    );
-    console.log(
-      "🔧 Tournament match routes imported:",
-      !!tournamentMatchRoutes.default
-    );
-    fastify.register(tournamentMatchRoutes.default, {
-      prefix: "/api/tournament-matches",
-    });
-    console.log(
-      "🔧 Tournament match routes registered with prefix /api/tournament-matches"
     );
 
     // Dashboard routes

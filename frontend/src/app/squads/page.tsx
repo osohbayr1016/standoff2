@@ -66,13 +66,7 @@ function CreateSquadForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const games = [
-    "Mobile Legends: Bang Bang",
-    "PUBG Mobile",
-    "Free Fire",
-    "Call of Duty Mobile",
-    "Arena of Valor",
-  ];
+  const games = ["Mobile Legends: Bang Bang"];
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -210,24 +204,15 @@ function CreateSquadForm({
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Game *
         </label>
-        <select
+        <input
+          type="text"
           value={formData.game}
-          onChange={(e) => handleInputChange("game", e.target.value)}
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent ${
-            errors.game
-              ? "border-red-500"
-              : "border-gray-300 dark:border-gray-600"
-          }`}
-        >
-          {games.map((game) => (
-            <option key={game} value={game}>
-              {game}
-            </option>
-          ))}
-        </select>
-        {errors.game && (
-          <p className="text-red-500 text-sm mt-1">{errors.game}</p>
-        )}
+          readOnly
+          className="w-full px-3 py-2 border rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 cursor-not-allowed"
+        />
+        <p className="text-gray-500 text-sm mt-1">
+          All squads are created for Mobile Legends: Bang Bang
+        </p>
       </div>
 
       <div>

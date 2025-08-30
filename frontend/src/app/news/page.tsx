@@ -563,8 +563,6 @@ export default function NewsPage() {
           </motion.div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from "mongoose";
+import { SquadDivision } from "./Squad";
 
 export interface ITournamentMatch extends Document {
   tournament: mongoose.Types.ObjectId; // Tournament ID
@@ -19,6 +20,17 @@ export interface ITournamentMatch extends Document {
   adminNotes?: string; // Admin notes about the match
   isWalkover: boolean; // If one team didn't show up
   walkoverReason?: string; // Reason for walkover
+  bountyCoinsDistributed: boolean; // Whether bounty coins have been distributed
+  bountyCoinAmount: number; // Amount of bounty coins for this match
+  matchType: "normal" | "auto_win" | "walkover"; // Type of match result
+
+  // Division System Integration
+  squad1Division: SquadDivision; // Division of squad1 at match time
+  squad2Division: SquadDivision; // Division of squad2 at match time
+  squad1BountyChange: number; // Bounty coin change for squad1
+  squad2BountyChange: number; // Bounty coin change for squad2
+  divisionChangesProcessed: boolean; // Whether division changes have been processed
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -95,6 +107,41 @@ const tournamentMatchSchema = new Schema<ITournamentMatch>(
       trim: true,
       maxlength: 500,
     },
+    bountyCoinsDistributed: {
+      type: Boolean,
+      default: false,
+    },
+    bountyCoinAmount: {
+      type: Number,
+      default: 50, // Default bounty coin amount for winning
+    },
+    matchType: {
+      type: String,
+      enum: ["normal", "auto_win", "walkover"],
+      default: "normal",
+    },
+
+    // Division System Integration
+    squad1Division: {
+      type: String,
+      enum: Object.values(SquadDivision),
+    },
+    squad2Division: {
+      type: String,
+      enum: Object.values(SquadDivision),
+    },
+    squad1BountyChange: {
+      type: Number,
+      default: 0,
+    },
+    squad2BountyChange: {
+      type: Number,
+      default: 0,
+    },
+    divisionChangesProcessed: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -111,6 +158,8 @@ tournamentMatchSchema.index({ tournament: 1, status: 1 });
 tournamentMatchSchema.index({ squad1: 1 });
 tournamentMatchSchema.index({ squad2: 1 });
 tournamentMatchSchema.index({ scheduledTime: 1 });
+tournamentMatchSchema.index({ bountyCoinsDistributed: 1 });
+tournamentMatchSchema.index({ divisionChangesProcessed: 1 });
 
 // Validation: Ensure squads are different
 tournamentMatchSchema.pre("save", function (next) {

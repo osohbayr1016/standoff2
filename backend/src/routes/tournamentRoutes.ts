@@ -342,6 +342,86 @@ const tournamentRoutes: FastifyPluginAsync = async (
       });
     }
   });
+
+  // Register squad for tournament
+  fastify.post("/:id/register", async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const { squadId, entryFee, currency } = request.body as any;
+
+      // Check if tournament exists
+      const tournament = await Tournament.findById(id);
+      if (!tournament) {
+        return reply.status(404).send({
+          success: false,
+          message: "Tournament not found",
+        });
+      }
+
+      // Check if tournament is full
+      if (tournament.currentSquads >= tournament.maxSquads) {
+        return reply.status(400).send({
+          success: false,
+          message: "Tournament is full",
+        });
+      }
+
+      // Check if squad is already registered
+      const existingRegistration = await TournamentRegistration.findOne({
+        tournament: id,
+        squad: squadId,
+      });
+
+      if (existingRegistration) {
+        return reply.status(400).send({
+          success: false,
+          message: "Squad is already registered for this tournament",
+        });
+      }
+
+      // Get squad details to populate leader and members
+      const Squad = (await import("../models/Squad")).default;
+      const squad = await Squad.findById(squadId);
+      if (!squad) {
+        return reply.status(404).send({
+          success: false,
+          message: "Squad not found",
+        });
+      }
+
+      // Create tournament registration
+      const registration = new TournamentRegistration({
+        tournament: id,
+        squad: squadId,
+        squadLeader: squad.leader,
+        squadMembers: squad.members,
+        registrationFee: entryFee || 5000,
+        paymentStatus: "paid", // Assuming payment is already processed
+        paymentDate: new Date(),
+        status: "registered",
+        isApproved: true, // Auto-approve for now
+      });
+
+      await registration.save();
+
+      // Update tournament current squads count
+      await Tournament.findByIdAndUpdate(id, {
+        $inc: { currentSquads: 1 },
+      });
+
+      return reply.status(200).send({
+        success: true,
+        message: "Successfully registered for tournament",
+        registration,
+      });
+    } catch (error) {
+      console.error("Tournament registration error:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Failed to register for tournament",
+      });
+    }
+  });
 };
 
 export default tournamentRoutes;

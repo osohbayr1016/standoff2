@@ -11,8 +11,10 @@ import {
   Shield,
   Plus,
   Calendar,
+  Award,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Navigation from "../components/Navigation";
 import { useAuth } from "../contexts/AuthContext";
@@ -229,6 +231,26 @@ export default function AdminDashboard() {
       icon: <Trophy className="w-8 h-8" />,
       href: "/admin/pro-players",
       color: "from-yellow-500 to-orange-500",
+    },
+    {
+      id: "match-results",
+      title: "Match Results",
+      description:
+        "Update tournament match results and manage Bounty Coin distribution",
+      icon: (
+        <div className="relative">
+          <Image
+            src="https://res.cloudinary.com/djvjsyzgw/image/upload/v1756557908/coin_masl_nzwekq.png"
+            alt="Bounty Coin"
+            width={32}
+            height={32}
+            className="rounded-full"
+          />
+          <Award className="absolute -top-1 -right-1 text-yellow-400 text-sm" />
+        </div>
+      ),
+      href: "/admin/match-results",
+      color: "from-pink-500 to-rose-500",
     },
     {
       id: "analytics",

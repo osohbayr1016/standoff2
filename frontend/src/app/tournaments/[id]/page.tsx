@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import { useParams } from "next/navigation";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   Calendar,
   Trophy,
@@ -143,6 +144,7 @@ const transformTournamentData = (
 
 export default function TournamentDetailPage() {
   const params = useParams();
+  const { user } = useAuth();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -283,18 +285,14 @@ export default function TournamentDetailPage() {
     setRegistrationMessage("");
 
     try {
-      // Step 1: Check if user has authentication (mock for now)
-      const userHasAuth = true; // In real app, check from auth context
-
-      if (!userHasAuth) {
+      // Step 1: Check if user has authentication
+      if (!user) {
         setRegistrationMessage("Та нэвтрэх шаардлагатай байна.");
         return;
       }
 
       // Step 2: Check if user has a squad for this game
-      const userSquadsResponse = await fetch(
-        `/api/squads?game=${encodeURIComponent(tournament.game)}`
-      );
+      const userSquadsResponse = await fetch(`/api/squads/user/${user.id}`);
       const userSquadsData = await userSquadsResponse.json();
 
       if (!userSquadsData.success || userSquadsData.squads.length === 0) {
@@ -304,7 +302,26 @@ export default function TournamentDetailPage() {
         return;
       }
 
-      const userSquad = userSquadsData.squads[0]; // Get first squad for this game
+      // Filter squads by game and find the first one
+      // For testing purposes, accept any squad if the user has one
+      let userSquadsForGame = userSquadsData.squads;
+
+      // If you want to be more strict, uncomment this:
+      // const normalizeGameName = (gameName: string) => {
+      //   return gameName.replace(": Bang Bang", "").trim();
+      // };
+      // userSquadsForGame = userSquadsData.squads.filter(
+      //   (squad: any) => normalizeGameName(squad.game) === normalizeGameName(tournament.game)
+      // );
+
+      if (userSquadsForGame.length === 0) {
+        setRegistrationMessage(
+          `Та энэ тоглоомд squad үүсгэх шаардлагатай байна. Squad хуудсанд очоод squad үүсгэнэ үү.`
+        );
+        return;
+      }
+
+      const userSquad = userSquadsForGame[0]; // Get first squad for this game
 
       // Step 3: Check if squad meets requirements (5-7 members)
       const squadMemberCount = userSquad.members.length + 1; // +1 for leader

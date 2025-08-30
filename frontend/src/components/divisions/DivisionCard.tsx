@@ -1,0 +1,119 @@
+import React from "react";
+import { DivisionConfig, SquadDivision } from "@/types/division";
+import { DivisionService } from "@/services/divisionService";
+
+interface DivisionCardProps {
+  division: DivisionConfig;
+  isSelected: boolean;
+  onSelect: () => void;
+}
+
+export default function DivisionCard({
+  division,
+  isSelected,
+  onSelect,
+}: DivisionCardProps) {
+  const getDivisionIcon = (divisionName: SquadDivision) => {
+    switch (divisionName) {
+      case SquadDivision.SILVER:
+        return "🥈";
+      case SquadDivision.GOLD:
+        return "🥇";
+      case SquadDivision.DIAMOND:
+        return "💎";
+      default:
+        return "🏆";
+    }
+  };
+
+  const getDivisionGradient = (divisionName: SquadDivision) => {
+    switch (divisionName) {
+      case SquadDivision.SILVER:
+        return "from-gray-400 to-gray-600";
+      case SquadDivision.GOLD:
+        return "from-yellow-400 to-yellow-600";
+      case SquadDivision.DIAMOND:
+        return "from-blue-400 to-blue-600";
+      default:
+        return "from-gray-400 to-gray-600";
+    }
+  };
+
+  return (
+    <div
+      className={`relative cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+        isSelected ? "ring-4 ring-blue-500 ring-opacity-50" : ""
+      }`}
+      onClick={onSelect}
+    >
+      <div
+        className={`bg-gradient-to-br ${getDivisionGradient(
+          division.name
+        )} rounded-xl shadow-lg overflow-hidden`}
+      >
+        {/* Header */}
+        <div className="p-6 text-white text-center">
+          <div className="text-4xl mb-3">{getDivisionIcon(division.name)}</div>
+          <h3 className="text-2xl font-bold mb-2">{division.displayName}</h3>
+          <p className="text-white/80 text-sm">{division.requirements}</p>
+        </div>
+
+        {/* Content */}
+        <div className="bg-white p-6">
+          {/* Upgrade Cost */}
+          {division.upgradeCost && (
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <div className="text-sm text-gray-600 mb-1">Upgrade Cost</div>
+              <div className="text-lg font-bold text-gray-900">
+                {division.upgradeCost} Bounty Coins
+              </div>
+            </div>
+          )}
+
+          {/* Bounty Coin Price */}
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+            <div className="text-sm text-blue-600 mb-1">50 Bounty Coins</div>
+            <div className="text-lg font-bold text-blue-900">
+              {division.bountyCoinPrice.toLocaleString()} MNT
+            </div>
+          </div>
+
+          {/* Win/Lose Rewards */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <div className="text-sm text-green-600 mb-1">Win</div>
+              <div className="text-lg font-bold text-green-900">
+                +{division.bountyCoinAmount}
+              </div>
+            </div>
+            <div className="text-center p-3 bg-red-50 rounded-lg">
+              <div className="text-sm text-red-600 mb-1">Lose</div>
+              <div className="text-lg font-bold text-red-900">
+                -{division.deductionAmount}
+              </div>
+            </div>
+          </div>
+
+          {/* Status Indicator */}
+          {isSelected && (
+            <div className="absolute top-4 right-4">
+              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-4 h-4 text-white"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -23,10 +23,24 @@ import {
   MapPin,
   MessageCircle,
   Settings,
+  Save,
+  Upload,
+  Lock,
+  Unlock,
+  UserCheck,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "../../contexts/AuthContext";
+import { SquadJoinType } from "../../../types/squad";
+import {
+  getJoinTypeLabel,
+  getJoinTypeDescription,
+  canApplyToSquad,
+  applyToSquad,
+} from "../../../utils/squadService";
+import DivisionCoinImage from "../../../components/DivisionCoinImage";
+import { SquadDivision } from "../../../types/division";
 
 interface Squad {
   _id: string;
@@ -45,10 +59,11 @@ interface Squad {
     avatar?: string;
   }>;
   maxMembers: number;
-  game: string;
+  game: "Mobile Legends: Bang Bang"; // Fixed to Mobile Legends only
   description?: string;
   logo?: string;
   isActive: boolean;
+  joinType: SquadJoinType;
   createdAt: string;
   updatedAt: string;
 }
@@ -58,6 +73,25 @@ interface SquadStats {
   availableSlots: number;
   memberPercentage: number;
   daysSinceCreated: number;
+  division?: {
+    name: string;
+    displayName: string;
+    currentBountyCoins: number;
+    canUpgrade: boolean;
+    protectionCount: number;
+    consecutiveLosses: number;
+    progress: number;
+  };
+}
+
+interface EditSquadForm {
+  name: string;
+  tag: string;
+  game: "Mobile Legends: Bang Bang"; // Fixed to Mobile Legends only
+  description: string;
+  maxMembers: number;
+  isActive: boolean;
+  joinType: SquadJoinType;
 }
 
 export default function SquadDetailPage() {
@@ -70,7 +104,19 @@ export default function SquadDetailPage() {
   const [stats, setStats] = useState<SquadStats | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editForm, setEditForm] = useState<EditSquadForm>({
+    name: "",
+    tag: "",
+    game: "Mobile Legends: Bang Bang",
+    description: "",
+    maxMembers: 7,
+    isActive: true,
+    joinType: SquadJoinType.OPEN_FOR_APPLY,
+  });
+  const [applicationMessage, setApplicationMessage] = useState("");
 
   const squadId = params.id as string;
 
@@ -81,6 +127,16 @@ export default function SquadDetailPage() {
   useEffect(() => {
     if (squad) {
       calculateStats();
+      // Initialize edit form with current squad data
+      setEditForm({
+        name: squad.name,
+        tag: squad.tag,
+        game: "Mobile Legends: Bang Bang", // Always Mobile Legends
+        description: squad.description || "",
+        maxMembers: squad.maxMembers,
+        isActive: squad.isActive,
+        joinType: squad.joinType,
+      });
     }
   }, [squad]);
 
@@ -112,7 +168,7 @@ export default function SquadDetailPage() {
     }
   };
 
-  const calculateStats = () => {
+  const calculateStats = async () => {
     if (!squad) return;
 
     const totalMembers = squad.members.length;
@@ -123,11 +179,24 @@ export default function SquadDetailPage() {
         (1000 * 60 * 60 * 24)
     );
 
+    // Fetch division info
+    let divisionInfo = null;
+    try {
+      const response = await fetch(`/api/divisions/squad/${squad._id}`);
+      if (response.ok) {
+        const data = await response.json();
+        divisionInfo = data.data;
+      }
+    } catch (error) {
+      console.error("Error fetching division info:", error);
+    }
+
     setStats({
       totalMembers,
       availableSlots,
       memberPercentage,
       daysSinceCreated,
+      division: divisionInfo,
     });
   };
 
@@ -209,6 +278,106 @@ export default function SquadDetailPage() {
       console.error("Error leaving squad:", err);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleEditSquad = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.id) return;
+
+    try {
+      setEditLoading(true);
+      const token = localStorage.getItem("token");
+
+      // Update squad details
+      const response = await fetch(`/api/squads/${squadId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          ...editForm,
+          userId: user.id,
+        }),
+      });
+
+      if (response.ok) {
+        // Refresh squad details
+        await fetchSquadDetails();
+        setShowEditModal(false);
+        setError(""); // Clear any previous errors
+      } else {
+        const data = await response.json();
+        setError(data.message || "Failed to update squad");
+      }
+    } catch (err) {
+      setError("Failed to update squad");
+      console.error("Error updating squad:", err);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleApplyToSquad = async () => {
+    if (!squad || !user) return;
+
+    setActionLoading(true);
+    const token = localStorage.getItem("token");
+
+    try {
+      await applyToSquad(
+        squadId,
+        {
+          userId: user.id,
+          message: applicationMessage.trim() || undefined,
+        },
+        token || ""
+      );
+
+      setError("");
+      setApplicationMessage("");
+      setShowApplyModal(false);
+      // Show success message or redirect
+      alert(
+        "Application submitted successfully! The squad leader will review your application."
+      );
+    } catch (error: any) {
+      setError(error.message || "Failed to submit application");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({
+      ...prev,
+      [name]: name === "maxMembers" ? parseInt(value) : value,
+    }));
+  };
+
+  const handleJoinTypeChange = (joinType: SquadJoinType) => {
+    setEditForm((prev) => ({
+      ...prev,
+      joinType,
+    }));
+  };
+
+  const getJoinTypeIcon = (joinType: SquadJoinType) => {
+    switch (joinType) {
+      case SquadJoinType.INVITE_ONLY:
+        return <Lock className="w-4 h-4" />;
+      case SquadJoinType.OPEN_FOR_APPLY:
+        return <UserCheck className="w-4 h-4" />;
+      case SquadJoinType.EVERYONE_CAN_JOIN:
+        return <Unlock className="w-4 h-4" />;
+      default:
+        return <Settings className="w-4 h-4" />;
     }
   };
 
@@ -347,6 +516,16 @@ export default function SquadDetailPage() {
                 </>
               )}
 
+              {squad && canApplyToSquad(squad) && !isUserMember() && (
+                <button
+                  onClick={() => setShowApplyModal(true)}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <UserCheck className="w-4 h-4 mr-2" />
+                  Apply to Join
+                </button>
+              )}
+
               {canJoinSquad() && (
                 <button
                   onClick={handleJoinSquad}
@@ -439,6 +618,22 @@ export default function SquadDetailPage() {
                         }`}
                       >
                         {squad.isActive ? "Active" : "Inactive"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <Settings className="w-5 h-5 text-indigo-400" />
+                    <div>
+                      <p className="text-gray-400 text-sm">Join Type</p>
+                      <div className="flex items-center space-x-2">
+                        {getJoinTypeIcon(squad.joinType)}
+                        <p className="text-white font-medium">
+                          {getJoinTypeLabel(squad.joinType)}
+                        </p>
+                      </div>
+                      <p className="text-gray-500 text-xs mt-1">
+                        {getJoinTypeDescription(squad.joinType)}
                       </p>
                     </div>
                   </div>
@@ -563,6 +758,79 @@ export default function SquadDetailPage() {
                 </div>
               )}
             </motion.div>
+
+            {/* Pending Applications Section (for Squad Leaders) */}
+            {isUserLeader() && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-gray-800 rounded-lg p-6"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-white">
+                    Pending Applications
+                  </h2>
+                  <div className="flex items-center space-x-2 text-sm text-gray-400">
+                    <UserCheck className="w-4 h-4" />
+                    <span>Review Applications</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-gray-300">
+                    Review and respond to applications from players who want to
+                    join your squad.
+                  </p>
+
+                  <button
+                    onClick={() =>
+                      router.push(`/squads/${squadId}/applications`)
+                    }
+                    className="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    <UserCheck className="w-4 h-4 mr-2" />
+                    View Applications
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* User's Applications Section */}
+            {!isUserLeader() && !isUserMember() && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-gray-800 rounded-lg p-6"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-white">
+                    My Applications
+                  </h2>
+                  <div className="flex items-center space-x-2 text-sm text-gray-400">
+                    <UserCheck className="w-4 h-4" />
+                    <span>Track Your Applications</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-gray-300">
+                    View the status of your applications to this squad.
+                  </p>
+
+                  <button
+                    onClick={() =>
+                      router.push(`/squads/user/${user?.id}/applications`)
+                    }
+                    className="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    <UserCheck className="w-4 h-4 mr-2" />
+                    View My Applications
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -620,6 +888,80 @@ export default function SquadDetailPage() {
               </motion.div>
             )}
 
+            {/* Division Stats */}
+            {stats?.division && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.25 }}
+                className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg p-6"
+              >
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <Trophy className="w-5 h-5 mr-2" />
+                  {stats.division.displayName}
+                </h3>
+
+                <div className="space-y-4">
+                  {/* Bounty Coins */}
+                  <div className="text-center p-3 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <div className="flex justify-center mb-2">
+                      <DivisionCoinImage
+                        division={stats.division.name as SquadDivision}
+                        size={32}
+                        showGlow={true}
+                      />
+                    </div>
+                    <p className="text-3xl font-bold text-white">
+                      {stats.division.currentBountyCoins.toLocaleString()}
+                    </p>
+                    <p className="text-white/80 text-sm">Bounty Coins</p>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-white/80">Progress</span>
+                      <span className="text-white font-semibold">
+                        {stats.division.progress.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-white/20 rounded-full h-3">
+                      <div
+                        className="bg-yellow-400 h-3 rounded-full transition-all duration-300"
+                        style={{ width: `${stats.division.progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Protection & Losses */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-center p-2 bg-green-500/20 rounded-lg">
+                      <p className="text-lg font-bold text-white">
+                        {stats.division.protectionCount}
+                      </p>
+                      <p className="text-white/80 text-xs">Protections</p>
+                    </div>
+                    <div className="text-center p-2 bg-red-500/20 rounded-lg">
+                      <p className="text-lg font-bold text-white">
+                        {stats.division.consecutiveLosses}
+                      </p>
+                      <p className="text-white/80 text-xs">
+                        Consecutive Losses
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Upgrade Button */}
+                  {stats.division.canUpgrade && (
+                    <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold">
+                      <Star className="w-4 h-4" />
+                      <span>Upgrade Division!</span>
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
             {/* Quick Actions */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -654,6 +996,196 @@ export default function SquadDetailPage() {
         </div>
       </div>
 
+      {/* Edit Squad Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">Edit Squad</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSquad} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Squad Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Squad Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editForm.name}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter squad name"
+                    required
+                  />
+                </div>
+
+                {/* Squad Tag */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Squad Tag
+                  </label>
+                  <input
+                    type="text"
+                    name="tag"
+                    value={editForm.tag}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                    placeholder="TAG"
+                    maxLength={10}
+                    required
+                  />
+                </div>
+
+                {/* Game */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Game
+                  </label>
+                  <input
+                    type="text"
+                    name="game"
+                    value="Mobile Legends: Bang Bang"
+                    readOnly
+                    className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-gray-400 cursor-not-allowed"
+                  />
+                  <p className="text-gray-500 text-xs mt-1">
+                    All squads are for Mobile Legends: Bang Bang
+                  </p>
+                </div>
+
+                {/* Max Members */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Max Members
+                  </label>
+                  <select
+                    name="maxMembers"
+                    value={editForm.maxMembers}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value={5}>5</option>
+                    <option value={6}>6</option>
+                    <option value={7}>7</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={editForm.description}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter squad description..."
+                  maxLength={500}
+                />
+              </div>
+
+              {/* Join Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  Join Type
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {Object.values(SquadJoinType).map((joinType) => (
+                    <button
+                      key={joinType}
+                      type="button"
+                      onClick={() => handleJoinTypeChange(joinType)}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        editForm.joinType === joinType
+                          ? "border-blue-500 bg-blue-500/10"
+                          : "border-gray-600 bg-gray-700 hover:border-gray-500"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2 mb-2">
+                        {getJoinTypeIcon(joinType)}
+                        <span className="text-sm font-medium text-white">
+                          {getJoinTypeLabel(joinType)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 text-left">
+                        {getJoinTypeDescription(joinType)}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Status Toggle */}
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  name="isActive"
+                  checked={editForm.isActive}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      isActive: e.target.checked,
+                    }))
+                  }
+                  className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label
+                  htmlFor="isActive"
+                  className="text-sm font-medium text-gray-300"
+                >
+                  Squad is active
+                </label>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+                >
+                  {editLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -681,6 +1213,80 @@ export default function SquadDetailPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Apply to Squad Modal */}
+      {showApplyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">
+                Apply to Join Squad
+              </h3>
+              <button
+                onClick={() => setShowApplyModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-gray-300">
+                This squad requires an application. Please submit your
+                application below.
+              </p>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-300">
+                  Message (Optional)
+                </label>
+                <textarea
+                  value={applicationMessage}
+                  onChange={(e) => setApplicationMessage(e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Tell the squad leader why you want to join..."
+                  maxLength={500}
+                />
+                <p className="text-gray-500 text-xs text-right">
+                  {applicationMessage.length}/500 characters
+                </p>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => setShowApplyModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleApplyToSquad}
+                  disabled={actionLoading}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+                >
+                  {actionLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Submit Application
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>
