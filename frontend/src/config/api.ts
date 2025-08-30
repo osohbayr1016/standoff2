@@ -1,9 +1,28 @@
-// API Configuration
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window !== "undefined" && window.location.hostname !== "localhost"
-    ? "https://e-sport-connection-0596.onrender.com"
-    : "http://localhost:8000");
+// API Configuration with production fallback handling
+const getApiBaseUrl = () => {
+  // Check for explicit environment variable first
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  // Fallback logic based on environment
+  if (typeof window !== "undefined") {
+    // In browser
+    if (window.location.hostname === "localhost") {
+      return "http://localhost:8000";
+    } else {
+      // Production - use Render backend
+      return "https://e-sport-connection-0596.onrender.com";
+    }
+  } else {
+    // On server (SSR)
+    return process.env.NODE_ENV === "production"
+      ? "https://e-sport-connection-0596.onrender.com"
+      : "http://localhost:8000";
+  }
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const WS_BASE_URL =
   process.env.NEXT_PUBLIC_WS_URL ||
