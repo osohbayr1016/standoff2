@@ -492,7 +492,7 @@ export default function BountyCoinsPage() {
                         </h4>
                       </div>
                       <p className="text-gray-300 text-sm">
-                        10 Боунти Койн = 2,000₮ (1 BC = 200₮)
+                        1 Боунти Койн = 2,000₮ (1 BC = 2000₮)
                       </p>
                     </div>
                     <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">

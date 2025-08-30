@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import PageTransition from "../../components/PageTransition";
+import PageTransition from "../components/PageTransition";
 import DivisionCoinImage from "../../components/DivisionCoinImage";
 import { SquadDivision } from "../../types/division";
 
