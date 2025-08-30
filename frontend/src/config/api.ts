@@ -44,6 +44,10 @@ export const API_ENDPOINTS = {
   TOURNAMENTS: {
     ALL: `${API_BASE_URL}/api/tournaments`,
     GET: (id: string) => `${API_BASE_URL}/api/tournaments/${id}`,
+    CREATE: `${API_BASE_URL}/api/tournaments`,
+    UPDATE: (id: string) => `${API_BASE_URL}/api/tournaments/${id}`,
+    DELETE: (id: string) => `${API_BASE_URL}/api/tournaments/${id}`,
+    START: (id: string) => `${API_BASE_URL}/api/tournaments/${id}/start`,
     GAMES: `${API_BASE_URL}/api/tournaments/games/list`,
     ORGANIZERS: `${API_BASE_URL}/api/tournaments/organizers/list`,
     REGISTER: (id: string) => `${API_BASE_URL}/api/tournaments/${id}/register`,
@@ -86,6 +90,34 @@ export const API_ENDPOINTS = {
 
   STATS: {
     OVERVIEW: `${API_BASE_URL}/api/stats/overview`,
+  },
+  BOUNTY_COINS: {
+    BALANCE: (userId: string) =>
+      `${API_BASE_URL}/api/bounty-coins/balance/${userId}`,
+    TRANSACTIONS: (userId: string) =>
+      `${API_BASE_URL}/api/bounty-coins/transactions/${userId}`,
+    SQUAD_SUMMARY: (squadId: string) =>
+      `${API_BASE_URL}/api/bounty-coins/squad/${squadId}`,
+    LEADERBOARD: `${API_BASE_URL}/api/bounty-coins/leaderboard`,
+    HEALTH: `${API_BASE_URL}/api/bounty-coins/health`,
+  },
+  SQUADS: {
+    ALL: `${API_BASE_URL}/api/squads`,
+    GET: (id: string) => `${API_BASE_URL}/api/squads/${id}`,
+    CREATE: `${API_BASE_URL}/api/squads`,
+    UPDATE: (id: string) => `${API_BASE_URL}/api/squads/${id}`,
+    DELETE: (id: string) => `${API_BASE_URL}/api/squads/${id}`,
+    APPLY: (id: string) => `${API_BASE_URL}/api/squads/${id}/apply`,
+    INVITE: (id: string) => `${API_BASE_URL}/api/squads/${id}/invite`,
+    JOIN: (id: string) => `${API_BASE_URL}/api/squads/${id}/join`,
+    LEAVE: (id: string) => `${API_BASE_URL}/api/squads/${id}/leave`,
+    USER_SQUADS: (userId: string) =>
+      `${API_BASE_URL}/api/squads/user/${userId}`,
+  },
+  DIVISIONS: {
+    INFO: `${API_BASE_URL}/api/divisions/info`,
+    LEADERBOARD: (division: string) =>
+      `${API_BASE_URL}/api/divisions/leaderboard/${division}`,
   },
 
   HEALTH: `${API_BASE_URL}/health`,

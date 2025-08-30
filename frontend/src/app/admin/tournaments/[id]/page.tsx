@@ -225,8 +225,8 @@ export default function AdminTournamentDetailPage() {
               Tournament not found
             </h1>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              The tournament you're looking for doesn't exist or has been
-              deleted.
+              The tournament you&apos;re looking for doesn&apos;t exist or has
+              been deleted.
             </p>
             <Link href="/admin/tournaments">
               <motion.button

@@ -57,6 +57,7 @@ interface Player {
     preferredHours: string;
   };
   languages?: string[];
+  mlbbId?: string;
 }
 
 export default function PlayerDetailPage({
@@ -350,6 +351,17 @@ export default function PlayerDetailPage({
                       {player.inGameName}
                     </p>
                   </div>
+                  {/* MLBB Game ID */}
+                  {player.mlbbId && (
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                        MLBB Game ID
+                      </h3>
+                      <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                        {player.mlbbId}
+                      </p>
+                    </div>
+                  )}
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                       Highest Rank

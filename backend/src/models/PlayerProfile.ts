@@ -7,6 +7,7 @@ export interface IPlayerProfile extends Document {
   roles: string[];
   realName?: string;
   inGameName: string;
+  mlbbId?: string; // MLBB Game ID (optional)
   rank: string;
   rankStars?: number;
   experience: string;
@@ -63,6 +64,11 @@ const playerProfileSchema = new Schema<IPlayerProfile>(
     inGameName: {
       type: String,
       required: true,
+    },
+    mlbbId: {
+      type: String,
+      trim: true,
+      maxlength: 20,
     },
     rank: {
       type: String,

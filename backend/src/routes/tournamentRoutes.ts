@@ -422,6 +422,64 @@ const tournamentRoutes: FastifyPluginAsync = async (
       });
     }
   });
+
+  // Start tournament and generate matches (admin only)
+  fastify.post("/:id/start", async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+
+      // Check if tournament exists
+      const tournament = await Tournament.findById(id);
+      if (!tournament) {
+        return reply.status(404).send({
+          success: false,
+          message: "Tournament not found",
+        });
+      }
+
+      // Check if tournament can be started
+      if (tournament.status !== "registration_closed") {
+        return reply.status(400).send({
+          success: false,
+          message: "Tournament can only be started when registration is closed",
+        });
+      }
+
+      // Check if there are enough squads
+      if (tournament.currentSquads < 2) {
+        return reply.status(400).send({
+          success: false,
+          message: "Need at least 2 squads to start tournament",
+        });
+      }
+
+      // Update tournament status to ongoing
+      await Tournament.findByIdAndUpdate(id, {
+        status: "ongoing",
+        startDate: new Date(),
+      });
+
+      // Generate matches using the tournament match service
+      const { generateTournamentMatches } = await import(
+        "../services/tournamentMatchService"
+      );
+      await generateTournamentMatches(id);
+
+      return reply.status(200).send({
+        success: true,
+        message: "Tournament started successfully and matches generated",
+        tournamentId: id,
+      });
+    } catch (error) {
+      console.error("Tournament start error:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Failed to start tournament",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  });
 };
 
 export default tournamentRoutes;

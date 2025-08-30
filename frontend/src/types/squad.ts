@@ -4,6 +4,12 @@ export enum SquadJoinType {
   EVERYONE_CAN_JOIN = "EVERYONE_CAN_JOIN",
 }
 
+export enum SquadDivision {
+  SILVER = "SILVER",
+  GOLD = "GOLD",
+  DIAMOND = "DIAMOND",
+}
+
 export enum InvitationStatus {
   PENDING = "PENDING",
   ACCEPTED = "ACCEPTED",
@@ -37,6 +43,14 @@ export interface Squad {
   logo?: string;
   isActive: boolean;
   joinType: SquadJoinType;
+  level: number;
+  experience: number;
+  totalBountyCoinsEarned: number;
+  totalBountyCoinsSpent: number;
+  division: SquadDivision;
+  currentBountyCoins: number;
+  protectionCount: number;
+  consecutiveLosses: number;
   createdAt: string;
   updatedAt: string;
 }

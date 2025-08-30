@@ -30,6 +30,7 @@ interface Player {
     name: string;
     tag: string;
   };
+  mlbbId?: string;
 }
 
 interface PlayerCardProps {
@@ -151,6 +152,17 @@ export default function PlayerCard({
               {player.experience}
             </p>
           </div>
+          {/* MLBB ID Display */}
+          {player.mlbbId && (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:col-span-2">
+              <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                MLBB Game ID
+              </h4>
+              <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                {player.mlbbId}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

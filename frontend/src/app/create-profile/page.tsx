@@ -65,6 +65,7 @@ interface ProfileFormData {
   roles: string[];
   realName: string;
   inGameName: string;
+  mlbbId?: string; // MLBB Game ID (optional)
   rank: string;
   rankStars?: number;
   experience: string;
@@ -105,6 +106,7 @@ export default function CreateProfilePage() {
     roles: [],
     realName: "",
     inGameName: "",
+    mlbbId: undefined,
     rank: "",
     rankStars: undefined,
     experience: "",
@@ -560,6 +562,26 @@ export default function CreateProfilePage() {
                       />
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         Энэ нэр тоглогчдын жагсаалтад харагдана
+                      </p>
+                    </div>
+
+                    {/* MLBB Game ID */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        MLBB Game ID
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.mlbbId || ""}
+                        onChange={(e) =>
+                          handleInputChange("mlbbId", e.target.value)
+                        }
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                        placeholder="Таны MLBB Game ID (optional)"
+                        maxLength={20}
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Таны Mobile Legends: Bang Bang Game ID (заавал биш)
                       </p>
                     </div>
 

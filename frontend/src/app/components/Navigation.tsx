@@ -35,20 +35,20 @@ export default function Navigation() {
     { name: "Нүүр", href: "/" },
     { name: "Тоглогчид", href: "/players" },
     { name: "Мэдээ", href: "/news" },
-    { name: "Squads", href: "/squads" },
     { name: "Тэмцээнүүд", href: "/tournaments" },
+    { name: "Бидний", href: "/about" },
+  ];
+
+  // Additional navigation items (in dropdown)
+  const moreNavItems = [
+    { name: "Squads", href: "/squads" },
     { name: "Divisions", href: "/divisions" },
     {
       name: "Bounty Coins",
       href: "/bounty-coins",
       icon: "https://res.cloudinary.com/djvjsyzgw/image/upload/v1756557908/coin_masl_nzwekq.png",
     },
-  ];
-
-  // Additional navigation items (in dropdown)
-  const moreNavItems = [
     { name: "Account Boosting", href: "/account-boosting" },
-    { name: "Бидний тухай", href: "/about" },
   ];
 
   // Add admin link if user is admin
@@ -108,7 +108,7 @@ export default function Navigation() {
                     onMouseLeave={() => setIsMoreMenuOpen(false)}
                     className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium"
                   >
-                    <span>Илүү</span>
+                    <span>Бусад</span>
                     <ChevronDown className="w-4 h-4" />
                   </button>
 

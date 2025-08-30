@@ -18,6 +18,7 @@ interface Player {
   game: string;
   roles: string[];
   inGameName?: string;
+  mlbbId?: string; // MLBB Game ID (optional)
   rank: string;
   rankStars?: number;
   experience: string;
@@ -91,6 +92,7 @@ interface FlexiblePlayerData {
   highlightVideo?: string;
   video?: string;
   clip?: string;
+  mlbbId?: string; // MLBB Game ID (optional)
 }
 
 // Game information (MLBB only)
@@ -220,6 +222,7 @@ export default function PlayersPage() {
                 : [],
               inGameName:
                 player.inGameName || player.ign || player.gameUsername,
+              mlbbId: player.mlbbId, // Add mlbbId
               rank: player.rank || player.rankLevel || "Unknown",
               rankStars: player.rankStars || player.stars || 0,
               experience:
@@ -274,6 +277,7 @@ export default function PlayersPage() {
                   : [],
                 inGameName:
                   player.inGameName || player.ign || player.gameUsername,
+                mlbbId: player.mlbbId, // Add mlbbId
                 rank: player.rank || player.rankLevel || "Unknown",
                 rankStars: player.rankStars || player.stars || 0,
                 experience:
@@ -310,16 +314,20 @@ export default function PlayersPage() {
   useEffect(() => {
     let filtered = players;
 
-    // Filter by search term
-    if (searchTerm) {
+    // Filter by search term (improved search logic)
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
       filtered = filtered.filter((player) => {
-        const playerName = player.name || "";
-        const playerBio = player.bio || player.description || "";
-        const searchLower = searchTerm.toLowerCase();
-
+        const playerName = (player.name || "").toLowerCase();
+        const playerBio = (player.bio || player.description || "").toLowerCase();
+        const playerInGameName = (player.inGameName || "").toLowerCase();
+        const playerMlbbId = (player.mlbbId || "").toLowerCase();
+        
         return (
-          playerName.toLowerCase().includes(searchLower) ||
-          playerBio.toLowerCase().includes(searchLower)
+          playerName.includes(searchLower) ||
+          playerBio.includes(searchLower) ||
+          playerInGameName.includes(searchLower) ||
+          playerMlbbId.includes(searchLower)
         );
       });
     }
@@ -340,33 +348,28 @@ export default function PlayersPage() {
       });
     }
 
-    // Filter by minimum stars for Mythical Glory
+    // Filter by minimum stars (works for all players with stars, not just Mythical Glory)
     if (minStars !== null && minStars > 0) {
       filtered = filtered.filter((player) => {
-        const playerRank = player.rank || "";
         const playerStars = player.rankStars || 0;
-
-        if (playerRank === "Mythical Glory" && playerStars > 0) {
-          return playerStars >= minStars;
-        }
-        return true; // Include players with other ranks
+        return playerStars >= minStars;
       });
     }
 
-    // Sort players with error handling
+    // Sort players with improved logic
     try {
       filtered.sort((a, b) => {
         switch (sortBy) {
           case "stars":
             // Sort by stars (highest first), then by rank
-            const aRank = a.rank || "";
-            const bRank = b.rank || "";
-            const aStars = aRank === "Mythical Glory" ? a.rankStars || 0 : 0;
-            const bStars = bRank === "Mythical Glory" ? b.rankStars || 0 : 0;
+            const aStars = a.rankStars || 0;
+            const bStars = b.rankStars || 0;
             if (aStars !== bStars) {
               return bStars - aStars; // Higher stars first
             }
             // If same stars, sort by rank
+            const aRank = a.rank || "";
+            const bRank = b.rank || "";
             return getRankValue(bRank) - getRankValue(aRank);
 
           case "rank":
@@ -550,26 +553,24 @@ export default function PlayersPage() {
                 ))}
               </select>
 
-              {/* Star Counter Filter (only show when Mythical Glory is selected) */}
-              {selectedRank === "Mythical Glory" && (
-                <div className="relative">
-                  <input
-                    type="number"
-                    placeholder="Мин. Од"
-                    min="1"
-                    max="999"
-                    value={minStars || ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setMinStars(value ? parseInt(value) : null);
-                    }}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
-                    ⭐
-                  </div>
+              {/* Star Counter Filter (works for all players with stars) */}
+              <div className="relative">
+                <input
+                  type="number"
+                  placeholder="Мин. Од"
+                  min="1"
+                  max="999"
+                  value={minStars || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setMinStars(value ? parseInt(value) : null);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
+                  ⭐
                 </div>
-              )}
+              </div>
 
               {/* Sort By */}
               <select

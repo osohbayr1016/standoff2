@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { DivisionConfig, SquadDivision } from "@/types/division";
 import { DivisionService } from "@/services/divisionService";
 
@@ -14,29 +15,21 @@ export default function DivisionCard({
   onSelect,
 }: DivisionCardProps) {
   const getDivisionIcon = (divisionName: SquadDivision) => {
-    switch (divisionName) {
-      case SquadDivision.SILVER:
-        return "🥈";
-      case SquadDivision.GOLD:
-        return "🥇";
-      case SquadDivision.DIAMOND:
-        return "💎";
-      default:
-        return "🏆";
-    }
+    const coinImageUrl = DivisionService.getDivisionCoinImage(divisionName);
+    return (
+      <Image
+        src={coinImageUrl}
+        alt={`${DivisionService.getDivisionDisplayName(divisionName)} Coin`}
+        width={64}
+        height={64}
+        className="mx-auto rounded-full"
+      />
+    );
   };
 
   const getDivisionGradient = (divisionName: SquadDivision) => {
-    switch (divisionName) {
-      case SquadDivision.SILVER:
-        return "from-gray-400 to-gray-600";
-      case SquadDivision.GOLD:
-        return "from-yellow-400 to-yellow-600";
-      case SquadDivision.DIAMOND:
-        return "from-blue-400 to-blue-600";
-      default:
-        return "from-gray-400 to-gray-600";
-    }
+    // Remove colored gradients and use consistent background
+    return "from-white to-gray-50 dark:from-gray-800 dark:to-gray-700";
   };
 
   return (
@@ -49,13 +42,15 @@ export default function DivisionCard({
       <div
         className={`bg-gradient-to-br ${getDivisionGradient(
           division.name
-        )} rounded-xl shadow-lg overflow-hidden`}
+        )} rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-600`}
       >
         {/* Header */}
-        <div className="p-6 text-white text-center">
-          <div className="text-4xl mb-3">{getDivisionIcon(division.name)}</div>
-          <h3 className="text-2xl font-bold mb-2">{division.displayName}</h3>
-          <p className="text-white/80 text-sm">{division.requirements}</p>
+        <div className="p-6 text-center bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500">
+          <div className="mb-3">{getDivisionIcon(division.name)}</div>
+          <h3 className="text-2xl font-bold mb-2 text-white">
+            {division.displayName}
+          </h3>
+          <p className="text-white/90 text-sm">{division.requirements}</p>
         </div>
 
         {/* Content */}

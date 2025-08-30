@@ -15,7 +15,7 @@ export class DivisionService {
   static async getDivisionsInfo(): Promise<DivisionConfig[]> {
     try {
       const response = await apiClient.get(`${this.BASE_URL}/info`);
-      return response.data.data;
+      return response.data.data || [];
     } catch (error) {
       console.error("Error fetching divisions info:", error);
       throw error;
@@ -36,7 +36,7 @@ export class DivisionService {
           params: { limit },
         }
       );
-      return response.data.data;
+      return response.data.data || [];
     } catch (error) {
       console.error("Error fetching division leaderboard:", error);
       throw error;
@@ -203,9 +203,101 @@ export class DivisionService {
       case SquadDivision.GOLD:
         return "https://res.cloudinary.com/djvjsyzgw/image/upload/v1756557908/coin_masl_nzwekq.png"; // Default gold coin
       case SquadDivision.DIAMOND:
-        return "https://res.cloudinary.com/djvjsyzgw/image/upload/v1756557908/coin_masl_nzwekq.png"; // Diamond division coin
+        return "https://res.cloudinary.com/djvjsyzgw/image/upload/v1756565086/Gemini_Generated_Image_ot4tb8ot4tb8ot4t_o5gyru.png"; // Diamond division coin
       default:
         return "https://res.cloudinary.com/djvjsyzgw/image/upload/v1756557908/coin_masl_nzwekq.png"; // Default fallback to gold
     }
+  }
+
+  /**
+   * Get division emoji for display
+   */
+  static getDivisionEmoji(division: SquadDivision): string {
+    switch (division) {
+      case SquadDivision.SILVER:
+        return "🥈";
+      case SquadDivision.GOLD:
+        return "🥇";
+      case SquadDivision.DIAMOND:
+        return "💎";
+      default:
+        return "🏆";
+    }
+  }
+
+  /**
+   * Get division description
+   */
+  static getDivisionDescription(division: SquadDivision): string {
+    switch (division) {
+      case SquadDivision.SILVER:
+        return "Silver Division - Starting point for new squads";
+      case SquadDivision.GOLD:
+        return "Gold Division - Intermediate level squads";
+      case SquadDivision.DIAMOND:
+        return "Diamond Division - Elite level squads";
+      default:
+        return "Unknown Division";
+    }
+  }
+
+  /**
+   * Check if a squad can upgrade to next division
+   */
+  static canUpgradeToNextDivision(
+    currentDivision: SquadDivision,
+    currentBountyCoins: number
+  ): boolean {
+    const upgradeCost = this.getUpgradeCost(currentDivision);
+    if (upgradeCost === null) return false;
+    return currentBountyCoins >= upgradeCost;
+  }
+
+  /**
+   * Get next division
+   */
+  static getNextDivision(currentDivision: SquadDivision): SquadDivision | null {
+    switch (currentDivision) {
+      case SquadDivision.SILVER:
+        return SquadDivision.GOLD;
+      case SquadDivision.GOLD:
+        return SquadDivision.DIAMOND;
+      case SquadDivision.DIAMOND:
+        return null; // Already at highest division
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Get previous division
+   */
+  static getPreviousDivision(
+    currentDivision: SquadDivision
+  ): SquadDivision | null {
+    switch (currentDivision) {
+      case SquadDivision.SILVER:
+        return null; // Already at lowest division
+      case SquadDivision.GOLD:
+        return SquadDivision.SILVER;
+      case SquadDivision.DIAMOND:
+        return SquadDivision.GOLD;
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Calculate progress percentage to next division
+   */
+  static calculateProgressToNextDivision(
+    currentDivision: SquadDivision,
+    currentBountyCoins: number
+  ): number {
+    const upgradeCost = this.getUpgradeCost(currentDivision);
+    if (upgradeCost === null) return 100; // Already at highest division
+
+    const progress = (currentBountyCoins / upgradeCost) * 100;
+    return Math.min(Math.max(progress, 0), 100); // Clamp between 0-100
   }
 }

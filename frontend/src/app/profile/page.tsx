@@ -58,6 +58,7 @@ interface PlayerProfile {
   };
   highlightVideo?: string;
   isLookingForTeam: boolean;
+  mlbbId?: string;
 }
 
 export default function ProfilePage() {
@@ -501,6 +502,27 @@ export default function ProfilePage() {
                       ) : (
                         <p className="text-lg font-semibold text-gray-900 dark:text-white">
                           {profile.inGameName}
+                        </p>
+                      )}
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                        MLBB Game ID
+                      </h3>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editData.mlbbId || ""}
+                          onChange={(e) =>
+                            handleInputChange("mlbbId", e.target.value)
+                          }
+                          className="text-lg font-semibold text-gray-900 dark:text-white bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-green-500 outline-none w-full"
+                          placeholder="Optional"
+                          maxLength={20}
+                        />
+                      ) : (
+                        <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {profile.mlbbId || "Not provided"}
                         </p>
                       )}
                     </div>

@@ -45,6 +45,8 @@ interface Squad {
   logo?: string;
   isActive: boolean;
   createdAt: string;
+  division?: string;
+  currentBountyCoins?: number;
 }
 
 // Create Squad Form Component
@@ -476,21 +478,23 @@ export default function SquadsPage() {
                 className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
               >
                 {/* Squad Header */}
-                <div className="relative h-32 bg-gradient-to-br from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500">
+                <div className="relative h-36 bg-gradient-to-br from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500">
                   {squad.logo && (
                     <div className="absolute inset-0 bg-black bg-opacity-20"></div>
                   )}
-                  <div className="absolute top-4 left-4 right-4">
+
+                  {/* Top Section - Game Info and Status Icons */}
+                  <div className="absolute top-3 left-3 right-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                      <div className="flex items-center space-x-2 flex-1 min-w-0">
+                        <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
                           <Gamepad2 className="w-4 h-4 text-white" />
                         </div>
-                        <span className="text-white text-sm font-medium">
+                        <span className="text-white text-sm font-medium truncate">
                           {squad.game}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
                         {isUserLeader(squad) && (
                           <Crown className="w-4 h-4 text-yellow-400" />
                         )}
@@ -500,17 +504,25 @@ export default function SquadsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white text-lg font-bold mb-1">
+
+                  {/* Bottom Section - Squad Name and Details */}
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <h3 className="text-white text-lg font-bold mb-2 line-clamp-1">
                       {squad.name}
                     </h3>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-white text-sm bg-white bg-opacity-20 px-2 py-1 rounded">
+                    <div className="flex items-center space-x-2 mb-2 flex-wrap">
+                      <span className="text-white text-sm bg-white bg-opacity-20 px-2 py-1 rounded flex-shrink-0">
                         #{squad.tag}
                       </span>
                       <span className="text-white text-sm">
                         {squad.members ? squad.members.length : 0}/
                         {squad.maxMembers} members
+                      </span>
+                    </div>
+                    {/* Division Info */}
+                    <div className="flex items-center space-x-2 flex-wrap">
+                      <span className="text-white text-xs bg-yellow-500 bg-opacity-80 px-2 py-1 rounded flex-shrink-0">
+                        {squad.division || "SILVER"}
                       </span>
                     </div>
                   </div>
@@ -523,6 +535,25 @@ export default function SquadsPage() {
                       {squad.description}
                     </p>
                   )}
+
+                  {/* Division and BC Info */}
+                  <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                          Division
+                        </span>
+                        <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">
+                          {squad.division || "SILVER"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {squad.currentBountyCoins || 0} BC
+                      </span>
+                    </div>
+                  </div>
 
                   {/* Leader */}
                   {squad.leader && (

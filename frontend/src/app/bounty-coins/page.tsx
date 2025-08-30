@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition";
 import { useAuth } from "../contexts/AuthContext";
 import { FaCoins, FaArrowUp, FaArrowDown, FaHistory } from "react-icons/fa";
-import Image from "next/image";
 import { SquadDivision } from "../../types/division";
 import DivisionCoinImage from "../../components/DivisionCoinImage";
+import { API_ENDPOINTS } from "../../config/api";
 
 interface BountyCoinData {
   balance: number;
@@ -32,31 +32,64 @@ export default function BountyCoinsPage() {
     SquadDivision.GOLD
   );
 
+  const fetchBountyCoinData = useCallback(async () => {
+    try {
+      const response = await fetch(
+        API_ENDPOINTS.BOUNTY_COINS.BALANCE(user?.id || ""),
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setBountyCoinData(data.data);
+          // Set user division from bounty coin data if available
+          if (data.data.division) {
+            setUserDivision(data.data.division);
+          }
+        } else {
+          // API returned error, use fallback data
+          console.log("API returned error, using fallback data");
+          setBountyCoinData({
+            balance: 0,
+            totalEarned: 0,
+            totalSpent: 0,
+            transactions: [],
+          });
+        }
+      } else {
+        // API not available, use fallback data
+        console.log("API not available, using fallback data");
+        setBountyCoinData({
+          balance: 0,
+          totalEarned: 0,
+          totalSpent: 0,
+          transactions: [],
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching bounty coin data:", error);
+      // Network error, use fallback data
+      setBountyCoinData({
+        balance: 0,
+        totalEarned: 0,
+        totalSpent: 0,
+        transactions: [],
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     if (user) {
       fetchBountyCoinData();
     }
-  }, [user]);
-
-  const fetchBountyCoinData = async () => {
-    try {
-      const response = await fetch(`/api/bounty-coins/balance/${user?.id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      const data = await response.json();
-      if (data.success) {
-        setBountyCoinData(data.data);
-        // Set user division from bounty coin data if available
-        if (data.data.division) {
-          setUserDivision(data.data.division);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching bounty coin data:", error);
-    }
-  };
+  }, [user, fetchBountyCoinData]);
 
   const formatCurrency = (amount: number) => {
     return `${amount} BC`;

@@ -67,6 +67,14 @@ interface Squad {
   joinType: SquadJoinType;
   createdAt: string;
   updatedAt: string;
+  level: number;
+  experience: number;
+  totalBountyCoinsEarned: number;
+  totalBountyCoinsSpent: number;
+  division: SquadDivision;
+  currentBountyCoins: number;
+  protectionCount: number;
+  consecutiveLosses: number;
 }
 
 interface SquadStats {
@@ -453,7 +461,7 @@ export default function SquadDetailPage() {
             Squad Not Found
           </h1>
           <p className="text-gray-400 mb-4">
-            The squad you're looking for doesn't exist.
+            The squad you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link
             href="/squads"
@@ -498,28 +506,38 @@ export default function SquadDetailPage() {
                   </h1>
                   <p className="text-gray-400">[{squad.tag || "TAG"}]</p>
 
-                  {/* Squad Division and BC Info */}
-                  {stats && stats.squadDivision && (
-                    <div className="flex items-center space-x-4 mt-2">
-                      <div className="flex items-center space-x-2">
-                        <DivisionCoinImage
-                          division={stats.squadDivision.name as any}
-                          size={24}
-                          showGlow={true}
-                        />
-                        <span className="text-sm text-gray-300">
-                          {stats.squadDivision.displayName ||
-                            "Unknown Division"}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <FaCoins className="w-4 h-4 text-yellow-400" />
-                        <span className="text-sm text-yellow-400 font-medium">
-                          {stats.squadDivision.currentBountyCoins || 0} BC
-                        </span>
-                      </div>
+                  {/* Squad Level, Division and BC Info */}
+                  <div className="flex items-center space-x-4 mt-2">
+                    {/* Squad Level */}
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm bg-blue-500 text-white px-2 py-1 rounded">
+                        Lv.{squad.level || 1}
+                      </span>
                     </div>
-                  )}
+
+                    {/* Squad Division and BC Info */}
+                    {stats && stats.squadDivision && (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <DivisionCoinImage
+                            division={stats.squadDivision.name as any}
+                            size={24}
+                            showGlow={true}
+                          />
+                          <span className="text-sm text-gray-300">
+                            {stats.squadDivision.displayName ||
+                              "Unknown Division"}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <FaCoins className="w-4 h-4 text-yellow-400" />
+                          <span className="text-sm text-yellow-400 font-medium">
+                            {stats.squadDivision.currentBountyCoins || 0} BC
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1406,8 +1424,8 @@ export default function SquadDetailPage() {
               Delete Squad
             </h3>
             <p className="text-gray-400 mb-6">
-              Are you sure you want to delete "{squad.name}"? This action cannot
-              be undone.
+              Are you sure you want to delete &quot;{squad.name}&quot;? This
+              action cannot be undone.
             </p>
             <div className="flex space-x-3">
               <button
