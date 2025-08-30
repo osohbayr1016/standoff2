@@ -155,22 +155,11 @@ export default function PlayersPage() {
         const data = await response.json();
         const allPlayers = data.profiles || [];
 
-        console.log("🔍 All players from API:", allPlayers);
-        console.log("🎮 Looking for game:", gameInfo.name);
-
-        // First, let's see what the actual player data structure looks like
-        console.log("🔍 First player data structure:", allPlayers[0]);
-        console.log(
-          "🔍 Player keys:",
-          allPlayers[0] ? Object.keys(allPlayers[0]) : "No players"
-        );
-
         // Accept ANY player object and try to extract useful information
         const gamePlayers = allPlayers
           .filter((player: FlexiblePlayerData) => {
             // Accept any player object
             if (!player || typeof player !== "object") {
-              console.log("❌ Player is not an object:", player);
               return false;
             }
 
@@ -181,7 +170,6 @@ export default function PlayersPage() {
               player.displayName ||
               player.playerName ||
               "Unknown Player";
-            console.log(`🎮 Player found: "${playerName}"`, player);
 
             // Check if player matches this game (very flexible matching)
             const playerGame =
@@ -199,10 +187,6 @@ export default function PlayersPage() {
               playerGame.toLowerCase().includes("legends") ||
               playerGame.toLowerCase().includes("moba") ||
               gameName.toLowerCase().includes(playerGame.toLowerCase());
-
-            console.log(
-              `🎮 Player "${playerName}" game: "${playerGame}" matches "${gameName}": ${matchesGame}`
-            );
 
             return true; // Accept all players for now to see what we have
           })
@@ -253,16 +237,8 @@ export default function PlayersPage() {
             })
           );
 
-        console.log(
-          `✅ Found ${gamePlayers.length} valid players for ${gameInfo.name}:`,
-          gamePlayers
-        );
-
-        // If no players found for this specific game, show all players for debugging
+        // If no players found for this specific game, show all players
         if (gamePlayers.length === 0 && allPlayers.length > 0) {
-          console.log(
-            "⚠️ No players found for specific game, showing all players for debugging"
-          );
           const allValidPlayers = allPlayers
             .filter(
               (player: FlexiblePlayerData) =>
@@ -314,7 +290,7 @@ export default function PlayersPage() {
                   player.highlightVideo || player.video || player.clip,
               })
             );
-          console.log("🔍 All valid players (for debugging):", allValidPlayers);
+
           setPlayers(allValidPlayers);
         } else {
           setPlayers(gamePlayers);

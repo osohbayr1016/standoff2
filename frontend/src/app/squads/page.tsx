@@ -308,18 +308,28 @@ export default function SquadsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { user } = useAuth();
 
-  const games = [
-    "All",
-    "Mobile Legends: Bang Bang",
-    "PUBG Mobile",
-    "Free Fire",
-    "Call of Duty Mobile",
-    "Arena of Valor",
-  ];
+  const [games, setGames] = useState<string[]>(["All"]);
 
   useEffect(() => {
     fetchSquads();
+    fetchGames();
   }, []);
+
+  const fetchGames = async () => {
+    try {
+      const response = await fetch("/api/tournaments/games/list");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.games) {
+          setGames(["All", ...data.games]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching games:", error);
+      // Fallback to default games if API fails
+      setGames(["Mobile Legends: Bang Bang"]);
+    }
+  };
 
   const fetchSquads = async () => {
     try {
@@ -343,6 +353,8 @@ export default function SquadsPage() {
   };
 
   const filteredSquads = squads.filter((squad) => {
+    if (!squad) return false;
+
     const matchesSearch =
       squad.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       squad.tag.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -352,11 +364,13 @@ export default function SquadsPage() {
   });
 
   const isUserInSquad = (squad: Squad) => {
-    return squad.members.some((member) => member._id === user?.id);
+    if (!user?.id || !squad?.members) return false;
+    return squad.members.some((member) => member._id === user.id);
   };
 
   const isUserLeader = (squad: Squad) => {
-    return squad.leader._id === user?.id;
+    if (!user?.id || !squad?.leader) return false;
+    return squad.leader._id === user.id;
   };
 
   if (isLoading) {
@@ -451,141 +465,159 @@ export default function SquadsPage() {
 
         {/* Squads Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSquads.map((squad, index) => (
-            <motion.div
-              key={squad._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-            >
-              {/* Squad Header */}
-              <div className="relative h-32 bg-gradient-to-br from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500">
-                {squad.logo && (
-                  <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-                )}
-                <div className="absolute top-4 left-4 right-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                        <Gamepad2 className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="text-white text-sm font-medium">
-                        {squad.game}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      {isUserLeader(squad) && (
-                        <Crown className="w-4 h-4 text-yellow-400" />
-                      )}
-                      {isUserInSquad(squad) && (
-                        <Shield className="w-4 h-4 text-green-400" />
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute bottom-4 left-4 right-4">
-                  <h3 className="text-white text-lg font-bold mb-1">
-                    {squad.name}
-                  </h3>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-white text-sm bg-white bg-opacity-20 px-2 py-1 rounded">
-                      #{squad.tag}
-                    </span>
-                    <span className="text-white text-sm">
-                      {squad.members.length}/{squad.maxMembers} members
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Squad Content */}
-              <div className="p-6">
-                {squad.description && (
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
-                    {squad.description}
-                  </p>
-                )}
-
-                {/* Leader */}
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-8 h-8 relative">
-                    <Image
-                      src={squad.leader.avatar || "/default-avatar.png"}
-                      alt={squad.leader.name}
-                      fill
-                      className="rounded-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {squad.leader.name}
-                      </span>
-                      <Crown className="w-3 h-3 text-yellow-500" />
-                    </div>
-                    <span className="text-xs text-gray-500">Leader</span>
-                  </div>
-                </div>
-
-                {/* Members Preview */}
-                <div className="mb-4">
-                  <div className="flex items-center space-x-1 mb-2">
-                    <Users className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
-                      Members ({squad.members.length})
-                    </span>
-                  </div>
-                  <div className="flex -space-x-2">
-                    {squad.members.slice(0, 5).map((member) => (
-                      <div key={member._id} className="w-6 h-6 relative">
-                        <Image
-                          src={member.avatar || "/default-avatar.png"}
-                          alt={member.name}
-                          fill
-                          className="rounded-full object-cover border-2 border-white dark:border-gray-800"
-                        />
-                      </div>
-                    ))}
-                    {squad.members.length > 5 && (
-                      <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
-                        <span className="text-xs text-gray-600 dark:text-gray-300">
-                          +{squad.members.length - 5}
+          {filteredSquads.map((squad, index) => {
+            if (!squad) return null;
+            return (
+              <motion.div
+                key={squad._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+              >
+                {/* Squad Header */}
+                <div className="relative h-32 bg-gradient-to-br from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500">
+                  {squad.logo && (
+                    <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+                  )}
+                  <div className="absolute top-4 left-4 right-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                          <Gamepad2 className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-white text-sm font-medium">
+                          {squad.game}
                         </span>
                       </div>
-                    )}
+                      <div className="flex items-center space-x-1">
+                        {isUserLeader(squad) && (
+                          <Crown className="w-4 h-4 text-yellow-400" />
+                        )}
+                        {isUserInSquad(squad) && (
+                          <Shield className="w-4 h-4 text-green-400" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-white text-lg font-bold mb-1">
+                      {squad.name}
+                    </h3>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-white text-sm bg-white bg-opacity-20 px-2 py-1 rounded">
+                        #{squad.tag}
+                      </span>
+                      <span className="text-white text-sm">
+                        {squad.members ? squad.members.length : 0}/
+                        {squad.maxMembers} members
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center space-x-2">
-                  <Link href={`/squads/${squad._id}`}>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                    >
-                      View Details
-                    </motion.button>
-                  </Link>
+                {/* Squad Content */}
+                <div className="p-6">
+                  {squad.description && (
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+                      {squad.description}
+                    </p>
+                  )}
 
-                  {isUserLeader(squad) && (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </motion.button>
+                  {/* Leader */}
+                  {squad.leader && (
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-8 h-8 relative">
+                        <Image
+                          src={squad.leader.avatar || "/default-avatar.png"}
+                          alt={squad.leader.name}
+                          fill
+                          className="rounded-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-1">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            {squad.leader.name}
+                          </span>
+                          <Crown className="w-3 h-3 text-yellow-500" />
+                        </div>
+                        <span className="text-xs text-gray-500">Leader</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Members Preview */}
+                  <div className="mb-4">
+                    <div className="flex items-center space-x-1 mb-2">
+                      <Users className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        Members ({squad.members ? squad.members.length : 0})
+                      </span>
+                    </div>
+                    <div className="flex -space-x-2">
+                      {squad.members &&
+                        squad.members.slice(0, 5).map((member) => (
+                          <div key={member._id} className="w-6 h-6 relative">
+                            <Image
+                              src={member.avatar || "/default-avatar.png"}
+                              alt={member.name}
+                              fill
+                              className="rounded-full object-cover border-2 border-white dark:border-gray-800"
+                            />
+                          </div>
+                        ))}
+                      {squad.members && squad.members.length > 5 && (
+                        <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
+                          <span className="text-xs text-gray-600 dark:text-gray-300">
+                            +{squad.members.length - 5}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center space-x-2">
+                    <Link href={`/squads/${squad._id}`}>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        View Details
+                      </motion.button>
+                    </Link>
+
+                    {isUserLeader(squad) && (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </motion.button>
+                    )}
+                  </div>
+
+                  {/* Available Slots */}
+                  {squad.members && squad.members.length < squad.maxMembers && (
+                    <div className="mt-6 p-4 border-2 border-dashed border-gray-600 rounded-lg text-center">
+                      <UserPlus className="w-8 h-8 text-gray-500 mx-auto mb-2" />
+                      <p className="text-gray-400">
+                        {squad.maxMembers - squad.members.length} slot(s)
+                        available
+                      </p>
+                    </div>
                   )}
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Empty State */}
-        {filteredSquads.length === 0 && !isLoading && (
+        {(!filteredSquads || filteredSquads.length === 0) && !isLoading && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

@@ -48,7 +48,6 @@ export default function Navigation() {
   // Additional navigation items (in dropdown)
   const moreNavItems = [
     { name: "Account Boosting", href: "/account-boosting" },
-    { name: "Division Coins Demo", href: "/division-coins-demo" },
     { name: "Бидний тухай", href: "/about" },
   ];
 

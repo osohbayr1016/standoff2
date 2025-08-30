@@ -1,39 +1,6 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
 import User from "../models/User";
 
-// Helper functions for mock data
-const getRandomGame = () => {
-  const games = [
-    "Valorant",
-    "CS:GO",
-    "League of Legends",
-    "Dota 2",
-    "Overwatch",
-  ];
-  return games[Math.floor(Math.random() * games.length)];
-};
-
-const getRandomRole = () => {
-  const roles = ["Tank", "DPS", "Support", "IGL", "Entry Fragger"];
-  return roles[Math.floor(Math.random() * roles.length)];
-};
-
-const getRandomRank = () => {
-  const ranks = ["Gold", "Platinum", "Diamond", "Master", "Grandmaster"];
-  return ranks[Math.floor(Math.random() * ranks.length)];
-};
-
-const getRandomDescription = (name: string) => {
-  const descriptions = [
-    `${name} is a dedicated esports enthusiast with exceptional skills.`,
-    `Experienced player looking for competitive opportunities.`,
-    `Strategic minded player with leadership qualities.`,
-    `Skilled in multiple games and always eager to improve.`,
-    `Team player with excellent communication skills.`,
-  ];
-  return descriptions[Math.floor(Math.random() * descriptions.length)];
-};
-
 const userRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   // Update user role (for admin setup - remove in production)
   fastify.put("/update-role", async (request, reply) => {
@@ -88,30 +55,22 @@ const userRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     }
   });
 
-  // Get all players (public endpoint) - Mock data for debug-free testing
+  // Get all players (public endpoint)
   fastify.get("/players", async (request, reply) => {
     try {
-      // Mock players data for testing
-      const mockPlayers = [
-        { id: "1", name: "Player One" },
-        { id: "2", name: "Player Two" },
-        { id: "3", name: "Player Three" },
-      ];
+      const players = await User.find({ role: "PLAYER" }).limit(50);
 
-      // Transform data to match frontend expectations
-      const transformedPlayers = mockPlayers.map((player) => ({
-        id: player.id,
-        name: player.name,
-        avatar: `https://images.unsplash.com/photo-${Math.floor(
-          Math.random() * 1000000
-        )}?w=150&h=150&fit=crop&crop=face`,
-        game: getRandomGame(),
-        role: getRandomRole(),
-        rank: getRandomRank(),
-        experience: `${Math.floor(Math.random() * 10) + 1}+ years`,
-        description: getRandomDescription(player.name || "Player"),
-        isOnline: Math.random() > 0.3, // 70% chance of being online
-        isLookingForTeam: Math.random() > 0.4, // 60% chance of looking for team
+      const transformedPlayers = players.map((player) => ({
+        id: player._id.toString(),
+        name: player.name || "Unknown Player",
+        avatar: player.avatar || "/default-avatar.png",
+        game: "Mobile Legends: Bang Bang", // Default game
+        role: "Player",
+        rank: "Unranked",
+        experience: "New Player",
+        description: "Player looking for opportunities",
+        isOnline: false,
+        isLookingForTeam: true,
       }));
 
       return {
@@ -130,27 +89,22 @@ const userRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     }
   });
 
-  // Get all organizations (public endpoint) - Mock data
+  // Get all organizations (public endpoint)
   fastify.get("/organizations", async (request, reply) => {
     try {
-      // Mock organizations data
-      const mockOrgs = [
-        { id: "1", name: "Team Alpha" },
-        { id: "2", name: "Beta Gaming" },
-      ];
+      const organizations = await User.find({ role: "ORGANIZATION" }).limit(50);
 
-      // Transform data to match frontend expectations
-      const transformedOrganizations = mockOrgs.map((org) => ({
-        id: org.id,
-        name: org.name,
-        avatar: `https://images.unsplash.com/photo-${Math.floor(
-          Math.random() * 1000000
-        )}?w=150&h=150&fit=crop&crop=face`,
-        games: [getRandomGame(), getRandomGame()],
-        description: `${org.name} is a professional esports organization.`,
-        founded: 2020 + Math.floor(Math.random() * 4),
-        achievements: Math.floor(Math.random() * 50) + 1,
-        isVerified: Math.random() > 0.5,
+      const transformedOrganizations = organizations.map((org) => ({
+        id: org._id.toString(),
+        name: org.name || "Unknown Organization",
+        avatar: org.avatar || "/default-avatar.png",
+        games: ["Mobile Legends: Bang Bang"], // Default game
+        description: `${
+          org.name || "Unknown Organization"
+        } is a professional esports organization.`,
+        founded: 2024,
+        achievements: 0,
+        isVerified: false,
       }));
 
       return {
@@ -169,42 +123,43 @@ const userRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     }
   });
 
-  // Get user profile by ID (public endpoint) - Mock data
+  // Get user profile by ID (public endpoint)
   fastify.get("/profile/:userId", async (request, reply) => {
     try {
       const { userId } = request.params as { userId: string };
 
-      // Mock user data
-      const mockUser = {
-        id: userId,
-        name: `User ${userId}`,
-        role: Math.random() > 0.5 ? "PLAYER" : "ORGANIZATION",
-        isVerified: Math.random() > 0.5,
-        createdAt: new Date(),
-      };
+      const user = await User.findById(userId);
+      if (!user) {
+        return reply.status(404).send({
+          success: false,
+          message: "User not found",
+        });
+      }
 
       // Transform data based on role
       const profile = {
-        id: mockUser.id,
-        name: mockUser.name,
-        avatar: `https://images.unsplash.com/photo-${Math.floor(
-          Math.random() * 1000000
-        )}?w=150&h=150&fit=crop&crop=face`,
-        role: mockUser.role,
-        isVerified: mockUser.isVerified,
-        joinedDate: mockUser.createdAt,
-        ...(mockUser.role === "PLAYER" && {
-          game: getRandomGame(),
-          playerRole: getRandomRole(),
-          rank: getRandomRank(),
-          experience: `${Math.floor(Math.random() * 10) + 1}+ years`,
-          description: getRandomDescription(mockUser.name || "Player"),
+        id: user._id.toString(),
+        name: user.name || "Unknown User",
+        avatar: user.avatar || "/default-avatar.png",
+        role: user.role,
+        isVerified: false, // Default to false for now
+        joinedDate: user.createdAt,
+        ...(user.role === "PLAYER" && {
+          game: "Mobile Legends: Bang Bang", // Default game
+          playerRole: "Player",
+          rank: "Unranked",
+          experience: "New Player",
+          description: `${
+            user.name || "Player"
+          } is looking for competitive opportunities.`,
         }),
-        ...(mockUser.role === "ORGANIZATION" && {
-          games: [getRandomGame(), getRandomGame()],
-          founded: 2020 + Math.floor(Math.random() * 4),
-          achievements: Math.floor(Math.random() * 50) + 1,
-          description: `${mockUser.name} is a professional esports organization.`,
+        ...(user.role === "ORGANIZATION" && {
+          games: ["Mobile Legends: Bang Bang"], // Default game
+          founded: 2024,
+          achievements: 0,
+          description: `${
+            user.name || "Organization"
+          } is a professional esports organization.`,
         }),
       };
 

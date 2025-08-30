@@ -4,16 +4,9 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition";
 import { useAuth } from "../contexts/AuthContext";
-import {
-  FaCoins,
-  FaArrowUp,
-  FaArrowDown,
-  FaHistory,
-  FaUsers,
-} from "react-icons/fa";
+import { FaCoins, FaArrowUp, FaArrowDown, FaHistory } from "react-icons/fa";
 import Image from "next/image";
 import { SquadDivision } from "../../types/division";
-import { DivisionService } from "../../services/divisionService";
 import DivisionCoinImage from "../../components/DivisionCoinImage";
 
 interface BountyCoinData {
@@ -28,24 +21,11 @@ interface BountyCoinData {
   }>;
 }
 
-interface SquadData {
-  squadId: string;
-  squadName: string;
-  totalBalance: number;
-  totalEarned: number;
-  totalSpent: number;
-  memberCount: number;
-  level: number;
-  experience: number;
-  division?: SquadDivision;
-}
-
 export default function BountyCoinsPage() {
   const { user } = useAuth();
   const [bountyCoinData, setBountyCoinData] = useState<BountyCoinData | null>(
     null
   );
-  const [squadData, setSquadData] = useState<SquadData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [userDivision, setUserDivision] = useState<SquadDivision>(
@@ -55,7 +35,6 @@ export default function BountyCoinsPage() {
   useEffect(() => {
     if (user) {
       fetchBountyCoinData();
-      fetchSquadData();
     }
   }, [user]);
 
@@ -69,76 +48,13 @@ export default function BountyCoinsPage() {
       const data = await response.json();
       if (data.success) {
         setBountyCoinData(data.data);
+        // Set user division from bounty coin data if available
+        if (data.data.division) {
+          setUserDivision(data.data.division);
+        }
       }
     } catch (error) {
       console.error("Error fetching bounty coin data:", error);
-    }
-  };
-
-  const fetchSquadData = async () => {
-    try {
-      // Fetch user's squads to get division information
-      const response = await fetch(`/api/squads/user/${user?.id}`);
-      const data = await response.json();
-
-      if (data.success && data.squads && data.squads.length > 0) {
-        const userSquad = data.squads[0]; // Get first squad
-
-        // Fetch division info for the squad
-        try {
-          const divisionResponse = await fetch(
-            `/api/divisions/squad/${userSquad._id}`
-          );
-          const divisionData = await divisionResponse.json();
-
-          if (divisionData.success) {
-            setUserDivision(divisionData.data.currentDivision);
-          }
-        } catch (divisionError) {
-          console.error("Error fetching division info:", divisionError);
-        }
-
-        setSquadData({
-          squadId: userSquad._id,
-          squadName: userSquad.name,
-          totalBalance: userSquad.currentBountyCoins || 0,
-          totalEarned: 0, // This would need to be implemented
-          totalSpent: 0, // This would need to be implemented
-          memberCount: userSquad.members?.length || 0,
-          level: 1,
-          experience: 0,
-          division: userSquad.division || SquadDivision.SILVER,
-        });
-      } else {
-        // Default squad data if user has no squads
-        setSquadData({
-          squadId: "placeholder",
-          squadName: "Таны баг",
-          totalBalance: 0,
-          totalEarned: 0,
-          totalSpent: 0,
-          memberCount: 0,
-          level: 1,
-          experience: 0,
-          division: SquadDivision.GOLD,
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching squad data:", error);
-      // Set default data on error
-      setSquadData({
-        squadId: "placeholder",
-        squadName: "Таны баг",
-        totalBalance: 0,
-        totalEarned: 0,
-        totalSpent: 0,
-        memberCount: 0,
-        level: 1,
-        experience: 0,
-        division: SquadDivision.GOLD,
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -354,7 +270,6 @@ export default function BountyCoinsPage() {
             <div className="flex space-x-1 p-2">
               {[
                 { id: "overview", label: "Ерөнхий", icon: FaCoins },
-                { id: "squad", label: "Багийн", icon: FaUsers },
                 { id: "transactions", label: "Гүйлгээ", icon: FaHistory },
               ].map((tab) => (
                 <button
@@ -549,64 +464,6 @@ export default function BountyCoinsPage() {
                       МНТ болгон хөрвүүлэх
                     </button>
                   </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === "squad" && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h3 className="text-xl font-semibold text-white mb-4">
-                    Багийн дэвшил
-                  </h3>
-                  {squadData ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-lg p-6">
-                        <h4 className="text-purple-400 font-medium mb-2">
-                          Багийн түвшин
-                        </h4>
-                        <p className="text-white text-3xl font-bold">
-                          {squadData.level}
-                        </p>
-                        <div className="mt-2">
-                          <div className="flex justify-between text-sm text-gray-300 mb-1">
-                            <span>Туршлага</span>
-                            <span>{squadData.experience}/100</span>
-                          </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2">
-                            <div
-                              className="bg-purple-500 h-2 rounded-full transition-all duration-300"
-                              style={{
-                                width: `${squadData.experience % 100}%`,
-                              }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-lg p-6">
-                        <h4 className="text-blue-400 font-medium mb-2">
-                          Багийн койн
-                        </h4>
-                        <p className="text-white text-3xl font-bold">
-                          {formatCurrency(squadData.totalBalance)}
-                        </p>
-                        <p className="text-blue-300 text-sm mt-2">
-                          Нийт олсон: {formatCurrency(squadData.totalEarned)}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-400">
-                        Багийн мэдээлэл байхгүй байна
-                      </p>
-                    </div>
-                  )}
                 </div>
               </motion.div>
             )}

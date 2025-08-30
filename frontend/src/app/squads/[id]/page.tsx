@@ -29,6 +29,7 @@ import {
   Unlock,
   UserCheck,
 } from "lucide-react";
+import { FaCoins } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "../../contexts/AuthContext";
@@ -73,7 +74,7 @@ interface SquadStats {
   availableSlots: number;
   memberPercentage: number;
   daysSinceCreated: number;
-  division?: {
+  squadDivision?: {
     name: string;
     displayName: string;
     currentBountyCoins: number;
@@ -169,26 +170,28 @@ export default function SquadDetailPage() {
   };
 
   const calculateStats = async () => {
-    if (!squad) return;
+    if (!squad || !squad.members) return;
 
     const totalMembers = squad.members.length;
-    const availableSlots = squad.maxMembers - totalMembers;
+    const availableSlots = Math.max(0, squad.maxMembers - totalMembers);
     const memberPercentage = (totalMembers / squad.maxMembers) * 100;
     const daysSinceCreated = Math.floor(
       (new Date().getTime() - new Date(squad.createdAt).getTime()) /
         (1000 * 60 * 60 * 24)
     );
 
-    // Fetch division info
-    let divisionInfo = null;
+    // Fetch squad division info
+    let squadDivisionInfo = null;
     try {
-      const response = await fetch(`/api/divisions/squad/${squad._id}`);
-      if (response.ok) {
-        const data = await response.json();
-        divisionInfo = data.data;
+      if (squad._id) {
+        const response = await fetch(`/api/divisions/squad/${squad._id}`);
+        if (response.ok) {
+          const data = await response.json();
+          squadDivisionInfo = data.data;
+        }
       }
     } catch (error) {
-      console.error("Error fetching division info:", error);
+      console.error("Error fetching squad division info:", error);
     }
 
     setStats({
@@ -196,23 +199,25 @@ export default function SquadDetailPage() {
       availableSlots,
       memberPercentage,
       daysSinceCreated,
-      division: divisionInfo,
+      squadDivision: squadDivisionInfo,
     });
   };
 
   const isUserLeader = () => {
-    return user?.id === squad?.leader._id;
+    if (!user?.id || !squad?.leader) return false;
+    return user.id === squad.leader._id;
   };
 
   const isUserMember = () => {
-    return squad?.members.some((member) => member._id === user?.id) || false;
+    if (!user?.id || !squad?.members) return false;
+    return squad.members.some((member) => member._id === user.id) || false;
   };
 
   const canJoinSquad = () => {
+    if (!squad || !squad.members) return false;
     return (
       !isUserMember() &&
       !isUserLeader() &&
-      squad &&
       squad.members.length < squad.maxMembers &&
       squad.isActive
     );
@@ -489,9 +494,32 @@ export default function SquadDetailPage() {
                 )}
                 <div>
                   <h1 className="text-2xl font-bold text-white">
-                    {squad.name}
+                    {squad.name || "Unnamed Squad"}
                   </h1>
-                  <p className="text-gray-400">[{squad.tag}]</p>
+                  <p className="text-gray-400">[{squad.tag || "TAG"}]</p>
+
+                  {/* Squad Division and BC Info */}
+                  {stats && stats.squadDivision && (
+                    <div className="flex items-center space-x-4 mt-2">
+                      <div className="flex items-center space-x-2">
+                        <DivisionCoinImage
+                          division={stats.squadDivision.name as any}
+                          size={24}
+                          showGlow={true}
+                        />
+                        <span className="text-sm text-gray-300">
+                          {stats.squadDivision.displayName ||
+                            "Unknown Division"}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <FaCoins className="w-4 h-4 text-yellow-400" />
+                        <span className="text-sm text-yellow-400 font-medium">
+                          {stats.squadDivision.currentBountyCoins || 0} BC
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -591,7 +619,8 @@ export default function SquadDetailPage() {
                     <div>
                       <p className="text-gray-400 text-sm">Members</p>
                       <p className="text-white font-medium">
-                        {squad.members.length}/{squad.maxMembers}
+                        {squad.members ? squad.members.length : 0}/
+                        {squad.maxMembers}
                       </p>
                     </div>
                   </div>
@@ -661,6 +690,35 @@ export default function SquadDetailPage() {
                           </p>
                         </div>
                       </div>
+
+                      {/* Squad Division Information */}
+                      {stats.squadDivision && (
+                        <div className="flex items-center space-x-3">
+                          <Trophy className="w-5 h-5 text-yellow-400" />
+                          <div>
+                            <p className="text-gray-400 text-sm">
+                              Squad Division
+                            </p>
+                            <div className="flex items-center space-x-2">
+                              <DivisionCoinImage
+                                division={
+                                  (stats.squadDivision.name as SquadDivision) ||
+                                  "SILVER"
+                                }
+                                size={24}
+                              />
+                              <p className="text-white font-medium">
+                                {stats.squadDivision.displayName ||
+                                  "Unknown Division"}
+                              </p>
+                            </div>
+                            <p className="text-gray-500 text-xs mt-1">
+                              {stats.squadDivision.currentBountyCoins || 0}{" "}
+                              Bounty Coins
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -678,6 +736,142 @@ export default function SquadDetailPage() {
               )}
             </motion.div>
 
+            {/* Squad Division Progress Section */}
+            {stats?.squadDivision && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 }}
+                className="bg-gray-800 rounded-lg p-6"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-white">
+                    Squad Division Progress
+                  </h2>
+                  <div className="flex items-center space-x-2">
+                    <Trophy className="w-5 h-5 text-yellow-400" />
+                    <span className="text-yellow-400 font-medium">
+                      {stats.squadDivision.displayName || "Unknown Division"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Current Status */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12">
+                        <DivisionCoinImage
+                          division={
+                            (stats.squadDivision.name as SquadDivision) ||
+                            "SILVER"
+                          }
+                          size={48}
+                          showGlow={true}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">
+                          Current Squad Division
+                        </p>
+                        <p className="text-white font-medium text-lg">
+                          {stats.squadDivision.displayName ||
+                            "Unknown Division"}
+                        </p>
+                        <p className="text-gray-500 text-xs">
+                          {stats.squadDivision.currentBountyCoins || 0} Bounty
+                          Coins
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      <Target className="w-5 h-5 text-blue-400" />
+                      <div>
+                        <p className="text-gray-400 text-sm">Progress</p>
+                        <div className="w-full bg-gray-700 rounded-full h-2 mt-1">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${stats.squadDivision.progress || 0}%`,
+                            }}
+                          ></div>
+                        </div>
+                        <p className="text-gray-500 text-xs mt-1">
+                          {stats.squadDivision.progress || 0}% to next division
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Squad Division Stats */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <Shield className="w-5 h-5 text-green-400" />
+                      <div>
+                        <p className="text-gray-400 text-sm">Protection</p>
+                        <p className="text-white font-medium">
+                          {stats.squadDivision.protectionCount || 0} remaining
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      <Star className="w-5 h-5 text-yellow-400" />
+                      <div>
+                        <p className="text-gray-400 text-sm">Upgrade Status</p>
+                        <p
+                          className={`font-medium ${
+                            stats.squadDivision.canUpgrade
+                              ? "text-green-400"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {stats.squadDivision.canUpgrade
+                            ? "Ready to Upgrade"
+                            : "Not Ready"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      <Clock className="w-5 h-5 text-orange-400" />
+                      <div>
+                        <p className="text-gray-400 text-sm">
+                          Consecutive Losses
+                        </p>
+                        <p className="text-white font-medium">
+                          {stats.squadDivision.consecutiveLosses || 0}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Squad Division Rules Info */}
+                <div className="mt-6 pt-6 border-t border-gray-700">
+                  <h3 className="text-lg font-medium text-white mb-3">
+                    Squad Division Rules
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="bg-gray-700/50 rounded-lg p-3">
+                      <p className="text-gray-300">
+                        <strong>Upgrade:</strong> Win matches to earn bounty
+                        coins and progress to higher divisions.
+                      </p>
+                    </div>
+                    <div className="bg-gray-700/50 rounded-lg p-3">
+                      <p className="text-gray-300">
+                        <strong>Protection:</strong> You have{" "}
+                        {stats.squadDivision.protectionCount || 0} protection(s)
+                        against demotion.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Members Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -690,66 +884,70 @@ export default function SquadDetailPage() {
                 <div className="flex items-center space-x-2 text-sm text-gray-400">
                   <Users className="w-4 h-4" />
                   <span>
-                    {squad.members.length}/{squad.maxMembers}
+                    {squad.members ? squad.members.length : 0}/
+                    {squad.maxMembers}
                   </span>
                 </div>
               </div>
 
               <div className="space-y-4">
-                {squad.members.map((member, index) => (
-                  <div
-                    key={member._id}
-                    className="flex items-center justify-between p-4 bg-gray-700 rounded-lg"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="relative">
-                        {member.avatar ? (
-                          <Image
-                            src={member.avatar}
-                            alt={member.name}
-                            width={48}
-                            height={48}
-                            className="rounded-full"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center">
-                            <User className="w-6 h-6 text-gray-400" />
-                          </div>
-                        )}
-                        {member._id === squad.leader._id && (
-                          <div className="absolute -top-1 -right-1 bg-yellow-500 rounded-full p-1">
-                            <Crown className="w-3 h-3 text-white" />
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <p className="text-white font-medium">
-                            {member.name}
-                          </p>
+                {squad.members &&
+                  squad.members.map((member, index) => (
+                    <div
+                      key={member._id}
+                      className="flex items-center justify-between p-4 bg-gray-700 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="relative">
+                          {member.avatar ? (
+                            <Image
+                              src={member.avatar}
+                              alt={member.name}
+                              width={48}
+                              height={48}
+                              className="rounded-full"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center">
+                              <User className="w-6 h-6 text-gray-400" />
+                            </div>
+                          )}
                           {member._id === squad.leader._id && (
-                            <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
-                              Leader
-                            </span>
+                            <div className="absolute -top-1 -right-1 bg-yellow-500 rounded-full p-1">
+                              <Crown className="w-3 h-3 text-white" />
+                            </div>
                           )}
                         </div>
-                        <p className="text-gray-400 text-sm">{member.email}</p>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <p className="text-white font-medium">
+                              {member.name}
+                            </p>
+                            {member._id === squad.leader._id && (
+                              <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+                                Leader
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-gray-400 text-sm">
+                            {member.email}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    {isUserLeader() && member._id !== squad.leader._id && (
-                      <button
-                        className="text-red-400 hover:text-red-300 transition-colors"
-                        title="Remove member"
-                      >
-                        <UserMinus className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                      {isUserLeader() && member._id !== squad.leader._id && (
+                        <button
+                          className="text-red-400 hover:text-red-300 transition-colors"
+                          title="Remove member"
+                        >
+                          <UserMinus className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
               </div>
 
-              {squad.members.length < squad.maxMembers && (
+              {squad.members && squad.members.length < squad.maxMembers && (
                 <div className="mt-6 p-4 border-2 border-dashed border-gray-600 rounded-lg text-center">
                   <UserPlus className="w-8 h-8 text-gray-500 mx-auto mb-2" />
                   <p className="text-gray-400">
@@ -852,13 +1050,20 @@ export default function SquadDetailPage() {
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-gray-400">Member Capacity</span>
                       <span className="text-white">
-                        {stats.memberPercentage.toFixed(0)}%
+                        {stats.memberPercentage
+                          ? stats.memberPercentage.toFixed(0)
+                          : 0}
+                        %
                       </span>
                     </div>
                     <div className="w-full bg-gray-700 rounded-full h-2">
                       <div
                         className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${stats.memberPercentage}%` }}
+                        style={{
+                          width: `${
+                            stats.memberPercentage ? stats.memberPercentage : 0
+                          }%`,
+                        }}
                       ></div>
                     </div>
                   </div>
@@ -866,13 +1071,13 @@ export default function SquadDetailPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-gray-700 rounded-lg">
                       <p className="text-2xl font-bold text-white">
-                        {stats.totalMembers}
+                        {stats.totalMembers || 0}
                       </p>
                       <p className="text-gray-400 text-sm">Members</p>
                     </div>
                     <div className="text-center p-3 bg-gray-700 rounded-lg">
                       <p className="text-2xl font-bold text-white">
-                        {stats.availableSlots}
+                        {stats.availableSlots || 0}
                       </p>
                       <p className="text-gray-400 text-sm">Available</p>
                     </div>
@@ -880,7 +1085,7 @@ export default function SquadDetailPage() {
 
                   <div className="text-center p-3 bg-gray-700 rounded-lg">
                     <p className="text-2xl font-bold text-white">
-                      {stats.daysSinceCreated}
+                      {stats.daysSinceCreated || 0}
                     </p>
                     <p className="text-gray-400 text-sm">Days Active</p>
                   </div>
@@ -888,8 +1093,8 @@ export default function SquadDetailPage() {
               </motion.div>
             )}
 
-            {/* Division Stats */}
-            {stats?.division && (
+            {/* Squad Division Stats */}
+            {stats?.squadDivision && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -898,7 +1103,7 @@ export default function SquadDetailPage() {
               >
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
                   <Trophy className="w-5 h-5 mr-2" />
-                  {stats.division.displayName}
+                  {stats.squadDivision.displayName || "Unknown Division"}
                 </h3>
 
                 <div className="space-y-4">
@@ -906,13 +1111,18 @@ export default function SquadDetailPage() {
                   <div className="text-center p-3 bg-white/20 rounded-lg backdrop-blur-sm">
                     <div className="flex justify-center mb-2">
                       <DivisionCoinImage
-                        division={stats.division.name as SquadDivision}
+                        division={
+                          (stats.squadDivision.name as SquadDivision) ||
+                          "SILVER"
+                        }
                         size={32}
                         showGlow={true}
                       />
                     </div>
                     <p className="text-3xl font-bold text-white">
-                      {stats.division.currentBountyCoins.toLocaleString()}
+                      {(
+                        stats.squadDivision.currentBountyCoins || 0
+                      ).toLocaleString()}
                     </p>
                     <p className="text-white/80 text-sm">Bounty Coins</p>
                   </div>
@@ -922,13 +1132,15 @@ export default function SquadDetailPage() {
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-white/80">Progress</span>
                       <span className="text-white font-semibold">
-                        {stats.division.progress.toFixed(1)}%
+                        {(stats.squadDivision.progress || 0).toFixed(1)}%
                       </span>
                     </div>
                     <div className="w-full bg-white/20 rounded-full h-3">
                       <div
                         className="bg-yellow-400 h-3 rounded-full transition-all duration-300"
-                        style={{ width: `${stats.division.progress}%` }}
+                        style={{
+                          width: `${stats.squadDivision.progress || 0}%`,
+                        }}
                       ></div>
                     </div>
                   </div>
@@ -937,13 +1149,13 @@ export default function SquadDetailPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="text-center p-2 bg-green-500/20 rounded-lg">
                       <p className="text-lg font-bold text-white">
-                        {stats.division.protectionCount}
+                        {stats.squadDivision.protectionCount || 0}
                       </p>
                       <p className="text-white/80 text-xs">Protections</p>
                     </div>
                     <div className="text-center p-2 bg-red-500/20 rounded-lg">
                       <p className="text-lg font-bold text-white">
-                        {stats.division.consecutiveLosses}
+                        {stats.squadDivision.consecutiveLosses || 0}
                       </p>
                       <p className="text-white/80 text-xs">
                         Consecutive Losses
@@ -952,10 +1164,10 @@ export default function SquadDetailPage() {
                   </div>
 
                   {/* Upgrade Button */}
-                  {stats.division.canUpgrade && (
+                  {stats.squadDivision.canUpgrade && (
                     <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold">
                       <Star className="w-4 h-4" />
-                      <span>Upgrade Division!</span>
+                      <span>Upgrade Squad Division!</span>
                     </button>
                   )}
                 </div>

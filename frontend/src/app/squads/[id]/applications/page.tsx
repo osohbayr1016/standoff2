@@ -117,12 +117,16 @@ export default function PendingApplicationsPage() {
       const token = localStorage.getItem("token");
       if (!token || !user?.id) return;
 
-      await respondToApplication(squadId, {
-        applicationId,
-        response,
-        responseMessage,
-        userId: user.id,
-      });
+      await respondToApplication(
+        squadId,
+        {
+          applicationId,
+          response,
+          responseMessage,
+          userId: user.id,
+        },
+        token
+      );
 
       // Refresh applications after response
       await fetchApplications();
@@ -135,7 +139,8 @@ export default function PendingApplicationsPage() {
   };
 
   const isUserLeader = () => {
-    return squad?.leader._id === user?.id;
+    if (!user?.id || !squad?.leader) return false;
+    return squad.leader._id === user.id;
   };
 
   const getStatusIcon = (status: ApplicationStatus) => {

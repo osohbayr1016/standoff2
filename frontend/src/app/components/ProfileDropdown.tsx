@@ -3,10 +3,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
-import { User, Settings, UserPlus, ChevronDown } from "lucide-react";
+import { User, Settings, UserPlus, ChevronDown, Users } from "lucide-react";
 // Clan removed from the app; drop related types and props
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface ProfileDropdownProps {
   onInviteFriend: () => void;
@@ -16,9 +17,46 @@ export default function ProfileDropdown({
   onInviteFriend,
 }: ProfileDropdownProps) {
   const { user, hasProfile } = useAuth();
+  const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [userSquad, setUserSquad] = useState<{
+    _id: string;
+    name: string;
+  } | null>(null);
+  const [isLoadingSquad, setIsLoadingSquad] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Check if user is in a squad
+  useEffect(() => {
+    const checkUserSquad = async () => {
+      if (!user?.id) return;
+
+      try {
+        setIsLoadingSquad(true);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`/api/squads/user/${user.id}`, {
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.squads && data.squads.length > 0) {
+            // Get the first squad (user can only be in one squad at a time)
+            setUserSquad(data.squads[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking user squad:", error);
+      } finally {
+        setIsLoadingSquad(false);
+      }
+    };
+
+    checkUserSquad();
+  }, [user?.id]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -41,6 +79,12 @@ export default function ProfileDropdown({
     setIsOpen(false);
     if (callback) {
       callback();
+    }
+  };
+
+  const handleMySquadClick = () => {
+    if (userSquad) {
+      router.push(`/squads/${userSquad._id}`);
     }
   };
 
@@ -154,6 +198,36 @@ export default function ProfileDropdown({
                   <span className="text-sm font-medium">Тохиргоо</span>
                 </motion.button>
               </Link>
+
+              {/* My Squad */}
+              {isLoadingSquad ? (
+                <motion.div className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-500 dark:text-gray-400">
+                  <Users className="w-4 h-4 animate-pulse" />
+                  <span className="text-sm font-medium">Loading squad...</span>
+                </motion.div>
+              ) : userSquad ? (
+                <motion.button
+                  onClick={() => handleItemClick(handleMySquadClick)}
+                  whileHover={{ backgroundColor: "rgba(124, 58, 237, 0.1)" }}
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                >
+                  <Users className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    My Squad: {userSquad.name}
+                  </span>
+                </motion.button>
+              ) : (
+                <Link href="/squads">
+                  <motion.button
+                    onClick={() => handleItemClick()}
+                    whileHover={{ backgroundColor: "rgba(124, 58, 237, 0.1)" }}
+                    className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                  >
+                    <Users className="w-4 h-4" />
+                    <span className="text-sm font-medium">Join Squad</span>
+                  </motion.button>
+                </Link>
+              )}
 
               {/* Invite Friend */}
               <motion.button
