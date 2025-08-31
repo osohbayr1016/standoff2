@@ -23,6 +23,7 @@ export interface ITournamentMatch extends Document {
   bountyCoinsDistributed: boolean; // Whether bounty coins have been distributed
   bountyCoinAmount: number; // Amount of bounty coins for this match
   matchType: "normal" | "auto_win" | "walkover"; // Type of match result
+  applyLoserDeduction: boolean; // Whether to deduct coins from loser
 
   // Division System Integration
   squad1Division: SquadDivision; // Division of squad1 at match time
@@ -119,6 +120,10 @@ const tournamentMatchSchema = new Schema<ITournamentMatch>(
       type: String,
       enum: ["normal", "auto_win", "walkover"],
       default: "normal",
+    },
+    applyLoserDeduction: {
+      type: Boolean,
+      default: true,
     },
 
     // Division System Integration

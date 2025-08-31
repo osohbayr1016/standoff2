@@ -44,7 +44,7 @@ interface RecentActivity {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState({
     news: { total: 0, new: 0 },
     users: { total: 0, new: 0 },
@@ -54,15 +54,16 @@ export default function AdminDashboard() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Check admin access
+  // Check admin access (wait for auth to load)
   useEffect(() => {
+    if (authLoading) return;
     const isAdmin =
       user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
     if (!user || !isAdmin) {
       router.push("/");
       return;
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   // Fetch real data
   useEffect(() => {
@@ -133,16 +134,16 @@ export default function AdminDashboard() {
       }
     };
 
-    // Only fetch data if user is admin
+    // Only fetch data if user is admin and auth loaded
     const isAdmin =
       user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
-    if (user && isAdmin) {
+    if (!authLoading && user && isAdmin) {
       fetchDashboardData();
     }
-  }, [user]);
+  }, [user, authLoading]);
 
-  // Show loading or redirect if not admin
-  if (!user) {
+  // Show loading while auth is initializing
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
         <Navigation />

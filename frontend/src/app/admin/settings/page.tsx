@@ -49,7 +49,7 @@ interface SettingsData {
 
 export default function AdminSettingsPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [settings, setSettings] = useState<SettingsData>({
     general: {
       siteName: "E-Sport Connection",
@@ -77,15 +77,16 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Check admin access
+  // Check admin access (wait for auth load)
   useEffect(() => {
+    if (authLoading) return;
     const isAdmin =
       user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
     if (!user || !isAdmin) {
       router.push("/");
       return;
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const handleSaveSettings = async () => {
     setSaving(true);
@@ -115,7 +116,7 @@ export default function AdminSettingsPage() {
     }));
   };
 
-  if (!user) {
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
         <Navigation />

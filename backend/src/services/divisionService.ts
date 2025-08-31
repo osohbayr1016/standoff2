@@ -39,18 +39,31 @@ export class DivisionService {
     match.squad1Division = squad1.division;
     match.squad2Division = squad2.division;
 
-    // Calculate bounty coin changes
+    // Calculate bounty coin changes (with override support via match fields)
     const squad1IsWinner = match.winner.toString() === squad1._id.toString();
     const squad2IsWinner = match.winner.toString() === squad2._id.toString();
 
-    const squad1BountyChange = calculateBountyCoinsForMatch(
+    // Defaults from division config
+    const defaultWinnerAward = calculateBountyCoinsForMatch(
       squad1.division,
-      squad1IsWinner
+      true
     );
-    const squad2BountyChange = calculateBountyCoinsForMatch(
-      squad2.division,
-      squad2IsWinner
+    const defaultLoserDeduction = Math.abs(
+      calculateBountyCoinsForMatch(squad1.division, false)
     );
+
+    // Overrides from match
+    const winnerAward = Math.max(
+      0,
+      match.bountyCoinAmount || defaultWinnerAward
+    );
+    const loserDeduction =
+      match.matchType === "normal" && match.applyLoserDeduction !== false
+        ? defaultLoserDeduction
+        : 0;
+
+    const squad1BountyChange = squad1IsWinner ? winnerAward : -loserDeduction;
+    const squad2BountyChange = squad2IsWinner ? winnerAward : -loserDeduction;
 
     match.squad1BountyChange = squad1BountyChange;
     match.squad2BountyChange = squad2BountyChange;

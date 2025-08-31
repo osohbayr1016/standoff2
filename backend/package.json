@@ -14,7 +14,8 @@
     "type-check": "npx tsc --noEmit",
     "clean": "rm -rf dist node_modules package-lock.json",
     "fresh-install": "npm run clean && npm install",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "e2e:tournament": "API_BASE=http://localhost:8000 ts-node src/scripts/testTournamentFlow.ts"
   },
   "keywords": [
     "fastify",

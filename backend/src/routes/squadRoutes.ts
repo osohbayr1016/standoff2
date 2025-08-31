@@ -985,6 +985,190 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     }
   });
 
+  // Add member directly (leader only)
+  fastify.post("/:id/members", async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const { newMemberId, userId } = request.body as any;
+
+      if (!newMemberId) {
+        return reply.status(400).send({
+          success: false,
+          message: "New member user ID is required",
+        });
+      }
+
+      const squad = await Squad.findById(id);
+      if (!squad) {
+        return reply
+          .status(404)
+          .send({ success: false, message: "Squad not found" });
+      }
+
+      // Only leader can add members directly
+      if (squad.leader.toString() !== userId) {
+        return reply.status(403).send({
+          success: false,
+          message: "Only squad leader can add members",
+        });
+      }
+
+      if (squad.members.length >= squad.maxMembers) {
+        return reply
+          .status(400)
+          .send({ success: false, message: "Squad is full" });
+      }
+
+      if (squad.members.some((member) => member.toString() === newMemberId)) {
+        return reply.status(400).send({
+          success: false,
+          message: "User is already a member of this squad",
+        });
+      }
+
+      // Verify user exists
+      const user = await User.findById(newMemberId).lean();
+      if (!user) {
+        return reply
+          .status(404)
+          .send({ success: false, message: "User not found" });
+      }
+
+      squad.members.push(newMemberId);
+      await squad.save();
+
+      const populatedSquad = await Squad.findById(squad._id)
+        .populate("leader", "name email avatar")
+        .populate("members", "name email avatar")
+        .lean();
+
+      return reply.status(200).send({
+        success: true,
+        message: "Member added to squad",
+        squad: populatedSquad,
+      });
+    } catch (error) {
+      console.error("Add member error:", error);
+      return reply
+        .status(500)
+        .send({ success: false, message: "Failed to add member" });
+    }
+  });
+
+  // Remove member (leader only)
+  fastify.delete("/:id/members/:memberId", async (request, reply) => {
+    try {
+      const { id, memberId } = request.params as {
+        id: string;
+        memberId: string;
+      };
+      const { userId } = request.body as any;
+
+      const squad = await Squad.findById(id);
+      if (!squad) {
+        return reply
+          .status(404)
+          .send({ success: false, message: "Squad not found" });
+      }
+
+      // Only leader can remove members
+      if (squad.leader.toString() !== userId) {
+        return reply.status(403).send({
+          success: false,
+          message: "Only squad leader can remove members",
+        });
+      }
+
+      if (memberId === squad.leader.toString()) {
+        return reply.status(400).send({
+          success: false,
+          message: "Cannot remove the squad leader",
+        });
+      }
+
+      if (!squad.members.some((member) => member.toString() === memberId)) {
+        return reply
+          .status(404)
+          .send({ success: false, message: "Member not in squad" });
+      }
+
+      squad.members = squad.members.filter((m) => m.toString() !== memberId);
+      await squad.save();
+
+      const populatedSquad = await Squad.findById(squad._id)
+        .populate("leader", "name email avatar")
+        .populate("members", "name email avatar")
+        .lean();
+
+      return reply.status(200).send({
+        success: true,
+        message: "Member removed from squad",
+        squad: populatedSquad,
+      });
+    } catch (error) {
+      console.error("Remove member error:", error);
+      return reply
+        .status(500)
+        .send({ success: false, message: "Failed to remove member" });
+    }
+  });
+
+  // Transfer leadership to another member (leader only)
+  fastify.put("/:id/leader", async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const { newLeaderId, userId } = request.body as any;
+
+      if (!newLeaderId) {
+        return reply.status(400).send({
+          success: false,
+          message: "New leader user ID is required",
+        });
+      }
+
+      const squad = await Squad.findById(id);
+      if (!squad) {
+        return reply
+          .status(404)
+          .send({ success: false, message: "Squad not found" });
+      }
+
+      // Only current leader can transfer leadership
+      if (squad.leader.toString() !== userId) {
+        return reply.status(403).send({
+          success: false,
+          message: "Only squad leader can transfer leadership",
+        });
+      }
+
+      if (!squad.members.some((m) => m.toString() === newLeaderId)) {
+        return reply.status(400).send({
+          success: false,
+          message: "New leader must be a current squad member",
+        });
+      }
+
+      squad.leader = newLeaderId;
+      await squad.save();
+
+      const populatedSquad = await Squad.findById(squad._id)
+        .populate("leader", "name email avatar")
+        .populate("members", "name email avatar")
+        .lean();
+
+      return reply.status(200).send({
+        success: true,
+        message: "Leadership transferred",
+        squad: populatedSquad,
+      });
+    } catch (error) {
+      console.error("Transfer leadership error:", error);
+      return reply
+        .status(500)
+        .send({ success: false, message: "Failed to transfer leadership" });
+    }
+  });
+
   // Get squads by game
   fastify.get("/game/:game", async (request, reply) => {
     try {

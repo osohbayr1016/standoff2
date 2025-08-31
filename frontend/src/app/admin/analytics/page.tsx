@@ -46,19 +46,20 @@ interface AnalyticsData {
 
 export default function AdminAnalyticsPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check admin access
+  // Check admin access (wait for auth load)
   useEffect(() => {
+    if (authLoading) return;
     const isAdmin =
       user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
     if (!user || !isAdmin) {
       router.push("/");
       return;
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   // Fetch analytics data
   useEffect(() => {
@@ -113,12 +114,12 @@ export default function AdminAnalyticsPage() {
 
     const isAdmin =
       user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
-    if (user && isAdmin) {
+    if (!authLoading && user && isAdmin) {
       fetchAnalytics();
     }
-  }, [user]);
+  }, [user, authLoading]);
 
-  if (!user) {
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
         <Navigation />

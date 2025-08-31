@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDarkMode } from "../contexts/DarkModeContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -13,6 +13,7 @@ import {
   Search,
   Bell,
   User,
+  Users,
   LogOut,
   ChevronDown,
 } from "lucide-react";
@@ -29,6 +30,51 @@ export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isInviteFriendModalOpen, setIsInviteFriendModalOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [userSquad, setUserSquad] = useState<{
+    _id: string;
+    name: string;
+  } | null>(null);
+  const [isLoadingSquad, setIsLoadingSquad] = useState(false);
+
+  // Fetch the current user's squad for mobile access
+  useEffect(() => {
+    const fetchUserSquad = async () => {
+      if (!user?.id) {
+        setUserSquad(null);
+        return;
+      }
+      try {
+        setIsLoadingSquad(true);
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const response = await fetch(`/api/squads/user/${user.id}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (
+            data?.success &&
+            Array.isArray(data.squads) &&
+            data.squads.length > 0
+          ) {
+            setUserSquad(data.squads[0]);
+          } else {
+            setUserSquad(null);
+          }
+        } else {
+          setUserSquad(null);
+        }
+      } catch (err) {
+        setUserSquad(null);
+      } finally {
+        setIsLoadingSquad(false);
+      }
+    };
+
+    fetchUserSquad();
+  }, [user?.id]);
 
   // Main navigation items (always visible)
   const mainNavItems: Array<{ name: string; href: string; icon?: string }> = [
@@ -307,7 +353,34 @@ export default function Navigation() {
 
                   {/* Mobile User Actions */}
                   {user ? (
-                    <div className="flex items-center space-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex flex-col space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      {/* My Squad / Join Squad for mobile */}
+                      {isLoadingSquad ? (
+                        <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
+                          <Users className="w-5 h-5 animate-pulse" />
+                          <span>Loading squad...</span>
+                        </div>
+                      ) : userSquad ? (
+                        <Link
+                          href={`/squads/${userSquad._id}`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                        >
+                          <Users className="w-5 h-5" />
+                          <span>My Squad: {userSquad.name}</span>
+                        </Link>
+                      ) : (
+                        <Link
+                          href="/squads"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                        >
+                          <Users className="w-5 h-5" />
+                          <span>Join Squad</span>
+                        </Link>
+                      )}
+
+                      {/* Profile */}
                       <Link
                         href={
                           user.role === "PLAYER" && hasProfile
@@ -328,6 +401,8 @@ export default function Navigation() {
                             : "Create Organization Profile"}
                         </span>
                       </Link>
+
+                      {/* Logout */}
                       <button
                         onClick={() => {
                           logout();

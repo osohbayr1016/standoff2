@@ -103,6 +103,26 @@ interface EditSquadForm {
   joinType: SquadJoinType;
 }
 
+interface BountySummary {
+  squadId: string;
+  squadName: string;
+  squadTag: string;
+  currentBountyCoins: number;
+  totalEarned: number;
+  totalSpent: number;
+  division: string;
+}
+
+interface DivisionInfoItem {
+  name: string; // SILVER | GOLD | DIAMOND
+  displayName: string;
+  requirements: string | null;
+  upgradeCost: number | null;
+  bountyCoinPrice: number; // MNT per 50 coins
+  bountyCoinAmount: number; // usually 50
+  deductionAmount: number; // usually 25
+}
+
 export default function SquadDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -126,11 +146,27 @@ export default function SquadDetailPage() {
     joinType: SquadJoinType.OPEN_FOR_APPLY,
   });
   const [applicationMessage, setApplicationMessage] = useState("");
+  const [bountySummary, setBountySummary] = useState<BountySummary | null>(
+    null
+  );
+  const [divisionInfo, setDivisionInfo] = useState<DivisionInfoItem[] | null>(
+    null
+  );
+  const [purchaseLoading, setPurchaseLoading] = useState(false);
+  const [memberActionLoading, setMemberActionLoading] = useState<string | null>(
+    null
+  );
+  const [transferLoadingId, setTransferLoadingId] = useState<string | null>(
+    null
+  );
+  const [addMemberId, setAddMemberId] = useState("");
+  const [addMemberLoading, setAddMemberLoading] = useState(false);
 
   const squadId = params.id as string;
 
   useEffect(() => {
     fetchSquadDetails();
+    fetchBountyAndDivisionInfo();
   }, [squadId]);
 
   useEffect(() => {
@@ -148,6 +184,30 @@ export default function SquadDetailPage() {
       });
     }
   }, [squad]);
+
+  const fetchBountyAndDivisionInfo = async () => {
+    try {
+      // Bounty summary for this squad
+      const bountyRes = await fetch(`/api/bounty-coins/squad/${squadId}`);
+      if (bountyRes.ok) {
+        const bountyData = await bountyRes.json();
+        if (bountyData?.success) {
+          setBountySummary(bountyData.data as BountySummary);
+        }
+      }
+
+      // Division config info (prices, amounts)
+      const divRes = await fetch(`/api/divisions/info`);
+      if (divRes.ok) {
+        const divData = await divRes.json();
+        if (divData?.success) {
+          setDivisionInfo(divData.data as DivisionInfoItem[]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching bounty/division info:", error);
+    }
+  };
 
   const fetchSquadDetails = async () => {
     try {
@@ -209,6 +269,53 @@ export default function SquadDetailPage() {
       daysSinceCreated,
       squadDivision: squadDivisionInfo,
     });
+  };
+
+  const getDivisionDisplayName = () => {
+    if (!stats?.squadDivision) return "Division";
+    return stats.squadDivision.displayName || "Division";
+  };
+
+  const getDivisionPricePerPack = () => {
+    const divisionName = (bountySummary?.division ||
+      stats?.squadDivision?.name ||
+      "SILVER") as string;
+    const info = divisionInfo?.find((d) => d.name === divisionName);
+    return info?.bountyCoinPrice || 10000; // default SILVER price
+  };
+
+  const getDivisionPackAmount = () => {
+    const divisionName = (bountySummary?.division ||
+      stats?.squadDivision?.name ||
+      "SILVER") as string;
+    const info = divisionInfo?.find((d) => d.name === divisionName);
+    return info?.bountyCoinAmount || 50;
+  };
+
+  const toMNT = (coins: number) => {
+    const pack = getDivisionPackAmount();
+    const price = getDivisionPricePerPack();
+    const mnt = (coins / pack) * price;
+    return Math.round(mnt);
+  };
+
+  const handlePurchaseCoins = async (amount: number) => {
+    try {
+      setPurchaseLoading(true);
+      const res = await fetch(`/api/divisions/purchase/${squadId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
+      if (res.ok) {
+        await fetchBountyAndDivisionInfo();
+        await calculateStats();
+      }
+    } catch (e) {
+      console.error("Purchase failed", e);
+    } finally {
+      setPurchaseLoading(false);
+    }
   };
 
   const isUserLeader = () => {
@@ -422,6 +529,103 @@ export default function SquadDetailPage() {
     }
   };
 
+  const handleRemoveMember = async (memberId: string) => {
+    if (!isUserLeader() || !user?.id) return;
+
+    try {
+      setMemberActionLoading(memberId);
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/squads/${squadId}/members/${memberId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({ userId: user.id }),
+        }
+      );
+
+      if (response.ok) {
+        await fetchSquadDetails();
+        setError("");
+      } else {
+        const data = await response.json();
+        setError(data.message || "Failed to remove member");
+      }
+    } catch (err) {
+      setError("Failed to remove member");
+      console.error("Error removing member:", err);
+    } finally {
+      setMemberActionLoading(null);
+    }
+  };
+
+  const handleAddMember = async () => {
+    if (!isUserLeader() || !user?.id || !addMemberId.trim()) return;
+
+    try {
+      setAddMemberLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/squads/${squadId}/members`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          newMemberId: addMemberId.trim(),
+          userId: user.id,
+        }),
+      });
+
+      if (response.ok) {
+        await fetchSquadDetails();
+        setAddMemberId("");
+        setError("");
+      } else {
+        const data = await response.json();
+        setError(data.message || "Failed to add member");
+      }
+    } catch (err) {
+      setError("Failed to add member");
+      console.error("Error adding member:", err);
+    } finally {
+      setAddMemberLoading(false);
+    }
+  };
+
+  const handleTransferLeadership = async (memberId: string) => {
+    if (!isUserLeader() || !user?.id) return;
+
+    try {
+      setTransferLoadingId(memberId);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/squads/${squadId}/leader`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ newLeaderId: memberId, userId: user.id }),
+      });
+
+      if (response.ok) {
+        await fetchSquadDetails();
+        setError("");
+      } else {
+        const data = await response.json();
+        setError(data.message || "Failed to transfer leadership");
+      }
+    } catch (err) {
+      setError("Failed to transfer leadership");
+      console.error("Error transferring leadership:", err);
+    } finally {
+      setTransferLoadingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -508,10 +712,21 @@ export default function SquadDetailPage() {
 
                   {/* Squad Level, Division and BC Info */}
                   <div className="flex items-center space-x-4 mt-2">
-                    {/* Squad Level */}
+                    {/* Squad Division Badge (replaces Level badge) */}
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm bg-blue-500 text-white px-2 py-1 rounded">
-                        Lv.{squad.level || 1}
+                      <DivisionCoinImage
+                        division={
+                          ((stats?.squadDivision?.name as SquadDivision) ||
+                            squad.division ||
+                            "SILVER") as any
+                        }
+                        size={20}
+                        showGlow={true}
+                      />
+                      <span className="text-sm bg-yellow-400 text-gray-900 px-2 py-1 rounded">
+                        {stats?.squadDivision?.displayName ||
+                          squad.division ||
+                          "SILVER"}
                       </span>
                     </div>
 
@@ -954,12 +1169,32 @@ export default function SquadDetailPage() {
                       </div>
 
                       {isUserLeader() && member._id !== squad.leader._id && (
-                        <button
-                          className="text-red-400 hover:text-red-300 transition-colors"
-                          title="Remove member"
-                        >
-                          <UserMinus className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleTransferLeadership(member._id)}
+                            disabled={transferLoadingId === member._id}
+                            className="text-yellow-400 hover:text-yellow-300 transition-colors disabled:opacity-50"
+                            title="Transfer leadership to this member"
+                          >
+                            {transferLoadingId === member._id ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-400" />
+                            ) : (
+                              <Crown className="w-4 h-4" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleRemoveMember(member._id)}
+                            disabled={memberActionLoading === member._id}
+                            className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                            title="Remove member"
+                          >
+                            {memberActionLoading === member._id ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-400" />
+                            ) : (
+                              <UserMinus className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
                       )}
                     </div>
                   ))}
@@ -971,6 +1206,24 @@ export default function SquadDetailPage() {
                   <p className="text-gray-400">
                     {squad.maxMembers - squad.members.length} slot(s) available
                   </p>
+                  {isUserLeader() && (
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <input
+                        type="text"
+                        value={addMemberId}
+                        onChange={(e) => setAddMemberId(e.target.value)}
+                        placeholder="Enter user ID to add"
+                        className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                      />
+                      <button
+                        onClick={handleAddMember}
+                        disabled={addMemberLoading || !addMemberId.trim()}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                      >
+                        {addMemberLoading ? "Adding..." : "Add Member"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -1051,6 +1304,117 @@ export default function SquadDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Bounty Coins Summary (Одоогийн үлдэгдэл / Нийт олсон / Нийт зарцуулсан) */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.18 }}
+              className="bg-gray-800 rounded-lg p-6"
+            >
+              <h3 className="text-lg font-semibold text-white mb-4">
+                Bounty Coins
+              </h3>
+
+              <div className="grid grid-cols-1 gap-4">
+                {/* Одоогийн үлдэгдэл */}
+                <div className="p-4 rounded-lg bg-gray-700/70">
+                  <p className="text-sm text-gray-300 mb-2">
+                    Одоогийн үлдэгдэл
+                  </p>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-2xl font-bold text-white">
+                        {(
+                          bountySummary?.currentBountyCoins ??
+                          stats?.squadDivision?.currentBountyCoins ??
+                          0
+                        ).toLocaleString()}{" "}
+                        BC
+                      </p>
+                      <p className="text-xs text-gray-300 mt-1">
+                        {stats?.squadDivision?.displayName || "Division"} Coin
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        ≈{" "}
+                        {toMNT(
+                          bountySummary?.currentBountyCoins ??
+                            stats?.squadDivision?.currentBountyCoins ??
+                            0
+                        ).toLocaleString()}
+                        ₮
+                      </p>
+                    </div>
+                    <DivisionCoinImage
+                      division={
+                        (stats?.squadDivision?.name as SquadDivision) ||
+                        "SILVER"
+                      }
+                      size={28}
+                      showGlow={true}
+                    />
+                  </div>
+                </div>
+
+                {/* Нийт олсон */}
+                <div className="p-4 rounded-lg bg-gray-700/70">
+                  <p className="text-sm text-gray-300 mb-2">Нийт олсон</p>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-2xl font-bold text-white">
+                        {(bountySummary?.totalEarned ?? 0).toLocaleString()} BC
+                      </p>
+                      <p className="text-xs text-gray-300 mt-1">
+                        {stats?.squadDivision?.displayName || "Division"} Coin
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        ≈{" "}
+                        {toMNT(
+                          bountySummary?.totalEarned ?? 0
+                        ).toLocaleString()}
+                        ₮
+                      </p>
+                    </div>
+                    <DivisionCoinImage
+                      division={
+                        (stats?.squadDivision?.name as SquadDivision) ||
+                        "SILVER"
+                      }
+                      size={28}
+                      showGlow={false}
+                    />
+                  </div>
+                </div>
+
+                {/* Нийт зарцуулсан */}
+                <div className="p-4 rounded-lg bg-gray-700/70">
+                  <p className="text-sm text-gray-300 mb-2">Нийт зарцуулсан</p>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-2xl font-bold text-white">
+                        {(bountySummary?.totalSpent ?? 0).toLocaleString()} BC
+                      </p>
+                      <p className="text-xs text-gray-300 mt-1">
+                        {stats?.squadDivision?.displayName || "Division"} Coin
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        ≈{" "}
+                        {toMNT(bountySummary?.totalSpent ?? 0).toLocaleString()}
+                        ₮
+                      </p>
+                    </div>
+                    <DivisionCoinImage
+                      division={
+                        (stats?.squadDivision?.name as SquadDivision) ||
+                        "SILVER"
+                      }
+                      size={28}
+                      showGlow={false}
+                    />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
             {/* Squad Stats */}
             {stats && (
               <motion.div
@@ -1137,12 +1501,25 @@ export default function SquadDetailPage() {
                         showGlow={true}
                       />
                     </div>
-                    <p className="text-3xl font-bold text-white">
-                      {(
-                        stats.squadDivision.currentBountyCoins || 0
-                      ).toLocaleString()}
-                    </p>
-                    <p className="text-white/80 text-sm">Bounty Coins</p>
+                    <div className="space-y-1">
+                      <p className="text-3xl font-bold text-white">
+                        {(
+                          bountySummary?.currentBountyCoins ??
+                          stats.squadDivision.currentBountyCoins ??
+                          0
+                        ).toLocaleString()}{" "}
+                        BC
+                      </p>
+                      <p className="text-white/80 text-xs">
+                        ≈{" "}
+                        {toMNT(
+                          bountySummary?.currentBountyCoins ??
+                            stats.squadDivision.currentBountyCoins ??
+                            0
+                        ).toLocaleString()}
+                        ₮
+                      </p>
+                    </div>
                   </div>
 
                   {/* Progress Bar */}
@@ -1210,10 +1587,35 @@ export default function SquadDetailPage() {
                 </button>
 
                 {isUserLeader() && (
-                  <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                    <Settings className="w-4 h-4" />
-                    <span>Manage Squad</span>
-                  </button>
+                  <div className="space-y-3">
+                    <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                      <Settings className="w-4 h-4" />
+                      <span>Manage Squad</span>
+                    </button>
+
+                    {/* Purchase Coins (leader visible; members can see balances on page already) */}
+                    <div className="p-3 bg-gray-700 rounded-lg">
+                      <p className="text-gray-300 text-sm mb-2">
+                        Buy Bounty Coins
+                      </p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[50, 100, 150].map((amt) => (
+                          <button
+                            key={amt}
+                            disabled={purchaseLoading}
+                            onClick={() => handlePurchaseCoins(amt)}
+                            className="px-2 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm disabled:opacity-60"
+                          >
+                            +{amt}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        {getDivisionPackAmount()} BC ≈{" "}
+                        {getDivisionPricePerPack().toLocaleString()}₮
+                      </p>
+                    </div>
+                  </div>
                 )}
 
                 <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors">

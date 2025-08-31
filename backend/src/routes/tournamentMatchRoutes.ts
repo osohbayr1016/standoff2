@@ -91,12 +91,31 @@ const tournamentMatchRoutes: FastifyPluginAsync = async (
     try {
       const { tournamentId } = request.params as { tournamentId: string };
 
-      const matches = await TournamentMatch.find({ tournament: tournamentId })
+      let matches = await TournamentMatch.find({ tournament: tournamentId })
         .populate("squad1", "name tag")
         .populate("squad2", "name tag")
         .populate("winner", "name tag")
         .populate("loser", "name tag")
         .sort({ round: 1, matchNumber: 1 });
+
+      // Auto-generate matches if none exist and tournament has enough squads
+      if (matches.length === 0) {
+        const tournament = await Tournament.findById(tournamentId);
+        if (tournament && (tournament.currentSquads || 0) >= 2) {
+          const { generateTournamentMatches } = await import(
+            "../services/tournamentMatchService"
+          );
+          await generateTournamentMatches(tournamentId);
+
+          // Re-fetch after generation
+          matches = await TournamentMatch.find({ tournament: tournamentId })
+            .populate("squad1", "name tag")
+            .populate("squad2", "name tag")
+            .populate("winner", "name tag")
+            .populate("loser", "name tag")
+            .sort({ round: 1, matchNumber: 1 });
+        }
+      }
 
       return reply.status(200).send({
         success: true,
@@ -115,7 +134,8 @@ const tournamentMatchRoutes: FastifyPluginAsync = async (
   fastify.put("/:matchId/result", async (request, reply) => {
     try {
       const { matchId } = request.params as { matchId: string };
-      const { winnerId, loserId, score, adminNotes } = request.body as any;
+      const { winnerId, loserId, score, adminNotes, applyLoserDeduction } =
+        request.body as any;
 
       if (!winnerId || !loserId) {
         return reply.status(400).send({
@@ -174,16 +194,98 @@ const tournamentMatchRoutes: FastifyPluginAsync = async (
       match.endTime = new Date();
       match.score = score;
       match.adminNotes = adminNotes;
+      if (typeof applyLoserDeduction === "boolean") {
+        (match as any).applyLoserDeduction = applyLoserDeduction;
+      }
+
+      // Save match first so service can read the updated winner/loser
+      await match.save();
 
       // Process bounty coins and division changes
       await DivisionService.processMatchResult(matchId);
 
-      await match.save();
+      // If the whole round is completed, auto-generate next round (Single Elimination)
+      try {
+        const currentRound = match.round;
+        const currentTournamentId = match.tournament.toString();
+
+        const roundMatches = await TournamentMatch.find({
+          tournament: currentTournamentId,
+          round: currentRound,
+        })
+          .sort({ matchNumber: 1 })
+          .lean();
+
+        const allCompleted = roundMatches.every(
+          (m) => m.status === "completed"
+        );
+        if (allCompleted) {
+          const winners = roundMatches
+            .map((m) => m.winner)
+            .filter((w): w is any => !!w);
+
+          if (winners.length >= 2) {
+            // Prepare next round matches by pairing winners in order
+            const nextRound = currentRound + 1;
+
+            const lastMatch = await TournamentMatch.find({
+              tournament: currentTournamentId,
+            })
+              .sort({ matchNumber: -1 })
+              .limit(1);
+            let nextMatchNumber = lastMatch[0]?.matchNumber
+              ? lastMatch[0].matchNumber + 1
+              : 1;
+
+            const newMatches: any[] = [];
+            for (let i = 0; i < winners.length; i += 2) {
+              if (winners[i] && winners[i + 1]) {
+                newMatches.push({
+                  tournament: match.tournament,
+                  matchNumber: nextMatchNumber++,
+                  round: nextRound,
+                  squad1: winners[i],
+                  squad2: winners[i + 1],
+                  status: "scheduled",
+                  scheduledTime: new Date(),
+                  bountyCoinAmount: 50,
+                  matchType: "normal",
+                });
+              }
+            }
+
+            if (newMatches.length > 0) {
+              await TournamentMatch.insertMany(newMatches);
+            } else if (winners.length === 1) {
+              // Edge case: only one winner remains
+              await Tournament.findByIdAndUpdate(currentTournamentId, {
+                status: "completed",
+                endDate: new Date(),
+              });
+            }
+          } else if (winners.length === 1) {
+            // Tournament finished
+            await Tournament.findByIdAndUpdate(currentTournamentId, {
+              status: "completed",
+              endDate: new Date(),
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Auto-advance round error:", e);
+      }
+
+      // Return the updated match
+      const updatedMatch = await TournamentMatch.findById(matchId)
+        .populate("squad1", "name tag")
+        .populate("squad2", "name tag")
+        .populate("winner", "name tag")
+        .populate("loser", "name tag");
 
       return reply.status(200).send({
         success: true,
         message: "Match result updated successfully",
-        match,
+        match: updatedMatch,
       });
     } catch (error) {
       console.error("Error updating match result:", error);
@@ -191,8 +293,48 @@ const tournamentMatchRoutes: FastifyPluginAsync = async (
         success: false,
         message: "Failed to update match result",
         error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === "development"
+            ? (error as any).message
+            : undefined,
       });
+    }
+  });
+
+  // Update bounty coin settings for a match (admin only)
+  fastify.put("/:matchId/bounty", async (request, reply) => {
+    try {
+      const { matchId } = request.params as { matchId: string };
+      const { bountyCoinAmount, applyLoserDeduction } = request.body as {
+        bountyCoinAmount?: number;
+        applyLoserDeduction?: boolean;
+      };
+
+      const match = await TournamentMatch.findById(matchId);
+      if (!match) {
+        return reply
+          .status(404)
+          .send({ success: false, message: "Match not found" });
+      }
+
+      if (typeof bountyCoinAmount === "number") {
+        match.bountyCoinAmount = Math.max(0, bountyCoinAmount);
+      }
+      if (typeof applyLoserDeduction === "boolean") {
+        (match as any).applyLoserDeduction = applyLoserDeduction;
+      }
+
+      await match.save();
+
+      return reply.status(200).send({
+        success: true,
+        message: "Bounty settings updated",
+        match,
+      });
+    } catch (error) {
+      console.error("Error updating match bounty settings:", error);
+      return reply
+        .status(500)
+        .send({ success: false, message: "Failed to update bounty settings" });
     }
   });
 

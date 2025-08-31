@@ -44,10 +44,12 @@ interface Match {
   bountyCoinsDistributed: boolean;
   matchType: string;
   adminNotes?: string;
+  bountyCoinAmount?: number;
+  applyLoserDeduction?: boolean;
 }
 
 export default function AdminMatchResultsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [selectedTournament, setSelectedTournament] = useState<string>("");
@@ -64,12 +66,18 @@ export default function AdminMatchResultsPage() {
     "normal" | "auto_win" | "walkover"
   >("normal");
   const [adminNotes, setAdminNotes] = useState<string>("");
+  const [customWinnerBC, setCustomWinnerBC] = useState<number | "">("");
+  const [applyLoserDeduction, setApplyLoserDeduction] = useState<boolean>(true);
 
   useEffect(() => {
-    if ((user as any)?.isAdmin) {
+    if (authLoading) return;
+    const isAdmin =
+      (user as any)?.role === "ADMIN" ||
+      (user as any)?.email === "admin@esport-connection.com";
+    if (isAdmin) {
       fetchTournaments();
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   useEffect(() => {
     if (selectedTournament) {
@@ -86,11 +94,8 @@ export default function AdminMatchResultsPage() {
       });
       const data = await response.json();
       if (data.success) {
-        setTournaments(
-          data.tournaments.filter((t: Tournament) =>
-            ["ongoing", "completed"].includes(t.status)
-          )
-        );
+        // Show all tournaments; admin can still select the relevant one
+        setTournaments(data.tournaments as Tournament[]);
       }
     } catch (error) {
       console.error("Error fetching tournaments:", error);
@@ -110,7 +115,8 @@ export default function AdminMatchResultsPage() {
       );
       const data = await response.json();
       if (data.success) {
-        setMatches(data.data);
+        // API returns { success, matches }
+        setMatches(data.matches || data.data || []);
       }
     } catch (error) {
       console.error("Error fetching matches:", error);
@@ -127,6 +133,8 @@ export default function AdminMatchResultsPage() {
     setSquad2Score(0);
     setMatchType("normal");
     setAdminNotes("");
+    setCustomWinnerBC(match.bountyCoinAmount ?? "");
+    setApplyLoserDeduction(match.applyLoserDeduction ?? true);
     setShowResultModal(true);
   };
 
@@ -134,6 +142,31 @@ export default function AdminMatchResultsPage() {
     if (!selectedMatch) return;
 
     try {
+      // If admin entered a custom winner BC, persist it to the match before result
+      if (matchType === "normal" && customWinnerBC !== "") {
+        await fetch(`/api/tournament-matches/${selectedMatch._id}/bounty`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            bountyCoinAmount: Number(customWinnerBC) || 0,
+            applyLoserDeduction,
+          }),
+        });
+      } else if (matchType !== "normal") {
+        // Ensure no deductions when not normal
+        await fetch(`/api/tournament-matches/${selectedMatch._id}/bounty`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ applyLoserDeduction: false }),
+        });
+      }
+
       const response = await fetch(
         `/api/tournament-matches/${selectedMatch._id}/result`,
         {
@@ -151,6 +184,7 @@ export default function AdminMatchResultsPage() {
             },
             matchType,
             adminNotes,
+            applyLoserDeduction,
           }),
         }
       );
@@ -199,7 +233,19 @@ export default function AdminMatchResultsPage() {
     }
   };
 
-  if (!(user as any)?.isAdmin) {
+  const isAdmin =
+    (user as any)?.role === "ADMIN" ||
+    (user as any)?.email === "admin@esport-connection.com";
+  if (authLoading || !user) {
+    return (
+      <PageTransition>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-black flex items-center justify-center">
+          <div className="text-white text-xl">Уншиж байна...</div>
+        </div>
+      </PageTransition>
+    );
+  }
+  if (!isAdmin) {
     return (
       <PageTransition>
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-black flex items-center justify-center">
@@ -519,13 +565,72 @@ export default function AdminMatchResultsPage() {
                       </span>
                     </div>
                     <div className="text-sm text-yellow-300">
-                      <p>• Хожигч багийн гишүүд: тус бүр +50 BC</p>
                       <p>
-                        • Хожигдсон багийн гишүүд: тус бүр -25 BC (хамгийн бага
-                        0)
+                        • Хожигч багийн гишүүд: тус бүр +
+                        {typeof customWinnerBC === "number" &&
+                        customWinnerBC > 0
+                          ? customWinnerBC
+                          : 50}{" "}
+                        BC
                       </p>
-                      <p>• Нийт оролцсон койн: 75 BC</p>
+                      <p>
+                        • Хожигдсон багийн гишүүд:{" "}
+                        {applyLoserDeduction
+                          ? "тус бүр -25 BC (хамгийн бага 0)"
+                          : "суутгалгүй"}
+                      </p>
                     </div>
+                  </div>
+                )}
+
+                {/* Custom Bounty Controls */}
+                {matchType === "normal" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        Хожигчийн авах BC (Option)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={customWinnerBC as any}
+                        onChange={(e) =>
+                          setCustomWinnerBC(
+                            e.target.value === ""
+                              ? ""
+                              : Math.max(0, parseInt(e.target.value) || 0)
+                          )
+                        }
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Default 50"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Хоосон бол default 50 BC хэрэглэнэ
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-6">
+                      <input
+                        id="applyDeduction"
+                        type="checkbox"
+                        checked={applyLoserDeduction}
+                        onChange={(e) =>
+                          setApplyLoserDeduction(e.target.checked)
+                        }
+                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                      <label
+                        htmlFor="applyDeduction"
+                        className="text-sm text-white"
+                      >
+                        Хожигдсонд -25 BC суутгах
+                      </label>
+                    </div>
+                    {typeof customWinnerBC === "number" && (
+                      <div className="md:col-span-2 text-xs text-gray-400">
+                        Дүрэм: winner {customWinnerBC} BC, loser{" "}
+                        {applyLoserDeduction ? "-25 BC" : "0 BC"}
+                      </div>
+                    )}
                   </div>
                 )}
 

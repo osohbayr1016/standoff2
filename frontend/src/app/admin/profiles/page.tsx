@@ -36,7 +36,7 @@ interface PlayerProfile {
 
 export default function AdminProfilesPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [profiles, setProfiles] = useState<PlayerProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,15 +48,16 @@ export default function AdminProfilesPage() {
     null
   );
 
-  // Check admin access
+  // Check admin access (wait for auth load)
   useEffect(() => {
+    if (authLoading) return;
     const isAdmin =
       user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
     if (!user || !isAdmin) {
       router.push("/");
       return;
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   // Fetch profiles data
   useEffect(() => {
@@ -76,10 +77,10 @@ export default function AdminProfilesPage() {
       }
     };
 
-    if (user) {
+    if (!authLoading && user) {
       fetchProfiles();
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   // Filter profiles based on search and filters
   const filteredProfiles = profiles.filter((profile) => {
@@ -156,7 +157,7 @@ export default function AdminProfilesPage() {
     }
   };
 
-  if (!user) {
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
         <Navigation />

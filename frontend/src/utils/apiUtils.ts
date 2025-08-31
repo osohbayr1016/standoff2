@@ -107,8 +107,9 @@ export const fetchWithFallback = async <T>(
       );
       return { data: fallbackData, isFromApi: false };
     }
-  } catch (error) {
-    console.log("API call failed, using fallback data:", error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.log("API call failed, using fallback data:", message);
     return { data: fallbackData, isFromApi: false };
   }
 };

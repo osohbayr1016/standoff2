@@ -70,7 +70,7 @@ interface TournamentRegistration {
 export default function AdminTournamentDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [registrations, setRegistrations] = useState<TournamentRegistration[]>(
     []
@@ -81,15 +81,16 @@ export default function AdminTournamentDetailPage() {
 
   const tournamentId = params.id as string;
 
-  // Check admin access
+  // Check admin access (wait for auth to load to avoid false redirect)
   useEffect(() => {
+    if (authLoading) return;
     const isAdmin =
       user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
     if (!user || !isAdmin) {
       router.push("/");
       return;
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   // Fetch tournament details
   useEffect(() => {
@@ -116,10 +117,10 @@ export default function AdminTournamentDetailPage() {
       }
     };
 
-    if (user && tournamentId) {
+    if (!authLoading && user && tournamentId) {
       fetchTournament();
     }
-  }, [user, tournamentId]);
+  }, [user, authLoading, tournamentId]);
 
   // Fetch tournament registrations
   useEffect(() => {
@@ -133,7 +134,34 @@ export default function AdminTournamentDetailPage() {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            setRegistrations(data.registrations || []);
+            const normalized = (data.registrations || []).map((r: any) => ({
+              id: r?._id || r?.id,
+              tournament:
+                r?.tournament?._id || r?.tournament?.id || r?.tournament,
+              squad: {
+                id: r?.squad?._id || r?.squad?.id || r?.squad,
+                name: r?.squad?.name || "Unknown Squad",
+                tag: r?.squad?.tag || "",
+                logo: r?.squad?.logo,
+              },
+              squadLeader: {
+                id: r?.squadLeader?._id || r?.squadLeader?.id || r?.squadLeader,
+                name: r?.squadLeader?.name || "Unknown",
+                email: r?.squadLeader?.email || "",
+                avatar: r?.squadLeader?.avatar,
+              },
+              squadMembers: (r?.squadMembers || []).map((m: any) => ({
+                id: m?._id || m?.id || m,
+                name: m?.name || "Unknown",
+                email: m?.email || "",
+                avatar: m?.avatar,
+              })),
+              registrationFee: r?.registrationFee ?? 0,
+              paymentStatus: r?.paymentStatus || "pending",
+              registrationDate: r?.registrationDate || r?.createdAt,
+              status: r?.status || (r?.isApproved ? "registered" : "pending"),
+            }));
+            setRegistrations(normalized);
           } else {
             setError(data.message || "Failed to load registrations");
           }
@@ -148,10 +176,10 @@ export default function AdminTournamentDetailPage() {
       }
     };
 
-    if (user && tournamentId) {
+    if (!authLoading && user && tournamentId) {
       fetchRegistrations();
     }
-  }, [user, tournamentId]);
+  }, [user, authLoading, tournamentId]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

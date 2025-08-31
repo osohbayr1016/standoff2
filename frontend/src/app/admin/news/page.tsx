@@ -30,7 +30,7 @@ interface NewsArticle {
 
 export default function AdminNewsPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,15 +41,16 @@ export default function AdminNewsPage() {
     null
   );
 
-  // Check admin access
+  // Check admin access (wait for auth load)
   useEffect(() => {
+    if (authLoading) return;
     const isAdmin =
       user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
     if (!user || !isAdmin) {
       router.push("/");
       return;
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   // Fetch news data
   useEffect(() => {
@@ -69,10 +70,10 @@ export default function AdminNewsPage() {
       }
     };
 
-    if (user) {
+    if (!authLoading && user) {
       fetchNews();
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   // Filter news based on search and filters
   const filteredNews = news.filter((article) => {
@@ -122,7 +123,7 @@ export default function AdminNewsPage() {
     }
   };
 
-  if (!user) {
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
         <Navigation />

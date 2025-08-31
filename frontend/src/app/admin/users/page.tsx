@@ -34,7 +34,7 @@ interface UserData {
 
 export default function AdminUsersPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -43,15 +43,16 @@ export default function AdminUsersPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
 
-  // Check admin access
+  // Check admin access (wait for auth load)
   useEffect(() => {
+    if (authLoading) return;
     const isAdmin =
       user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
     if (!user || !isAdmin) {
       router.push("/");
       return;
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   // Fetch users data
   useEffect(() => {
@@ -71,10 +72,10 @@ export default function AdminUsersPage() {
       }
     };
 
-    if (user) {
+    if (!authLoading && user) {
       fetchUsers();
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   // Filter users based on search and filters
   const filteredUsers = users.filter((user) => {
@@ -144,7 +145,7 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (!user) {
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
         <Navigation />

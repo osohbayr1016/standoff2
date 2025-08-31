@@ -49,10 +49,8 @@ interface Match {
 }
 
 export default function AdminTournamentsPage() {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"tournaments" | "matches">(
-    "tournaments"
-  );
+  const { user, loading: authLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState<"tournaments">("tournaments");
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selectedTournament, setSelectedTournament] =
     useState<Tournament | null>(null);
@@ -81,10 +79,10 @@ export default function AdminTournamentsPage() {
   });
 
   useEffect(() => {
-    if (user?.role === "ADMIN") {
+    if (!authLoading && user?.role === "ADMIN") {
       fetchTournaments();
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchTournaments = async () => {
     try {
@@ -284,6 +282,19 @@ export default function AdminTournamentsPage() {
     });
   };
 
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Loading...
+            </h1>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (user?.role !== "ADMIN") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
@@ -323,26 +334,11 @@ export default function AdminTournamentsPage() {
         <div className="mb-6">
           <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => setActiveTab("tournaments")}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "tournaments"
-                    ? "border-purple-500 text-purple-600 dark:text-purple-400"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
-                }`}
+              <span
+                className={`py-2 px-1 border-b-2 font-medium text-sm border-purple-500 text-purple-600 dark:text-purple-400`}
               >
                 Tournament Management
-              </button>
-              <button
-                onClick={() => setActiveTab("matches")}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "matches"
-                    ? "border-purple-500 text-purple-600 dark:text-purple-400"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
-                }`}
-              >
-                Match Management
-              </button>
+              </span>
             </nav>
           </div>
         </div>
@@ -367,9 +363,10 @@ export default function AdminTournamentsPage() {
               {tournaments
                 .filter((tournament) => tournament && tournament._id)
                 .map((tournament) => (
-                  <div
+                  <a
+                    href={`/admin/tournaments/${tournament._id}`}
                     key={tournament._id}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700"
+                    className="block bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow"
                   >
                     {editingTournament?._id === tournament._id ? (
                       <div className="space-y-4">
@@ -575,151 +572,13 @@ export default function AdminTournamentsPage() {
                         )}
                       </div>
                     )}
-                  </div>
+                  </a>
                 ))}
             </div>
           </div>
         )}
 
-        {/* Match Management Tab */}
-        {activeTab === "matches" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                Match Management
-              </h2>
-              <div className="flex space-x-4">
-                <select
-                  value={selectedTournament?._id || ""}
-                  onChange={(e) => {
-                    const tournament = tournaments.find(
-                      (t) => t._id === e.target.value
-                    );
-                    setSelectedTournament(tournament || null);
-                    if (tournament) {
-                      fetchMatches(tournament._id);
-                    } else {
-                      setMatches([]);
-                    }
-                  }}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  <option value="">Select Tournament</option>
-                  {tournaments.map((tournament) => (
-                    <option key={tournament._id} value={tournament._id}>
-                      {tournament.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {selectedTournament ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Matches - {selectedTournament.name}
-                </h3>
-                {matches.length === 0 ? (
-                  <p className="text-gray-600 dark:text-gray-400">
-                    No matches found. Start the tournament to generate matches.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {matches.map((match) => (
-                      <div
-                        key={match._id}
-                        className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
-                      >
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                            Match #{match.matchNumber} (Round {match.round})
-                          </span>
-                          <span
-                            className={`px-2 py-1 text-xs rounded-full ${
-                              match.status === "completed"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            }`}
-                          >
-                            {match.status}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-3">
-                          <div className="text-center">
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {match.squad1.name}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {match.squad1.tag}
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {match.squad2.name}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {match.squad2.tag}
-                            </p>
-                          </div>
-                        </div>
-
-                        {match.status === "scheduled" && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() =>
-                                updateMatchResult(
-                                  match._id,
-                                  match.squad1._id,
-                                  match.squad2._id
-                                )
-                              }
-                              className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-                            >
-                              {match.squad1.name} Wins
-                            </button>
-                            <button
-                              onClick={() =>
-                                updateMatchResult(
-                                  match._id,
-                                  match.squad2._id,
-                                  match.squad1._id
-                                )
-                              }
-                              className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-                            >
-                              {match.squad2.name} Wins
-                            </button>
-                          </div>
-                        )}
-
-                        {match.status === "completed" && (
-                          <div className="text-center">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              Winner: {match.winner?.name}
-                            </p>
-                            {match.score && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Score: {match.score.squad1Score} -{" "}
-                                {match.score.squad2Score}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-                <p className="text-gray-600 dark:text-gray-400">
-                  Select a tournament to view and manage matches
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Match Management Tab removed as requested */}
 
         {/* Create Tournament Modal */}
         {showCreateModal && (
