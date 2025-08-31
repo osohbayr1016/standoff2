@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Upload, X, Camera, Loader2, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { API_ENDPOINTS } from "../../config/api";
+import { safeFetch, parseJsonSafe } from "../../lib/safeFetch";
 
 interface ImageUploaderProps {
   currentImage?: string;
@@ -59,18 +60,20 @@ export default function ImageUploader({
       console.log("🔍 Debug - Upload URL:", API_ENDPOINTS.UPLOAD.IMAGE);
       console.log("🔍 Debug - File:", file.name, file.size, file.type);
 
-      const response = await fetch(API_ENDPOINTS.UPLOAD.IMAGE, {
+      const response = await safeFetch(API_ENDPOINTS.UPLOAD.IMAGE, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
         body: formData,
-      });
+        retries: 1,
+        timeoutMs: 12000,
+      } as any);
 
       console.log("🔍 Debug - Response status:", response.status);
       console.log("🔍 Debug - Response headers:", response.headers);
 
-      const data = await response.json();
+      const data = (await parseJsonSafe(response)) || {};
       console.log("🔍 Debug - Response data:", data);
 
       if (response.ok && data.success) {
@@ -82,7 +85,12 @@ export default function ImageUploader({
         setUploadedPublicId(data.publicId);
         onImageUpload(data.url, data.publicId);
       } else {
-        setError(data.message || "Failed to upload image");
+        setError(
+          (data && (data.message as string)) ||
+            (response.status === 413
+              ? "Image too large. Please upload under 5MB."
+              : "Failed to upload image")
+        );
       }
     } catch (error) {
       console.error("Upload error:", error);

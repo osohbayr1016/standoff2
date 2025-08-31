@@ -1,4 +1,6 @@
 import Fastify from "fastify";
+import compress from "@fastify/compress";
+import etag from "@fastify/etag";
 import cors from "@fastify/cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
@@ -63,6 +65,13 @@ fastify.register(cors, {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 });
+
+// Enable response compression (gzip/brotli) and ETag for caching
+fastify.register(compress, {
+  global: true,
+  encodings: ["gzip", "deflate", "br"],
+});
+fastify.register(etag);
 
 // Session removed for debug-free simplicity
 

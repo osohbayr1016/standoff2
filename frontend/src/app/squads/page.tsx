@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -305,7 +305,8 @@ function CreateSquadForm({
 export default function SquadsPage() {
   const [squads, setSquads] = useState<Squad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedGame, setSelectedGame] = useState("All");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { user } = useAuth();
@@ -354,16 +355,28 @@ export default function SquadsPage() {
     }
   };
 
-  const filteredSquads = squads.filter((squad) => {
-    if (!squad) return false;
+  // Debounce search input
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchInput.trim()), 250);
+    return () => clearTimeout(id);
+  }, [searchInput]);
 
-    const matchesSearch =
-      squad.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      squad.tag.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      squad.game.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesGame = selectedGame === "All" || squad.game === selectedGame;
-    return matchesSearch && matchesGame;
-  });
+  const filteredSquads = useMemo(() => {
+    return squads.filter((squad) => {
+      if (!squad) return false;
+
+      const matchesGame = selectedGame === "All" || squad.game === selectedGame;
+      if (!matchesGame) return false;
+
+      if (!debouncedSearch) return true;
+      const q = debouncedSearch.toLowerCase();
+      return (
+        squad.name.toLowerCase().includes(q) ||
+        squad.tag.toLowerCase().includes(q) ||
+        squad.game.toLowerCase().includes(q)
+      );
+    });
+  }, [squads, selectedGame, debouncedSearch]);
 
   const isUserInSquad = (squad: Squad) => {
     if (!user?.id || !squad?.members) return false;
@@ -443,8 +456,8 @@ export default function SquadsPage() {
                 <input
                   type="text"
                   placeholder="Search squads..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
                 />
               </div>
@@ -563,6 +576,7 @@ export default function SquadsPage() {
                           src={squad.leader.avatar || "/default-avatar.png"}
                           alt={squad.leader.name}
                           fill
+                          sizes="32px"
                           className="rounded-full object-cover"
                         />
                       </div>
@@ -594,6 +608,7 @@ export default function SquadsPage() {
                               src={member.avatar || "/default-avatar.png"}
                               alt={member.name}
                               fill
+                              sizes="24px"
                               className="rounded-full object-cover border-2 border-white dark:border-gray-800"
                             />
                           </div>
@@ -659,11 +674,11 @@ export default function SquadsPage() {
               No squads found
             </h3>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              {searchTerm || selectedGame !== "All"
+              {searchInput || selectedGame !== "All"
                 ? "Try adjusting your search criteria"
                 : "Be the first to create a squad!"}
             </p>
-            {!searchTerm && selectedGame === "All" && (
+            {!searchInput && selectedGame === "All" && (
               <motion.button
                 onClick={() => setShowCreateModal(true)}
                 whileHover={{ scale: 1.05 }}

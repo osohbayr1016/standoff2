@@ -25,7 +25,7 @@ export default function DivisionsPage() {
       const divisionsData = await DivisionService.getDivisionsInfo();
       setDivisions(divisionsData);
     } catch (err) {
-      setError("Failed to fetch divisions");
+      setError("Дивизийн мэдээллийг татаж чадсангүй");
       console.error("Error fetching divisions:", err);
     } finally {
       setLoading(false);
@@ -44,13 +44,13 @@ export default function DivisionsPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Алдаа</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={fetchDivisions}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Try Again
+            Дахин оролдох
           </button>
         </div>
       </div>
@@ -64,11 +64,11 @@ export default function DivisionsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Division System
+              Дивизийн систем
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Compete in tournaments to earn Bounty Coins and climb the
-              divisions. Each division offers unique challenges and rewards.
+              Тэмцээнүүдэд оролцож Bounty Coin цуглуулан дивизүүдээр ахина уу.
+              Дивиз бүр өөрийн гэсэн сорилт, шагналтай.
             </p>
           </div>
         </div>
@@ -92,10 +92,10 @@ export default function DivisionsPage() {
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900">
               {DivisionService.getDivisionDisplayName(selectedDivision)}{" "}
-              Leaderboard
+              Лидерборд
             </h2>
             <p className="text-gray-600 mt-1">
-              Top squads in{" "}
+              Тэргүүлэгч багууд:{" "}
               {DivisionService.getDivisionDisplayName(
                 selectedDivision
               ).toLowerCase()}
@@ -109,67 +109,66 @@ export default function DivisionsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Division Rules
+            Дивизийн дүрэм
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                Progression
+                Ахиц дэвшил
               </h4>
               <ul className="space-y-3 text-gray-600 dark:text-gray-300">
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
                   <span>
-                    All squads start in <strong>Silver Division</strong> (0-250
-                    Bounty Coins)
+                    Бүх багууд <strong>Silver Division</strong> (0-250 Bounty
+                    Coin)-оос эхэлнэ
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
                   <span>
-                    Reach 250 coins to upgrade to <strong>Gold Division</strong>
+                    250 coin хүрвэл <strong>Gold Division</strong> руу дэвшинэ
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
                   <span>
-                    Reach 750 coins to upgrade to{" "}
-                    <strong>Diamond Division</strong>
+                    750 coin хүрвэл <strong>Diamond Division</strong> руу
+                    дэвшинэ
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
-                  <span>Diamond Division has unlimited progression</span>
+                  <span>Diamond Division-д ахиц дэвшлийн дээд хязгааргүй</span>
                 </li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                Protection System
+                Хамгаалалтын систем
               </h4>
               <ul className="space-y-3 text-gray-600 dark:text-gray-300">
                 <li className="flex items-start">
                   <span className="text-blue-500 mr-2">🛡️</span>
                   <span>
-                    Each squad gets <strong>2 protections</strong> when reaching
-                    0 coins
+                    0 coin болоход баг бүр <strong>2 хамгаалалт</strong> авна
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-500 mr-2">🛡️</span>
-                  <span>Protections prevent division demotion</span>
+                  <span>Хамгаалалт нь дивиз буурахаас сэргийлнэ</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-500 mr-2">🛡️</span>
-                  <span>Protections reset on wins and division changes</span>
+                  <span>
+                    Ялалт болон дивиз өөрчлөгдөхөд хамгаалалт дахин шинэчлэгдэнэ
+                  </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-red-500 mr-2">⚠️</span>
-                  <span>
-                    Lose 2 matches without protection = division demotion
-                  </span>
+                  <span>Хамгаалалтгүйгээр 2 ялагдвал = дивиз буурах</span>
                 </li>
               </ul>
             </div>
@@ -177,40 +176,40 @@ export default function DivisionsPage() {
 
           <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
             <h4 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
-              Bounty Coin System
+              Bounty Coin систем
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="text-center">
                 <div className="font-semibold text-blue-700 dark:text-blue-300">
-                  Silver Division
+                  Silver дивиз
                 </div>
                 <div className="text-blue-600 dark:text-blue-400">
-                  50 coins = 10,000 MNT
+                  50 coin = 10,000 MNT
                 </div>
                 <div className="text-blue-600 dark:text-blue-400">
-                  Win: +50, Lose: -25
+                  Ялалт: +50, Ялагдал: -25
                 </div>
               </div>
               <div className="text-center">
                 <div className="font-semibold text-blue-700 dark:text-blue-300">
-                  Gold Division
+                  Gold дивиз
                 </div>
                 <div className="text-blue-600 dark:text-blue-400">
-                  50 coins = 20,000 MNT
+                  50 coin = 20,000 MNT
                 </div>
                 <div className="text-blue-600 dark:text-blue-400">
-                  Win: +50, Lose: -25
+                  Ялалт: +50, Ялагдал: -25
                 </div>
               </div>
               <div className="text-center">
                 <div className="font-semibold text-blue-700 dark:text-blue-300">
-                  Diamond Division
+                  Diamond дивиз
                 </div>
                 <div className="text-blue-600 dark:text-blue-400">
-                  50 coins = 30,000 MNT
+                  50 coin = 30,000 MNT
                 </div>
                 <div className="text-blue-600 dark:text-blue-400">
-                  Win: +50, Lose: -25
+                  Ялалт: +50, Ялагдал: -25
                 </div>
               </div>
             </div>

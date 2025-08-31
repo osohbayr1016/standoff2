@@ -54,10 +54,9 @@ interface TournamentCardProps {
   index: number;
 }
 
-export default function TournamentCard({
-  tournament,
-  index,
-}: TournamentCardProps) {
+import { memo } from "react";
+
+function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
   const getStatusColor = (status: Tournament["status"]) => {
     switch (status) {
       case "registration_open":
@@ -169,6 +168,7 @@ export default function TournamentCard({
               alt={tournament.game}
               width={24}
               height={24}
+              sizes="40px"
               className="w-6 h-6"
             />
           </div>
@@ -213,6 +213,7 @@ export default function TournamentCard({
                 src={tournament.organizer.logo}
                 alt={tournament.organizer.name}
                 fill
+                sizes="40px"
                 className="rounded-full object-cover"
               />
             ) : (
@@ -353,3 +354,13 @@ export default function TournamentCard({
     </motion.div>
   );
 }
+
+function arePropsEqual(prev: TournamentCardProps, next: TournamentCardProps) {
+  return (
+    prev.tournament._id === next.tournament._id && prev.index === next.index
+  );
+}
+
+const TournamentCard = memo(TournamentCardComponent, arePropsEqual);
+
+export default TournamentCard;

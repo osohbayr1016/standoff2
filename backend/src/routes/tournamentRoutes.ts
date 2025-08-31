@@ -47,14 +47,40 @@ const tournamentRoutes: FastifyPluginAsync = async (
 
       const skip = (parseInt(page) - 1) * parseInt(limit);
 
+      const projection = {
+        name: 1,
+        game: 1,
+        description: 1,
+        organizer: 1,
+        organizerLogo: 1,
+        startDate: 1,
+        endDate: 1,
+        registrationDeadline: 1,
+        prizePool: 1,
+        entryFee: 1,
+        format: 1,
+        location: 1,
+        status: 1,
+        maxSquads: 1,
+        currentSquads: 1,
+        createdAt: 1,
+        updatedAt: 1,
+      } as const;
+
       const [tournaments, total] = await Promise.all([
-        Tournament.find(query)
+        Tournament.find(query, projection)
           .sort({ startDate: 1, createdAt: -1 })
           .skip(skip)
           .limit(parseInt(limit))
           .lean(),
         Tournament.countDocuments(query),
       ]);
+
+      // Cache list responses briefly to improve perceived performance
+      reply.header(
+        "Cache-Control",
+        "public, max-age=30, s-maxage=60, stale-while-revalidate=120"
+      );
 
       return reply.status(200).send({
         success: true,

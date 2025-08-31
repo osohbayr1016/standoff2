@@ -14,15 +14,14 @@ import Link from "next/link";
 import TournamentCard, { Tournament } from "../../components/TournamentCard";
 import { demoTournaments } from "../../data/demoTournaments";
 import { API_ENDPOINTS } from "../../config/api";
+import { safeFetch, parseJsonSafe } from "../../lib/safeFetch";
 
 export default function TournamentsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [filteredTournaments, setFilteredTournaments] = useState<Tournament[]>(
-    []
-  );
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const [selectedGame, setSelectedGame] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,9 +34,12 @@ export default function TournamentsPage() {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(API_ENDPOINTS.TOURNAMENTS.ALL);
+      const response = await safeFetch(
+        `${API_ENDPOINTS.TOURNAMENTS.ALL}?limit=18`,
+        { retries: 2, retryDelayMs: 300, timeoutMs: 7000 }
+      );
       if (response.ok) {
-        const data = await response.json();
+        const data = (await parseJsonSafe(response)) || {};
         if (data.success && data.tournaments) {
           // Transform the data to match our Tournament interface
           const transformedTournaments = data.tournaments
@@ -85,83 +87,59 @@ export default function TournamentsPage() {
               updatedAt: tournament.updatedAt,
             }));
 
-          console.log(
-            "Transformed tournaments:",
-            transformedTournaments.map((t: { _id: any; name: any }) => ({
-              id: t._id,
-              name: t.name,
-            }))
-          );
           setTournaments(transformedTournaments);
-          setFilteredTournaments(transformedTournaments);
         } else {
           setTournaments([]);
-          setFilteredTournaments([]);
         }
       } else {
-        // If API doesn't return data, use demo data
-        console.log("Using demo tournaments data");
-        console.log(
-          "Demo tournaments IDs:",
-          demoTournaments.map((t) => ({ id: t._id, name: t.name }))
-        );
         setTournaments(demoTournaments);
-        setFilteredTournaments(demoTournaments);
       }
     } catch (error) {
       console.error("Error fetching tournaments:", error);
-      console.log("Falling back to demo tournaments data");
-      console.log(
-        "Demo tournaments IDs:",
-        demoTournaments.map((t) => ({ id: t._id, name: t.name }))
-      );
       // Use demo data as fallback
       setTournaments(demoTournaments);
-      setFilteredTournaments(demoTournaments);
       setError(null); // Clear error since we have demo data
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Debounce search input
   useEffect(() => {
-    const filterTournaments = () => {
-      let filtered = tournaments;
+    const id = setTimeout(
+      () => setDebouncedSearchQuery(searchInput.trim()),
+      250
+    );
+    return () => clearTimeout(id);
+  }, [searchInput]);
 
-      // Filter by game
-      if (selectedGame !== "all") {
-        filtered = filtered.filter(
-          (tournament) => tournament.game === selectedGame
-        );
-      }
+  const filteredTournaments = useMemo(() => {
+    let filtered = tournaments;
 
-      // Filter by status
-      if (selectedStatus !== "all") {
-        filtered = filtered.filter(
-          (tournament) => tournament.status === selectedStatus
-        );
-      }
+    if (selectedGame !== "all") {
+      filtered = filtered.filter(
+        (tournament) => tournament.game === selectedGame
+      );
+    }
 
-      // Filter by search query
-      if (searchQuery.trim()) {
-        filtered = filtered.filter(
-          (tournament) =>
-            tournament.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            tournament.description
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase()) ||
-            tournament.organizer.name
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase())
-        );
-      }
+    if (selectedStatus !== "all") {
+      filtered = filtered.filter(
+        (tournament) => tournament.status === selectedStatus
+      );
+    }
 
-      return filtered;
-    };
+    if (debouncedSearchQuery) {
+      const q = debouncedSearchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (tournament) =>
+          tournament.name.toLowerCase().includes(q) ||
+          tournament.description.toLowerCase().includes(q) ||
+          tournament.organizer.name.toLowerCase().includes(q)
+      );
+    }
 
-    const filtered = filterTournaments();
-    setFilteredTournaments(filtered);
-  }, [tournaments, selectedGame, selectedStatus, searchQuery]);
+    return filtered;
+  }, [tournaments, selectedGame, selectedStatus, debouncedSearchQuery]);
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -291,8 +269,8 @@ export default function TournamentsPage() {
                 <input
                   type="text"
                   placeholder="Тэмцээн хайх..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-400 focus:border-transparent"
                 />
               </div>

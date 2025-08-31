@@ -37,6 +37,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fastify_1 = __importDefault(require("fastify"));
+const compress_1 = __importDefault(require("@fastify/compress"));
+const etag_1 = __importDefault(require("@fastify/etag"));
 const cors_1 = __importDefault(require("@fastify/cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const mongoose_1 = __importDefault(require("mongoose"));
@@ -86,6 +88,11 @@ fastify.register(cors_1.default, {
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 });
+fastify.register(compress_1.default, {
+    global: true,
+    encodings: ["gzip", "deflate", "br"],
+});
+fastify.register(etag_1.default);
 fastify.get("/health", async (request, reply) => {
     return {
         status: "OK",
