@@ -559,17 +559,20 @@ export default function AdminTournamentsPage() {
                           </div>
                         </div>
 
-                        {tournament?.status === "registration_closed" && (
-                          <button
-                            onClick={() =>
-                              tournament?._id && startTournament(tournament._id)
-                            }
-                            disabled={loading}
-                            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                          >
-                            {loading ? "Starting..." : "Start Tournament"}
-                          </button>
-                        )}
+                        {tournament &&
+                          tournament.status !== "ongoing" &&
+                          tournament.status !== "completed" && (
+                            <button
+                              onClick={() =>
+                                tournament?._id &&
+                                startTournament(tournament._id)
+                              }
+                              disabled={loading}
+                              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                            >
+                              {loading ? "Starting..." : "Start Tournament"}
+                            </button>
+                          )}
                       </div>
                     )}
                   </a>

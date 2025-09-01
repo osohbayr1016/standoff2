@@ -232,9 +232,8 @@ export default function TournamentDetailPage() {
   };
 
   const canRegister = (status: Tournament["status"], deadline: string) => {
-    // For testing purposes, allow registration if status is registration_open
-    // In production, you might want to check the deadline: && new Date(deadline) > new Date()
-    return status === "registration_open";
+    // Registration remains open until the tournament is started by admin
+    return status !== "ongoing" && status !== "completed";
   };
 
   const isDeadlinePassed = (deadline: string) => {
@@ -741,52 +740,11 @@ export default function TournamentDetailPage() {
               ) && (
                 <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                   <div className="text-sm text-blue-600 dark:text-blue-400 mb-2 text-center">
-                    {new Date(tournament.registrationDeadline) > new Date()
-                      ? "Бүртгэлийн хугацаа дуусах"
-                      : "Бүртгэл нээлттэй (тестийн горимд)"}
+                    Бүртгэл нээлттэй (Админ эхлүүлэх хүртэл)
                   </div>
-                  {new Date(tournament.registrationDeadline) > new Date() ? (
-                    <div className="grid grid-cols-4 gap-2 text-center">
-                      <div className="bg-white dark:bg-gray-700 p-2 rounded">
-                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                          {timeLeft.days}
-                        </div>
-                        <div className="text-xs text-gray-500">Хоног</div>
-                      </div>
-                      <div className="bg-white dark:bg-gray-700 p-2 rounded">
-                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                          {timeLeft.hours}
-                        </div>
-                        <div className="text-xs text-gray-500">Цаг</div>
-                      </div>
-                      <div className="bg-white dark:bg-gray-700 p-2 rounded">
-                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                          {timeLeft.minutes}
-                        </div>
-                        <div className="text-xs text-gray-500">Минут</div>
-                      </div>
-                      <div className="bg-white dark:bg-gray-700 p-2 rounded">
-                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                          {timeLeft.seconds}
-                        </div>
-                        <div className="text-xs text-gray-500">Секунд</div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center text-blue-600 dark:text-blue-400 font-medium">
-                      Тестийн горимд бүртгэл нээлттэй
-                    </div>
-                  )}
-
-                  {/* Deadline Warning */}
-                  {isDeadlinePassed(tournament.registrationDeadline) && (
-                    <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                      <div className="text-sm text-yellow-700 dark:text-yellow-300 text-center">
-                        ⚠️ Бүртгэлийн хугацаа дууссан, гэхдээ тестийн горимд
-                        бүртгэл хийх боломжтой
-                      </div>
-                    </div>
-                  )}
+                  <div className="text-center text-blue-600 dark:text-blue-400 font-medium">
+                    Админ тэмцээнийг эхлүүлэх хүртэл бүртгэл үргэлжилнэ
+                  </div>
                 </div>
               )}
 
@@ -809,11 +767,8 @@ export default function TournamentDetailPage() {
                           ? "Төлбөр боловсруулж байна..."
                           : "Бүртгэж байна..."}
                       </div>
-                    ) : new Date(tournament.registrationDeadline) >
-                      new Date() ? (
-                      "Squad-аар бүртгүүлэх"
                     ) : (
-                      "Squad-аар бүртгүүлэх (Тест - Хугацаа дууссан)"
+                      "Squad-аар бүртгүүлэх"
                     )}
                   </motion.button>
 
@@ -843,9 +798,9 @@ export default function TournamentDetailPage() {
                 </>
               ) : (
                 <div className="w-full bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 py-3 px-4 rounded-lg font-medium text-center mb-4">
-                  {tournament.status === "registration_closed"
-                    ? "Бүртгэл хаагдсан"
-                    : "Бүртгэл нээлттэй биш"}
+                  {tournament.status === "ongoing"
+                    ? "Тэмцээн эхэлсэн"
+                    : "Тэмцээн дууссан"}
                 </div>
               )}
 

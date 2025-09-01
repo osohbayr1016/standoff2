@@ -110,17 +110,14 @@ const tournamentRegistrationRoutes: FastifyPluginAsync = async (
         });
       }
 
-      if (tournament.status !== "registration_open") {
+      // Registration remains open until the tournament is started by admin.
+      if (
+        tournament.status === "ongoing" ||
+        tournament.status === "completed"
+      ) {
         return reply.status(400).send({
           success: false,
-          message: "Tournament registration is not open",
-        });
-      }
-
-      if (new Date() > tournament.registrationDeadline) {
-        return reply.status(400).send({
-          success: false,
-          message: "Registration deadline has passed",
+          message: "Tournament has already started",
         });
       }
 

@@ -172,12 +172,8 @@ const tournamentRoutes: FastifyPluginAsync = async (
         });
       }
 
-      if (registrationDeadline >= startDate) {
-        return reply.status(400).send({
-          success: false,
-          message: "Registration deadline must be before start date",
-        });
-      }
+      // Relax validation: allow registration deadline to be on/after start date,
+      // since registration stays open until admin starts the tournament.
 
       const newTournament = new Tournament(tournamentData);
       await newTournament.save();
@@ -229,17 +225,7 @@ const tournamentRoutes: FastifyPluginAsync = async (
         }
       }
 
-      if (updateData.registrationDeadline && updateData.startDate) {
-        const registrationDeadline = new Date(updateData.registrationDeadline);
-        const startDate = new Date(updateData.startDate);
-
-        if (registrationDeadline >= startDate) {
-          return reply.status(400).send({
-            success: false,
-            message: "Registration deadline must be before start date",
-          });
-        }
-      }
+      // Relaxed: do not force registrationDeadline before startDate
 
       const tournament = await Tournament.findByIdAndUpdate(id, updateData, {
         new: true,
@@ -463,11 +449,14 @@ const tournamentRoutes: FastifyPluginAsync = async (
         });
       }
 
-      // Check if tournament can be started
-      if (tournament.status !== "registration_closed") {
+      // Allow admin to start tournament anytime unless already ongoing/completed
+      if (
+        tournament.status === "ongoing" ||
+        tournament.status === "completed"
+      ) {
         return reply.status(400).send({
           success: false,
-          message: "Tournament can only be started when registration is closed",
+          message: "Tournament already started or completed",
         });
       }
 
