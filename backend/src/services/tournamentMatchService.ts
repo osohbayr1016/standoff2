@@ -176,3 +176,74 @@ export function getSquadStats(matches: any[]): Record<string, any> {
 
   return stats;
 }
+
+// Disqualify a squad from a tournament: mark registration banned and
+// set all pending matches involving the squad as walkover wins for the opponent.
+export async function disqualifySquadFromTournament(
+  tournamentId: string,
+  squadId: string,
+  options?: { reason?: string; adminId?: string }
+): Promise<{ updatedMatches: number }> {
+  const session = await (await import("mongoose")).default.startSession();
+  session.startTransaction();
+  try {
+    const registration = await TournamentRegistration.findOne({
+      tournament: tournamentId,
+      squad: squadId,
+    }).session(session);
+
+    if (!registration) {
+      throw new Error("Registration not found for this squad in tournament");
+    }
+
+    // Mark as banned
+    registration.isBanned = true;
+    registration.status = "eliminated";
+    registration.banReason = options?.reason;
+    registration.bannedAt = new Date();
+    if (options?.adminId) {
+      // @ts-ignore
+      registration.bannedBy = options.adminId;
+    }
+    await registration.save({ session });
+
+    // Find all matches not completed/cancelled where squad is involved
+    const pendingMatches = await TournamentMatch.find({
+      tournament: tournamentId,
+      status: { $in: ["scheduled", "in_progress"] },
+      $or: [{ squad1: squadId }, { squad2: squadId }],
+    }).session(session);
+
+    let updatedCount = 0;
+    for (const match of pendingMatches) {
+      const opponent =
+        match.squad1.toString() === squadId ? match.squad2 : match.squad1;
+
+      // If opponent is null (bye) or undefined, cancel the match
+      if (!opponent) {
+        match.status = "cancelled";
+        match.adminNotes = `Match cancelled due to disqualification of squad ${squadId}`;
+      } else {
+        match.status = "completed";
+        match.winner = opponent as any;
+        match.loser = new (await import("mongoose")).default.Types.ObjectId(
+          squadId
+        ) as any;
+        match.matchType = "walkover" as any;
+        match.isWalkover = true;
+        match.walkoverReason = options?.reason || "Disqualified";
+        match.endTime = new Date();
+      }
+      await match.save({ session });
+      updatedCount += 1;
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    return { updatedMatches: updatedCount };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+}

@@ -107,10 +107,7 @@ export class DivisionService {
     const newBountyCoins = Math.max(0, squad.currentBountyCoins + bountyChange);
     squad.currentBountyCoins = newBountyCoins;
 
-    // Check for division upgrade
-    if (isWinner && canUpgradeDivision(squad.division, newBountyCoins)) {
-      await this.upgradeSquadDivision(squad);
-    }
+    // Manual upgrades only: remove auto-upgrade on wins. Division upgrades now require explicit spend by leader.
 
     // Check for division demotion
     if (
@@ -151,8 +148,10 @@ export class DivisionService {
     );
 
     squad.division = divisionChange.newDivision;
+    // Deduct coins used for upgrade and carry over remaining coins
     squad.currentBountyCoins = divisionChange.newCoins;
-    squad.totalBountyCoinsSpent += divisionChange.coinsSpent;
+    squad.totalBountyCoinsSpent =
+      (squad.totalBountyCoinsSpent || 0) + divisionChange.coinsSpent;
     squad.consecutiveLosses = 0;
     squad.protectionCount = resetProtections();
 

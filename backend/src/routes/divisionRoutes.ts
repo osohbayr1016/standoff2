@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from "fastify";
 import { DivisionService } from "../services/divisionService";
-import { SquadDivision } from "../models/Squad";
+import Squad, { SquadDivision } from "../models/Squad";
+import { canUpgradeDivision, DIVISION_CONFIG } from "../utils/divisionSystem";
 
 const divisionRoutes: FastifyPluginAsync = async (fastify, options) => {
   // Get division leaderboard
@@ -94,6 +95,63 @@ const divisionRoutes: FastifyPluginAsync = async (fastify, options) => {
       console.error("Error purchasing bounty coins:", error);
       if (error instanceof Error && error.message === "Squad not found") {
         return reply.status(404).send({ error: "Squad not found" });
+      }
+      return reply.status(500).send({ error: "Internal server error" });
+    }
+  });
+
+  // Upgrade division by spending bounty coins (leader-only)
+  fastify.post("/upgrade/:squadId", async (request, reply) => {
+    try {
+      const { squadId } = request.params as { squadId: string };
+      const { userId } = request.body as { userId: string };
+
+      if (!userId) {
+        return reply.status(400).send({ error: "User ID is required" });
+      }
+
+      const squad = await Squad.findById(squadId);
+      if (!squad) {
+        return reply.status(404).send({ error: "Squad not found" });
+      }
+
+      // Only leader can upgrade
+      if (squad.leader.toString() !== userId) {
+        return reply
+          .status(403)
+          .send({ error: "Only squad leader can upgrade division" });
+      }
+
+      const upgradeCost = DIVISION_CONFIG[squad.division].upgradeCost;
+      const hasEnough = canUpgradeDivision(
+        squad.division,
+        squad.currentBountyCoins
+      );
+
+      if (!hasEnough || !isFinite(upgradeCost)) {
+        return reply
+          .status(400)
+          .send({ error: "Upgrade not available for current division" });
+      }
+
+      await DivisionService.upgradeSquadDivision(squad);
+
+      return reply.send({
+        success: true,
+        data: {
+          squadId: squad._id,
+          newDivision: squad.division,
+          newBalance: squad.currentBountyCoins,
+          coinsSpent: upgradeCost,
+        },
+      });
+    } catch (error) {
+      console.error("Error upgrading division:", error);
+      if (
+        error instanceof Error &&
+        error.message === "Cannot upgrade further"
+      ) {
+        return reply.status(400).send({ error: "Cannot upgrade further" });
       }
       return reply.status(500).send({ error: "Internal server error" });
     }

@@ -21,6 +21,11 @@ export interface ITournamentRegistration extends Document {
     | "runner_up"
     | "third_place";
   tournamentBracket?: any; // Bracket position and matches
+  // Disqualification/Ban fields
+  isBanned?: boolean;
+  banReason?: string;
+  bannedAt?: Date;
+  bannedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -94,6 +99,24 @@ const tournamentRegistrationSchema = new Schema<ITournamentRegistration>(
     },
     tournamentBracket: {
       type: Schema.Types.Mixed,
+    },
+    // Disqualification/Ban fields
+    isBanned: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    banReason: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    bannedAt: {
+      type: Date,
+    },
+    bannedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {

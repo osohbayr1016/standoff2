@@ -128,11 +128,13 @@ export function processDivisionChange(
     }
 
     const config = DIVISION_CONFIG[currentDivision];
-    const coinsSpent = config.upgradeCost;
+    // Spend only what is required up to the current coin balance
+    const coinsSpent = Math.min(config.upgradeCost, currentCoins);
 
     return {
       newDivision: nextDivision,
-      newCoins: 0, // Reset to 0 in new division
+      // Remaining coins carry over after spending the upgrade cost
+      newCoins: Math.max(0, currentCoins - coinsSpent),
       coinsSpent,
     };
   } else {

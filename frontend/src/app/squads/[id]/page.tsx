@@ -33,6 +33,7 @@ import { FaCoins } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "../../contexts/AuthContext";
+import { API_ENDPOINTS } from "../../../config/api";
 import { SquadJoinType } from "../../../types/squad";
 import {
   getJoinTypeLabel,
@@ -161,6 +162,20 @@ export default function SquadDetailPage() {
   );
   const [addMemberId, setAddMemberId] = useState("");
   const [addMemberLoading, setAddMemberLoading] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawForm, setWithdrawForm] = useState({
+    amountCoins: 0,
+    bankName: "",
+    iban: "",
+  });
+  const [withdrawSubmitting, setWithdrawSubmitting] = useState(false);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [showBuyBountyModal, setShowBuyBountyModal] = useState(false);
+  const [buyBountyForm, setBuyBountyForm] = useState({
+    amount: 50,
+    customAmount: "",
+  });
+  const [buyBountySubmitting, setBuyBountySubmitting] = useState(false);
 
   const squadId = params.id as string;
 
@@ -188,7 +203,9 @@ export default function SquadDetailPage() {
   const fetchBountyAndDivisionInfo = async () => {
     try {
       // Bounty summary for this squad
-      const bountyRes = await fetch(`/api/bounty-coins/squad/${squadId}`);
+      const bountyRes = await fetch(
+        API_ENDPOINTS.BOUNTY_COINS.SQUAD_SUMMARY(squadId)
+      );
       if (bountyRes.ok) {
         const bountyData = await bountyRes.json();
         if (bountyData?.success) {
@@ -197,7 +214,7 @@ export default function SquadDetailPage() {
       }
 
       // Division config info (prices, amounts)
-      const divRes = await fetch(`/api/divisions/info`);
+      const divRes = await fetch(API_ENDPOINTS.DIVISIONS.INFO);
       if (divRes.ok) {
         const divData = await divRes.json();
         if (divData?.success) {
@@ -252,7 +269,9 @@ export default function SquadDetailPage() {
     let squadDivisionInfo = null;
     try {
       if (squad._id) {
-        const response = await fetch(`/api/divisions/squad/${squad._id}`);
+        const response = await fetch(
+          API_ENDPOINTS.DIVISIONS.SQUAD_INFO(squad._id)
+        );
         if (response.ok) {
           const data = await response.json();
           squadDivisionInfo = data.data;
@@ -273,7 +292,130 @@ export default function SquadDetailPage() {
 
   const getDivisionDisplayName = () => {
     if (!stats?.squadDivision) return "Division";
-    return stats.squadDivision.displayName || "Division";
+    return (
+      stats.squadDivision.displayName ||
+      getDivisionNameFromEnum(stats.squadDivision.name) ||
+      "Division"
+    );
+  };
+
+  const getDivisionNameFromEnum = (divisionName: string) => {
+    switch (divisionName) {
+      case "SILVER":
+        return "Silver Division";
+      case "GOLD":
+        return "Gold Division";
+      case "DIAMOND":
+        return "Diamond Division";
+      default:
+        return "Division";
+    }
+  };
+
+  const getUpgradeCost = (division: string) => {
+    switch (division) {
+      case "SILVER":
+        return 250;
+      case "GOLD":
+        return 750;
+      default:
+        return null;
+    }
+  };
+
+  const handleUpgradeDivision = async () => {
+    if (!user?.id || !squad) return;
+
+    const upgradeCost = getUpgradeCost(squad.division || "SILVER");
+    if (!upgradeCost) {
+      setError("Cannot upgrade from current division");
+      return;
+    }
+
+    const currentCoins =
+      bountySummary?.currentBountyCoins ??
+      stats?.squadDivision?.currentBountyCoins ??
+      0;
+    if (currentCoins < upgradeCost) {
+      setError(
+        `Insufficient bounty coins. Need ${upgradeCost} BC, have ${currentCoins} BC`
+      );
+      return;
+    }
+
+    try {
+      setUpgradeLoading(true);
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/divisions/upgrade/${squad._id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        setError(data.error || "Failed to upgrade division");
+        return;
+      }
+
+      // Refresh data after successful upgrade
+      await fetchBountyAndDivisionInfo();
+      await fetchSquadDetails();
+      setError(""); // Clear any previous errors
+    } catch (e) {
+      console.error("Error upgrading division:", e);
+      setError("Failed to upgrade division");
+    } finally {
+      setUpgradeLoading(false);
+    }
+  };
+
+  const handleBuyBountyCoins = async () => {
+    if (!user?.id || !squad) return;
+    if (!buyBountyForm.amount || buyBountyForm.amount <= 0) {
+      setError("Please enter a valid amount");
+      return;
+    }
+
+    try {
+      setBuyBountySubmitting(true);
+      const token = localStorage.getItem("token");
+      const res = await fetch(API_ENDPOINTS.BOUNTY_COINS.REQUEST_PURCHASE, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          squadId: squad._id,
+          amount: buyBountyForm.amount,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        setError(data.message || "Failed to submit purchase request");
+        return;
+      }
+
+      // Reset form and close modal
+      setBuyBountyForm({ amount: 50, customAmount: "" });
+      setShowBuyBountyModal(false);
+      setError(""); // Clear any previous errors
+
+      // Show success message
+      alert(
+        "Purchase request submitted successfully! Admin will review and process your request."
+      );
+    } catch (e) {
+      console.error("Error submitting purchase request:", e);
+      setError("Failed to submit purchase request");
+    } finally {
+      setBuyBountySubmitting(false);
+    }
   };
 
   const getDivisionPricePerPack = () => {
@@ -299,10 +441,53 @@ export default function SquadDetailPage() {
     return Math.round(mnt);
   };
 
+  const openWithdraw = () => {
+    setWithdrawForm({ amountCoins: 0, bankName: "", iban: "" });
+    setShowWithdrawModal(true);
+  };
+
+  const submitWithdraw = async () => {
+    if (!user?.id || !squad) return;
+    if (!withdrawForm.amountCoins || withdrawForm.amountCoins <= 0) return;
+    if (!withdrawForm.bankName.trim() || !withdrawForm.iban.trim()) return;
+
+    try {
+      setWithdrawSubmitting(true);
+      const token = localStorage.getItem("token");
+      const res = await fetch(API_ENDPOINTS.BOUNTY_COINS.WITHDRAW_CREATE, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          squadId: squad._id,
+          amountCoins: withdrawForm.amountCoins,
+          bankName: withdrawForm.bankName.trim(),
+          iban: withdrawForm.iban.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        await fetchBountyAndDivisionInfo();
+        await fetchSquadDetails();
+        setShowWithdrawModal(false);
+      } else {
+        const data = await res.json();
+        setError(data.message || "Failed to submit withdraw request");
+      }
+    } catch (e) {
+      console.error("Withdraw request failed", e);
+      setError("Failed to submit withdraw request");
+    } finally {
+      setWithdrawSubmitting(false);
+    }
+  };
+
   const handlePurchaseCoins = async (amount: number) => {
     try {
       setPurchaseLoading(true);
-      const res = await fetch(`/api/divisions/purchase/${squadId}`, {
+      const res = await fetch(API_ENDPOINTS.DIVISIONS.PURCHASE(squadId), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount }),
@@ -716,9 +901,9 @@ export default function SquadDetailPage() {
                     <div className="flex items-center space-x-2">
                       <DivisionCoinImage
                         division={
-                          ((stats?.squadDivision?.name as SquadDivision) ||
-                            squad.division ||
-                            "SILVER") as any
+                          (squad.division as SquadDivision) ||
+                          (stats?.squadDivision?.name as SquadDivision) ||
+                          "SILVER"
                         }
                         size={20}
                         showGlow={true}
@@ -735,13 +920,16 @@ export default function SquadDetailPage() {
                       <>
                         <div className="flex items-center space-x-2">
                           <DivisionCoinImage
-                            division={stats.squadDivision.name as any}
+                            division={
+                              (squad.division as SquadDivision) ||
+                              (stats.squadDivision.name as SquadDivision) ||
+                              "SILVER"
+                            }
                             size={24}
                             showGlow={true}
                           />
                           <span className="text-sm text-gray-300">
-                            {stats.squadDivision.displayName ||
-                              "Unknown Division"}
+                            {getDivisionNameFromEnum(stats.squadDivision.name)}
                           </span>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -766,6 +954,20 @@ export default function SquadDetailPage() {
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
+                  </button>
+                  <button
+                    onClick={openWithdraw}
+                    className="inline-flex items-center px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                  >
+                    <FaCoins className="w-4 h-4 mr-2" />
+                    Withdraw
+                  </button>
+                  <button
+                    onClick={() => setShowBuyBountyModal(true)}
+                    className="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <FaCoins className="w-4 h-4 mr-2" />
+                    Buy Bounty Coins
                   </button>
                   <button
                     onClick={() => setShowDeleteModal(true)}
@@ -935,14 +1137,16 @@ export default function SquadDetailPage() {
                             <div className="flex items-center space-x-2">
                               <DivisionCoinImage
                                 division={
+                                  (squad.division as SquadDivision) ||
                                   (stats.squadDivision.name as SquadDivision) ||
                                   "SILVER"
                                 }
                                 size={24}
                               />
                               <p className="text-white font-medium">
-                                {stats.squadDivision.displayName ||
-                                  "Unknown Division"}
+                                {getDivisionNameFromEnum(
+                                  stats.squadDivision.name
+                                )}
                               </p>
                             </div>
                             <p className="text-gray-500 text-xs mt-1">
@@ -984,7 +1188,7 @@ export default function SquadDetailPage() {
                   <div className="flex items-center space-x-2">
                     <Trophy className="w-5 h-5 text-yellow-400" />
                     <span className="text-yellow-400 font-medium">
-                      {stats.squadDivision.displayName || "Unknown Division"}
+                      {getDivisionNameFromEnum(stats.squadDivision.name)}
                     </span>
                   </div>
                 </div>
@@ -996,6 +1200,7 @@ export default function SquadDetailPage() {
                       <div className="w-12 h-12">
                         <DivisionCoinImage
                           division={
+                            (squad.division as SquadDivision) ||
                             (stats.squadDivision.name as SquadDivision) ||
                             "SILVER"
                           }
@@ -1008,8 +1213,7 @@ export default function SquadDetailPage() {
                           Current Squad Division
                         </p>
                         <p className="text-white font-medium text-lg">
-                          {stats.squadDivision.displayName ||
-                            "Unknown Division"}
+                          {getDivisionNameFromEnum(stats.squadDivision.name)}
                         </p>
                         <p className="text-gray-500 text-xs">
                           {stats.squadDivision.currentBountyCoins || 0} Bounty
@@ -1026,12 +1230,19 @@ export default function SquadDetailPage() {
                           <div
                             className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
                             style={{
-                              width: `${stats.squadDivision.progress || 0}%`,
+                              width: `${Math.min(
+                                stats.squadDivision.progress || 0,
+                                100
+                              )}%`,
                             }}
                           ></div>
                         </div>
                         <p className="text-gray-500 text-xs mt-1">
-                          {stats.squadDivision.progress || 0}% to next division
+                          {Math.min(
+                            stats.squadDivision.progress || 0,
+                            100
+                          ).toFixed(1)}
+                          % to next division
                         </p>
                       </div>
                     </div>
@@ -1346,6 +1557,7 @@ export default function SquadDetailPage() {
                     </div>
                     <DivisionCoinImage
                       division={
+                        (squad.division as SquadDivision) ||
                         (stats?.squadDivision?.name as SquadDivision) ||
                         "SILVER"
                       }
@@ -1376,6 +1588,7 @@ export default function SquadDetailPage() {
                     </div>
                     <DivisionCoinImage
                       division={
+                        (squad.division as SquadDivision) ||
                         (stats?.squadDivision?.name as SquadDivision) ||
                         "SILVER"
                       }
@@ -1404,6 +1617,7 @@ export default function SquadDetailPage() {
                     </div>
                     <DivisionCoinImage
                       division={
+                        (squad.division as SquadDivision) ||
                         (stats?.squadDivision?.name as SquadDivision) ||
                         "SILVER"
                       }
@@ -1485,7 +1699,7 @@ export default function SquadDetailPage() {
               >
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
                   <Trophy className="w-5 h-5 mr-2" />
-                  {stats.squadDivision.displayName || "Unknown Division"}
+                  {getDivisionNameFromEnum(stats.squadDivision.name)}
                 </h3>
 
                 <div className="space-y-4">
@@ -1494,6 +1708,7 @@ export default function SquadDetailPage() {
                     <div className="flex justify-center mb-2">
                       <DivisionCoinImage
                         division={
+                          (squad.division as SquadDivision) ||
                           (stats.squadDivision.name as SquadDivision) ||
                           "SILVER"
                         }
@@ -1527,14 +1742,21 @@ export default function SquadDetailPage() {
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-white/80">Progress</span>
                       <span className="text-white font-semibold">
-                        {(stats.squadDivision.progress || 0).toFixed(1)}%
+                        {Math.min(
+                          stats.squadDivision.progress || 0,
+                          100
+                        ).toFixed(1)}
+                        %
                       </span>
                     </div>
                     <div className="w-full bg-white/20 rounded-full h-3">
                       <div
                         className="bg-yellow-400 h-3 rounded-full transition-all duration-300"
                         style={{
-                          width: `${stats.squadDivision.progress || 0}%`,
+                          width: `${Math.min(
+                            stats.squadDivision.progress || 0,
+                            100
+                          )}%`,
                         }}
                       ></div>
                     </div>
@@ -1559,10 +1781,22 @@ export default function SquadDetailPage() {
                   </div>
 
                   {/* Upgrade Button */}
-                  {stats.squadDivision.canUpgrade && (
-                    <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold">
+                  {stats.squadDivision.canUpgrade && isUserLeader() && (
+                    <button
+                      onClick={handleUpgradeDivision}
+                      disabled={upgradeLoading}
+                      className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       <Star className="w-4 h-4" />
-                      <span>Upgrade Squad Division!</span>
+                      <span>
+                        {upgradeLoading
+                          ? "Upgrading..."
+                          : `Upgrade to ${
+                              squad.division === "SILVER" ? "Gold" : "Diamond"
+                            } Division (${getUpgradeCost(
+                              squad.division || "SILVER"
+                            )} BC)`}
+                      </span>
                     </button>
                   )}
                 </div>
@@ -1848,6 +2082,109 @@ export default function SquadDetailPage() {
         </div>
       )}
 
+      {/* Withdraw Modal */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gray-800 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">
+                Withdraw Bounty Coins
+              </h3>
+              <button
+                onClick={() => setShowWithdrawModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-300 mb-1">
+                  Amount (Coins)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={
+                    bountySummary?.currentBountyCoins ??
+                    stats?.squadDivision?.currentBountyCoins ??
+                    0
+                  }
+                  value={withdrawForm.amountCoins}
+                  onChange={(e) =>
+                    setWithdrawForm((p) => ({
+                      ...p,
+                      amountCoins: parseInt(e.target.value || "0"),
+                    }))
+                  }
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  ≈ {toMNT(withdrawForm.amountCoins || 0).toLocaleString()}₮
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-300 mb-1">
+                  Bank Name
+                </label>
+                <input
+                  type="text"
+                  value={withdrawForm.bankName}
+                  onChange={(e) =>
+                    setWithdrawForm((p) => ({ ...p, bankName: e.target.value }))
+                  }
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none"
+                  placeholder="e.g., Khan Bank"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-300 mb-1">IBAN</label>
+                <input
+                  type="text"
+                  value={withdrawForm.iban}
+                  onChange={(e) =>
+                    setWithdrawForm((p) => ({ ...p, iban: e.target.value }))
+                  }
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none"
+                  placeholder="IBAN / Account number"
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-2">
+                <button
+                  onClick={() => setShowWithdrawModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitWithdraw}
+                  disabled={withdrawSubmitting}
+                  className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+                >
+                  {withdrawSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <FaCoins className="w-4 h-4 mr-2" />
+                      Submit Request
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Apply to Squad Modal */}
       {showApplyModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1913,6 +2250,134 @@ export default function SquadDetailPage() {
                     <>
                       <UserCheck className="w-4 h-4 mr-2" />
                       Submit Application
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Buy Bounty Coins Modal */}
+      {showBuyBountyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">
+                Buy Bounty Coins
+              </h3>
+              <button
+                onClick={() => setShowBuyBountyModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-gray-300">
+                Request bounty coins for your squad. Admin will review and
+                process your request.
+              </p>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-300">
+                  Amount of Bounty Coins
+                </label>
+
+                {/* Quick amount buttons */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[50, 100, 200, 250, 500, 750].map((amount) => (
+                    <button
+                      key={amount}
+                      onClick={() =>
+                        setBuyBountyForm({
+                          ...buyBountyForm,
+                          amount,
+                          customAmount: "",
+                        })
+                      }
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        buyBountyForm.amount === amount &&
+                        buyBountyForm.customAmount === ""
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      }`}
+                    >
+                      {amount} BC
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom amount input */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-300">
+                    Or enter custom amount
+                  </label>
+                  <input
+                    type="number"
+                    value={buyBountyForm.customAmount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setBuyBountyForm({
+                        ...buyBountyForm,
+                        customAmount: value,
+                        amount: value ? parseInt(value) : 50,
+                      });
+                    }}
+                    min="1"
+                    max="10000"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter custom amount..."
+                  />
+                </div>
+
+                {/* Estimated cost */}
+                {divisionInfo && (
+                  <div className="p-3 bg-gray-700 rounded-lg">
+                    <p className="text-sm text-gray-300">
+                      Estimated cost: ~
+                      {Math.round(
+                        (buyBountyForm.amount /
+                          divisionInfo[0]?.bountyCoinAmount || 50) *
+                          (divisionInfo[0]?.bountyCoinPrice || 5000)
+                      ).toLocaleString()}{" "}
+                      ₮
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Based on current division pricing
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => setShowBuyBountyModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBuyBountyCoins}
+                  disabled={buyBountySubmitting || buyBountyForm.amount <= 0}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+                >
+                  {buyBountySubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <FaCoins className="w-4 h-4 mr-2" />
+                      Request Purchase
                     </>
                   )}
                 </button>

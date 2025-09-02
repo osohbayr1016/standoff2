@@ -22,6 +22,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "../contexts/AuthContext";
+import { API_ENDPOINTS } from "../../config/api";
 
 interface Squad {
   _id: string;
@@ -310,6 +311,7 @@ export default function SquadsPage() {
   const [selectedGame, setSelectedGame] = useState("All");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { user } = useAuth();
+  const [upgrading, setUpgrading] = useState<Record<string, boolean>>({});
 
   const [games, setGames] = useState<string[]>(["All"]);
 
@@ -320,7 +322,7 @@ export default function SquadsPage() {
 
   const fetchGames = async () => {
     try {
-      const response = await fetch("/api/tournaments/games/list");
+      const response = await fetch(API_ENDPOINTS.TOURNAMENTS.GAMES);
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.games) {
@@ -337,7 +339,7 @@ export default function SquadsPage() {
   const fetchSquads = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/squads", {
+      const response = await fetch(API_ENDPOINTS.SQUADS.ALL, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
@@ -386,6 +388,62 @@ export default function SquadsPage() {
   const isUserLeader = (squad: Squad) => {
     if (!user?.id || !squad?.leader) return false;
     return squad.leader._id === user.id;
+  };
+
+  const getUpgradeCost = (division: string) => {
+    switch (division) {
+      case "SILVER":
+        return 250;
+      case "GOLD":
+        return 750;
+      default:
+        return null;
+    }
+  };
+
+  const canUpgrade = (squad: Squad) => {
+    const upgradeCost = getUpgradeCost(squad.division || "SILVER");
+    if (!upgradeCost) return false;
+    return (squad.currentBountyCoins || 0) >= upgradeCost;
+  };
+
+  const handleUpgradeDivision = async (squad: Squad) => {
+    if (!user?.id) return;
+
+    const upgradeCost = getUpgradeCost(squad.division || "SILVER");
+    if (!upgradeCost) {
+      console.error("Cannot upgrade from current division");
+      return;
+    }
+
+    if ((squad.currentBountyCoins || 0) < upgradeCost) {
+      console.error("Insufficient bounty coins for upgrade");
+      return;
+    }
+
+    try {
+      setUpgrading((prev) => ({ ...prev, [squad._id]: true }));
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const res = await fetch(`/api/divisions/upgrade/${squad._id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        console.error("Upgrade failed:", data);
+        return;
+      }
+      await fetchSquads();
+    } catch (e) {
+      console.error("Error upgrading division:", e);
+    } finally {
+      setUpgrading((prev) => ({ ...prev, [squad._id]: false }));
+    }
   };
 
   if (isLoading) {
@@ -636,13 +694,35 @@ export default function SquadsPage() {
                     </Link>
 
                     {isUserLeader(squad) && (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </motion.button>
+                      <div className="flex items-center space-x-2">
+                        {canUpgrade(squad) && (
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleUpgradeDivision(squad)}
+                            disabled={!!upgrading[squad._id]}
+                            className="px-3 py-2 text-xs rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50"
+                            title={`Upgrade to ${
+                              squad.division === "SILVER" ? "Gold" : "Diamond"
+                            } Division (${getUpgradeCost(
+                              squad.division || "SILVER"
+                            )} BC)`}
+                          >
+                            {upgrading[squad._id]
+                              ? "Upgrading..."
+                              : `Upgrade (${getUpgradeCost(
+                                  squad.division || "SILVER"
+                                )} BC)`}
+                          </motion.button>
+                        )}
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </motion.button>
+                      </div>
                     )}
                   </div>
 

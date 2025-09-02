@@ -495,6 +495,57 @@ const tournamentRoutes: FastifyPluginAsync = async (
       });
     }
   });
+
+  // Disqualify/Ban a squad from a tournament (admin only)
+  fastify.post("/:id/disqualify", async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const { squadId, reason, adminId } = request.body as {
+        squadId: string;
+        reason?: string;
+        adminId?: string;
+      };
+
+      if (!squadId) {
+        return reply.status(400).send({
+          success: false,
+          message: "squadId is required",
+        });
+      }
+
+      const tournament = await Tournament.findById(id);
+      if (!tournament) {
+        return reply.status(404).send({
+          success: false,
+          message: "Tournament not found",
+        });
+      }
+
+      const { disqualifySquadFromTournament } = await import(
+        "../services/tournamentMatchService"
+      );
+      const result = await disqualifySquadFromTournament(id, squadId, {
+        reason,
+        adminId,
+      });
+
+      return reply.status(200).send({
+        success: true,
+        message: "Squad disqualified successfully",
+        updatedMatches: result.updatedMatches,
+      });
+    } catch (error) {
+      console.error("Disqualify squad error:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Failed to disqualify squad",
+        error:
+          process.env.NODE_ENV === "development"
+            ? (error as any).message
+            : undefined,
+      });
+    }
+  });
 };
 
 export default tournamentRoutes;

@@ -119,6 +119,16 @@ export const API_ENDPOINTS = {
       `${API_BASE_URL}/api/bounty-coins/squad/${squadId}`,
     LEADERBOARD: `${API_BASE_URL}/api/bounty-coins/leaderboard`,
     HEALTH: `${API_BASE_URL}/api/bounty-coins/health`,
+    WITHDRAW_CREATE: `${API_BASE_URL}/api/bounty-coins/withdraw`,
+    WITHDRAW_LIST: (params?: string) =>
+      `${API_BASE_URL}/api/bounty-coins/withdraw${params ? `?${params}` : ""}`,
+    WITHDRAW_DECIDE: (id: string) =>
+      `${API_BASE_URL}/api/bounty-coins/withdraw/${id}/decision`,
+    REQUEST_PURCHASE: `${API_BASE_URL}/api/bounty-coins/request-purchase`,
+    PURCHASE_LIST: (params?: string) =>
+      `${API_BASE_URL}/api/bounty-coins/purchase${params ? `?${params}` : ""}`,
+    PURCHASE_DECIDE: (id: string) =>
+      `${API_BASE_URL}/api/bounty-coins/purchase/${id}/decision`,
   },
   SQUADS: {
     ALL: `${API_BASE_URL}/api/squads`,
@@ -137,6 +147,12 @@ export const API_ENDPOINTS = {
     INFO: `${API_BASE_URL}/api/divisions/info`,
     LEADERBOARD: (division: string) =>
       `${API_BASE_URL}/api/divisions/leaderboard/${division}`,
+    SQUAD_INFO: (squadId: string) =>
+      `${API_BASE_URL}/api/divisions/squad/${squadId}`,
+    PURCHASE: (squadId: string) =>
+      `${API_BASE_URL}/api/divisions/purchase/${squadId}`,
+    UPGRADE: (squadId: string) =>
+      `${API_BASE_URL}/api/divisions/upgrade/${squadId}`,
   },
 
   HEALTH: `${API_BASE_URL}/health`,

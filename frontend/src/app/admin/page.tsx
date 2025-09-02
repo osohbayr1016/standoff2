@@ -254,6 +254,33 @@ export default function AdminDashboard() {
       color: "from-pink-500 to-rose-500",
     },
     {
+      id: "withdraw-requests",
+      title: "Withdraw Requests",
+      description: "Review squad withdrawal requests and mark as paid",
+      icon: <Award className="w-8 h-8" />,
+      href: "/admin/withdraw-requests",
+      color: "from-yellow-500 to-orange-500",
+    },
+    {
+      id: "recharge-requests",
+      title: "Recharge Requests",
+      description: "Review and approve bounty coin purchase requests",
+      icon: (
+        <div className="relative">
+          <Image
+            src="https://res.cloudinary.com/djvjsyzgw/image/upload/v1756557908/coin_masl_nzwekq.png"
+            alt="Bounty Coin"
+            width={32}
+            height={32}
+            className="rounded-full"
+          />
+          <Plus className="absolute -top-1 -right-1 text-green-400 text-sm" />
+        </div>
+      ),
+      href: "/admin/recharge-requests",
+      color: "from-green-500 to-emerald-500",
+    },
+    {
       id: "analytics",
       title: "Analytics & Reports",
       description: "View platform statistics and generate reports",
