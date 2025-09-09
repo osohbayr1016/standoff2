@@ -1,22 +1,27 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
+import multipart from "@fastify/multipart";
 import cloudinary from "../config/cloudinary";
 import { authenticateToken } from "../middleware/auth";
 
-const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
-  console.log("🔧 Upload routes plugin starting...");
+// Check if Cloudinary is properly configured
+const isCloudinaryConfigured = () => {
+  return (
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
+  );
+};
 
-  // Try to register multipart plugin
+const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
+  // Register multipart plugin
   try {
-    await fastify.register(import("@fastify/multipart"));
-    console.log("✅ Multipart plugin registered successfully");
-  } catch (error) {
+    await fastify.register(multipart);
+    } catch (error) {
     console.error("❌ Failed to register multipart plugin:", error);
-    console.log("⚠️ Continuing without multipart support");
-  }
+    }
 
   // Health check
   fastify.get("/health", async (request, reply) => {
-    console.log("🔧 Health check endpoint called");
     return reply.send({
       success: true,
       message: "Upload routes available",
@@ -26,7 +31,6 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 
   // Simple test endpoint
   fastify.get("/test", async (request, reply) => {
-    console.log("🔧 Test endpoint called");
     return reply.send({
       success: true,
       message: "Upload test endpoint working",
@@ -42,7 +46,14 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     },
     async (request: any, reply) => {
       try {
-        console.log("🔧 Image upload endpoint called");
+        // Check if Cloudinary is configured
+        if (!isCloudinaryConfigured()) {
+          return reply.status(503).send({
+            success: false,
+            message:
+              "Image upload service is not configured. Please contact administrator.",
+          });
+        }
 
         const data = await request.file();
         if (!data) {
@@ -74,8 +85,6 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
         const base64Image = buffer.toString("base64");
         const dataURI = `data:${data.mimetype};base64,${base64Image}`;
 
-        console.log("🔧 Uploading to Cloudinary...");
-
         // Upload to Cloudinary
         const uploadResult = await cloudinary.uploader.upload(dataURI, {
           folder: "e-sport-profiles",
@@ -84,11 +93,6 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
             { width: 400, height: 400, crop: "fill", gravity: "face" },
             { quality: "auto" },
           ],
-        });
-
-        console.log("✅ Image uploaded successfully:", {
-          url: uploadResult.secure_url,
-          publicId: uploadResult.public_id,
         });
 
         return reply.send({
@@ -116,9 +120,16 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     },
     async (request: any, reply) => {
       try {
-        const { publicId } = request.params as { publicId: string };
-        console.log("🔧 Delete image endpoint called for:", publicId);
+        // Check if Cloudinary is configured
+        if (!isCloudinaryConfigured()) {
+          return reply.status(503).send({
+            success: false,
+            message:
+              "Image upload service is not configured. Please contact administrator.",
+          });
+        }
 
+        const { publicId } = request.params as { publicId: string };
         if (!publicId) {
           return reply.status(400).send({
             success: false,
@@ -128,8 +139,6 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 
         // Delete from Cloudinary
         const deleteResult = await cloudinary.uploader.destroy(publicId);
-
-        console.log("✅ Image deleted successfully:", deleteResult);
 
         return reply.send({
           success: true,
@@ -147,7 +156,6 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     }
   );
 
-  console.log("🔧 Upload routes plugin loaded successfully");
-};
+  };
 
 export default uploadRoutes;

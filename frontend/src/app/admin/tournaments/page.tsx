@@ -73,6 +73,7 @@ export default function AdminTournamentsPage() {
     maxSquads: 16,
     format: "Single Elimination",
     entryFee: 0,
+    tournamentType: "tax" as "tax" | "free",
     location: "Online",
     requirements: [] as string[],
     rules: [] as string[],
@@ -276,6 +277,7 @@ export default function AdminTournamentsPage() {
       maxSquads: 16,
       format: "Single Elimination",
       entryFee: 0,
+      tournamentType: "tax",
       location: "Online",
       requirements: [],
       rules: [],
@@ -722,7 +724,7 @@ export default function AdminTournamentsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Prize Pool
@@ -758,6 +760,26 @@ export default function AdminTournamentsPage() {
                       placeholder="0"
                       min="0"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Tournament Type *
+                    </label>
+                    <select
+                      value={newTournament.tournamentType}
+                      onChange={(e) =>
+                        setNewTournament({
+                          ...newTournament,
+                          tournamentType: e.target.value as "tax" | "free",
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    >
+                      <option value="tax">
+                        Tax (Requires Payment & Approval)
+                      </option>
+                      <option value="free">Free (Direct Registration)</option>
+                    </select>
                   </div>
                 </div>
 

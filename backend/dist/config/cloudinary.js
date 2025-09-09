@@ -1,12 +1,19 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const cloudinary_1 = __importDefault(require("cloudinary"));
-cloudinary_1.default.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+const cloudinary_1 = require("cloudinary");
+const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+const apiKey = process.env.CLOUDINARY_API_KEY;
+const apiSecret = process.env.CLOUDINARY_API_SECRET;
+if (!cloudName || !apiKey || !apiSecret) {
+    console.warn("⚠️ Cloudinary environment variables not set. Image upload will be disabled.");
+    console.warn("Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env file");
+}
+else {
+    console.log("✅ Cloudinary environment variables found");
+}
+cloudinary_1.v2.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
 });
-exports.default = cloudinary_1.default;
+exports.default = cloudinary_1.v2;

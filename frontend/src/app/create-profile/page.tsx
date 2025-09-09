@@ -174,14 +174,12 @@ export default function CreateProfilePage() {
   };
 
   const handleImageUpload = (url: string, publicId: string) => {
-    console.log("🔍 Debug - handleImageUpload called:", { url, publicId });
     setFormData((prev) => {
       const newData = {
         ...prev,
         avatar: url,
         avatarPublicId: publicId,
       };
-      console.log("🔍 Debug - Updated formData:", newData);
       return newData;
     });
   };
@@ -217,10 +215,6 @@ export default function CreateProfilePage() {
       const token = localStorage.getItem("token");
 
       // Debug: Log the form data being sent
-      console.log("🔍 Debug - Form data being sent:", formData);
-      console.log("🔍 Debug - Avatar URL:", formData.avatar);
-      console.log("🔍 Debug - Avatar Public ID:", formData.avatarPublicId);
-
       // Validate required fields before submission
       const requiredFields = [
         "category",
@@ -268,8 +262,6 @@ export default function CreateProfilePage() {
         avatarPublicId: formData.avatarPublicId || undefined,
       };
 
-      console.log("🔍 Debug - Final request data:", requestData);
-
       const response = await fetch(API_ENDPOINTS.PLAYER_PROFILES.CREATE, {
         method: "POST",
         headers: {
@@ -278,9 +270,6 @@ export default function CreateProfilePage() {
         },
         body: JSON.stringify(requestData),
       });
-
-      console.log("🔍 Debug - Response status:", response.status);
-      console.log("🔍 Debug - Response headers:", response.headers);
 
       const data = await response.json();
 

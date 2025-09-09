@@ -155,6 +155,11 @@ async function registerRoutes() {
         console.log("🔧 Test routes imported:", !!testRoutes.default);
         fastify.register(testRoutes.default, { prefix: "/api/test" });
         console.log("🔧 Test routes registered with prefix /api/test");
+        console.log("🔧 Registering upload routes...");
+        const uploadRoutes = await Promise.resolve().then(() => __importStar(require("./routes/uploadRoutes")));
+        console.log("🔧 Upload routes imported:", !!uploadRoutes.default);
+        fastify.register(uploadRoutes.default, { prefix: "/api/upload" });
+        console.log("🔧 Upload routes registered with prefix /api/upload");
         console.log("🔧 Registering message routes...");
         const messageRoutes = await Promise.resolve().then(() => __importStar(require("./routes/messageRoutes")));
         console.log("🔧 Message routes imported:", !!messageRoutes.default);

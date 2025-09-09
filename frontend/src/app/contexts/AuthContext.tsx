@@ -105,17 +105,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if user is already logged in on mount
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log("🔍 AuthContext: Initializing authentication...");
       const token = getStoredToken();
       const userData = getStoredUser();
       const storedHasProfile = getStoredHasProfile();
-
-      console.log("🔍 AuthContext: Stored data:", {
-        hasToken: !!token,
-        hasUserData: !!userData,
-        storedHasProfile,
-        tokenLength: token?.length || 0,
-      });
 
       // Always set user from localStorage first to prevent logout on refresh
       if (token && userData) {
@@ -126,21 +118,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Only validate token if we have both token and user data
       if (token && userData) {
         try {
-          console.log("🔍 AuthContext: Checking backend connectivity...");
           // First check if backend is accessible
           const healthResponse = await fetch(API_ENDPOINTS.HEALTH, {
             signal: AbortSignal.timeout(3000), // 3 second timeout
           });
 
           if (!healthResponse.ok) {
-            console.log(
-              "🔍 AuthContext: Backend not accessible, keeping user logged in"
-            );
             // Keep user logged in if backend is not accessible
             // Don't return, continue with token validation but be more lenient
           }
 
-          console.log("🔍 AuthContext: Validating token with server...");
           // Validate token with server in the background with retry
           let response;
           let retryCount = 0;
@@ -162,14 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               break; // Success, exit retry loop
             } catch (error) {
               retryCount++;
-              console.log(
-                `🔍 AuthContext: Token validation attempt ${retryCount} failed:`,
-                error
-              );
               if (retryCount >= maxRetries) {
-                console.log(
-                  "🔍 AuthContext: Max retries reached, keeping user logged in"
-                );
                 return; // Keep user logged in after max retries
               }
               // Wait a bit before retrying
@@ -179,24 +159,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // If we get here without a response, keep user logged in
           if (!response) {
-            console.log(
-              "🔍 AuthContext: No response received, keeping user logged in"
-            );
             return;
           }
 
-          console.log(
-            "🔍 AuthContext: Token validation response:",
-            response.status
-          );
-
           if (response.ok) {
             const data = await response.json();
-            console.log(
-              "🔍 AuthContext: Token valid, updating user:",
-              data.data?.user || data.user
-            );
-
             // Update user with fresh data from server
             const freshUser = data.data?.user || data.user;
             if (freshUser) {
@@ -215,7 +182,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }, 100);
             }
           } else if (response.status === 401 || response.status === 403) {
-            console.log("🔍 AuthContext: Token invalid, attempting refresh...");
             // Try to refresh the token first
             try {
               const refreshResponse = await fetch(API_ENDPOINTS.AUTH.REFRESH, {
@@ -228,28 +194,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
               if (refreshResponse.ok) {
                 const refreshData = await refreshResponse.json();
-                console.log("🔍 AuthContext: Token refreshed successfully");
                 setStoredToken(refreshData.token);
                 setStoredUser(refreshData.user);
                 setUser(refreshData.user);
               } else {
-                console.log(
-                  "🔍 AuthContext: Token refresh failed, clearing storage"
-                );
                 removeStoredToken();
                 setUser(null);
                 setHasProfile(false);
               }
             } catch (refreshError) {
-              console.log(
-                "🔍 AuthContext: Token refresh error, clearing storage"
-              );
               removeStoredToken();
               setUser(null);
               setHasProfile(false);
             }
           } else {
-            console.log("🔍 AuthContext: Server error, keeping user logged in");
             // For other server errors, keep the user logged in
             // This includes 500, 502, 503, etc.
           }
@@ -268,7 +226,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // For network errors, keep the user logged in
         }
       } else {
-        console.log("🔍 AuthContext: No stored token or user data");
       }
       setLoading(false);
     };
@@ -307,19 +264,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(data.message || "Нэвтрэхэд алдаа гарлаа");
       }
 
-      console.log(
-        "🔍 AuthContext: Login successful, storing token and user data"
-      );
-      console.log("🔍 AuthContext: Token length:", data.token?.length || 0);
-      console.log("🔍 AuthContext: User data:", data.user);
-
       setStoredToken(data.token);
       setStoredUser(data.user);
       setUser(data.user);
 
       // Check profile status for players and organizations
       if (data.user.role === "PLAYER" || data.user.role === "ORGANIZATION") {
-        console.log("🔍 AuthContext: Checking profile status...");
         await checkProfileStatus();
       }
     } catch (error: unknown) {
@@ -445,12 +395,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getToken = (): string | null => {
     const token = getStoredToken();
-    console.log(
-      "🔍 AuthContext: getToken called, token exists:",
-      !!token,
-      "length:",
-      token?.length || 0
-    );
     return token;
   };
 

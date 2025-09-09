@@ -85,16 +85,12 @@ export default function ChatModal({
         return;
       }
 
-      console.log("🔍 Debug - Fetching messages for player:", playerId);
-
       const response = await fetch(API_ENDPOINTS.MESSAGES.LIST(playerId), {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-
-      console.log("🔍 Debug - Fetch response status:", response.status);
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -103,15 +99,12 @@ export default function ChatModal({
         }
 
         const errorData = await response.json().catch(() => ({}));
-        console.log("🔍 Debug - Fetch error response:", errorData);
         throw new Error(
           errorData.message || `Failed to fetch messages (${response.status})`
         );
       }
 
       const data = await response.json();
-      console.log("🔍 Debug - Fetch success response:", data);
-
       if (data.success) {
         setMessages(data.messages || []);
         // Scroll to bottom after loading messages

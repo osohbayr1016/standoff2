@@ -1802,62 +1802,6 @@ export default function SquadDetailPage() {
                 </div>
               </motion.div>
             )}
-
-            {/* Quick Actions */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-gray-800 rounded-lg p-6"
-            >
-              <h3 className="text-lg font-semibold text-white mb-4">
-                Quick Actions
-              </h3>
-
-              <div className="space-y-3">
-                <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Send Message</span>
-                </button>
-
-                {isUserLeader() && (
-                  <div className="space-y-3">
-                    <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                      <Settings className="w-4 h-4" />
-                      <span>Manage Squad</span>
-                    </button>
-
-                    {/* Purchase Coins (leader visible; members can see balances on page already) */}
-                    <div className="p-3 bg-gray-700 rounded-lg">
-                      <p className="text-gray-300 text-sm mb-2">
-                        Buy Bounty Coins
-                      </p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[50, 100, 150].map((amt) => (
-                          <button
-                            key={amt}
-                            disabled={purchaseLoading}
-                            onClick={() => handlePurchaseCoins(amt)}
-                            className="px-2 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm disabled:opacity-60"
-                          >
-                            +{amt}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-xs text-gray-400 mt-2">
-                        {getDivisionPackAmount()} BC ≈{" "}
-                        {getDivisionPricePerPack().toLocaleString()}₮
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                  <Trophy className="w-4 h-4" />
-                  <span>View Achievements</span>
-                </button>
-              </div>
-            </motion.div>
           </div>
         </div>
       </div>

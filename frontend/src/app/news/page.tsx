@@ -165,8 +165,6 @@ export default function NewsPage() {
 
         // Try to fetch from API first
         try {
-          console.log("🔍 Attempting to fetch news from API...");
-
           // Fetch all news
           const newsResponse = await fetch(API_ENDPOINTS.NEWS.ALL, {
             method: "GET",
@@ -175,16 +173,11 @@ export default function NewsPage() {
             },
           });
 
-          console.log("🔍 News API response status:", newsResponse.status);
-
           if (newsResponse.ok) {
             const newsData = await newsResponse.json();
-            console.log("🔍 News API response:", newsData);
-
             if (newsData.success && newsData.news) {
               setNews(newsData.news);
-              console.log("✅ Successfully loaded news from API");
-            } else {
+              } else {
               throw new Error("Invalid API response format");
             }
           } else {
@@ -210,12 +203,10 @@ export default function NewsPage() {
                 featuredData.news.length > 0
               ) {
                 setFeaturedNews(featuredData.news[0]);
-                console.log("✅ Successfully loaded featured news from API");
-              }
+                }
             }
           } catch (featuredError) {
-            console.log("⚠️ Featured news fetch failed:", featuredError);
-          }
+            }
 
           // Fetch categories
           try {
@@ -233,14 +224,11 @@ export default function NewsPage() {
               const categoriesData = await categoriesResponse.json();
               if (categoriesData.success && categoriesData.categories) {
                 setCategories(["All", ...categoriesData.categories]);
-                console.log("✅ Successfully loaded categories from API");
-              }
+                }
             }
           } catch (categoriesError) {
-            console.log("⚠️ Categories fetch failed:", categoriesError);
-          }
+            }
         } catch (apiError) {
-          console.log("⚠️ API fetch failed, using mock data:", apiError);
           // Fallback to mock data if API fails
           setNews(mockNewsData);
           setFeaturedNews(mockNewsData.find((item) => item.featured) || null);

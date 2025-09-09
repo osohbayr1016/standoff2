@@ -40,7 +40,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      console.log("🔌 No token available for socket connection");
       return;
     }
 
@@ -65,17 +64,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Connection events
     socket.on("connect", () => {
-      console.log("🔌 Socket connected successfully");
       setIsConnected(true);
     });
 
     socket.on("disconnect", (reason) => {
-      console.log("🔌 Socket disconnected:", reason);
       setIsConnected(false);
 
       // Attempt to reconnect if it wasn't a manual disconnect
       if (reason === "io server disconnect") {
-        console.log("🔌 Server disconnected, attempting to reconnect...");
         socket.connect();
       }
     });
@@ -93,7 +89,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     });
 
     socket.on("reconnect", (attemptNumber) => {
-      console.log("🔌 Socket reconnected after", attemptNumber, "attempts");
       setIsConnected(true);
     });
 
@@ -109,20 +104,17 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Message events
     socket.on("new_message", (data) => {
-      console.log("📨 New message received:", data);
       // You can emit a custom event here to notify components
       window.dispatchEvent(new CustomEvent("new_message", { detail: data }));
     });
 
     socket.on("message_delivered", (data) => {
-      console.log("✅ Message delivered:", data);
       window.dispatchEvent(
         new CustomEvent("message_delivered", { detail: data })
       );
     });
 
     socket.on("message_sent_offline", (data) => {
-      console.log("📤 Message sent offline:", data);
       window.dispatchEvent(
         new CustomEvent("message_sent_offline", { detail: data })
       );
@@ -135,12 +127,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Typing events
     socket.on("user_typing", (data) => {
-      console.log("⌨️ User typing:", data);
       window.dispatchEvent(new CustomEvent("user_typing", { detail: data }));
     });
 
     socket.on("user_stopped_typing", (data) => {
-      console.log("⌨️ User stopped typing:", data);
       window.dispatchEvent(
         new CustomEvent("user_stopped_typing", { detail: data })
       );
@@ -148,20 +138,17 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Read receipt events
     socket.on("message_read", (data) => {
-      console.log("👁️ Message read:", data);
       window.dispatchEvent(new CustomEvent("message_read", { detail: data }));
     });
 
     // Status events
     socket.on("user_status_changed", (data) => {
-      console.log("🔄 User status changed:", data);
       window.dispatchEvent(
         new CustomEvent("user_status_changed", { detail: data })
       );
     });
 
     socket.on("user_offline", (data) => {
-      console.log("🔴 User offline:", data);
       window.dispatchEvent(new CustomEvent("user_offline", { detail: data }));
     });
 

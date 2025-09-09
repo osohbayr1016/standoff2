@@ -134,10 +134,7 @@ export async function generateTournamentMatches(
     // Save matches to database
     await TournamentMatch.insertMany(matches);
 
-    console.log(
-      `Generated ${matches.length} matches for tournament ${tournamentId}`
-    );
-  } catch (error) {
+    } catch (error) {
     console.error("Error generating tournament matches:", error);
     throw error;
   }

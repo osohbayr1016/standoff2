@@ -73,6 +73,14 @@ export const API_ENDPOINTS = {
     UNREGISTER: (id: string) =>
       `${API_BASE_URL}/api/tournaments/${id}/unregister`,
   },
+  TOURNAMENT_REGISTRATIONS: {
+    ALL: `${API_BASE_URL}/api/tournament-registrations`,
+    GET: (id: string) => `${API_BASE_URL}/api/tournament-registrations/${id}`,
+    CREATE: `${API_BASE_URL}/api/tournament-registrations/register`,
+    PENDING_TAX: `${API_BASE_URL}/api/tournament-registrations/pending-tax`,
+    APPROVE: (id: string) =>
+      `${API_BASE_URL}/api/tournament-registrations/${id}/approve`,
+  },
   DASHBOARD: {
     STATS: `${API_BASE_URL}/api/dashboard/stats`,
     ACTIVITY: `${API_BASE_URL}/api/dashboard/activity`,

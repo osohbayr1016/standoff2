@@ -53,7 +53,6 @@ export default function BountyCoinsPage() {
           }
         } else {
           // API returned error, use fallback data
-          console.log("API returned error, using fallback data");
           setBountyCoinData({
             balance: 0,
             totalEarned: 0,
@@ -63,7 +62,6 @@ export default function BountyCoinsPage() {
         }
       } else {
         // API not available, use fallback data
-        console.log("API not available, using fallback data");
         setBountyCoinData({
           balance: 0,
           totalEarned: 0,
@@ -440,7 +438,7 @@ export default function BountyCoinsPage() {
                         </h4>
                       </div>
                       <p className="text-gray-300 text-sm">
-                        1 Боунти Койн = 2,000₮ (1 BC = 2000₮)
+                        10 Боунти Койн = 2,000₮ (1 BC = 2000₮)
                       </p>
                     </div>
                     <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">

@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import Navigation from "../../components/Navigation";
 import { API_ENDPOINTS } from "../../../config/api";
+import PaymentProofUploader from "../../../components/PaymentProofUploader";
 import {
   Calendar,
   Trophy,
@@ -44,6 +45,7 @@ interface Tournament {
   currentParticipants: number;
   format: string;
   entryFee: number;
+  tournamentType: "tax" | "free"; // Tournament type: tax (requires payment) or free
   location: string;
   status:
     | "upcoming"
@@ -64,6 +66,8 @@ export default function TournamentDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationMessage, setRegistrationMessage] = useState<string>("");
+  const [paymentProofUrl, setPaymentProofUrl] = useState<string>("");
+  const [paymentProofPublicId, setPaymentProofPublicId] = useState<string>("");
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
     hours: number;
@@ -119,6 +123,7 @@ export default function TournamentDetailPage() {
                 0,
               format: apiTournament.format || "Single Elimination",
               entryFee: apiTournament.entryFee || 0,
+              tournamentType: apiTournament.tournamentType || "tax", // Default to tax if not specified
               location: apiTournament.location || "Online",
               status: apiTournament.status || "upcoming",
               requirements: Array.isArray(apiTournament.requirements)
@@ -300,24 +305,42 @@ export default function TournamentDetailPage() {
         return;
       }
 
-      // Step 5: Simulate payment processing
-      setRegistrationMessage("Төлбөр боловсруулж байна...");
+      // Step 5: Handle different tournament types
+      if (tournament.tournamentType === "tax") {
+        // For tax tournaments, require payment proof
+        if (!paymentProofUrl) {
+          setRegistrationMessage(
+            "Төлбөртэй тэмцээн. Төлбөрийн баримт оруулна уу."
+          );
+          return;
+        }
+        setRegistrationMessage(
+          "Төлбөртэй тэмцээн. Төлбөрийн баримт шалгаж байна..."
+        );
+      } else if (tournament.tournamentType === "free") {
+        // For free tournaments, proceed directly
+        setRegistrationMessage("Үнэгүй тэмцээн. Бүртгэл хийж байна...");
+      }
 
-      // Simulate payment delay
+      // Simulate processing delay
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Step 6: Register the squad for the tournament
       const registrationResponse = await fetch(
-        API_ENDPOINTS.TOURNAMENTS.REGISTER(tournament._id),
+        API_ENDPOINTS.TOURNAMENT_REGISTRATIONS.CREATE,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            tournamentId: tournament._id,
             squadId: userSquad._id,
+            squadLeaderId: user.id,
             entryFee: tournament.entryFee,
             currency: tournament.currency,
+            paymentProof: paymentProofUrl || undefined,
+            paymentProofPublicId: paymentProofPublicId || undefined,
           }),
         }
       );
@@ -753,6 +776,25 @@ export default function TournamentDetailPage() {
                 tournament.registrationDeadline
               ) ? (
                 <>
+                  {/* Payment Proof Upload for Tax Tournaments */}
+                  {tournament.tournamentType === "tax" && (
+                    <div className="mb-6">
+                      <PaymentProofUploader
+                        onUpload={(url, publicId) => {
+                          setPaymentProofUrl(url);
+                          setPaymentProofPublicId(publicId);
+                        }}
+                        onRemove={() => {
+                          setPaymentProofUrl("");
+                          setPaymentProofPublicId("");
+                        }}
+                        initialUrl={paymentProofUrl}
+                        initialPublicId={paymentProofPublicId}
+                        disabled={isRegistering}
+                      />
+                    </div>
+                  )}
+
                   <motion.button
                     onClick={handleRegistration}
                     disabled={isRegistering}

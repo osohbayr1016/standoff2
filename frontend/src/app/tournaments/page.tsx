@@ -71,6 +71,7 @@ export default function TournamentsPage() {
               currentParticipants: tournament.currentParticipants || 0,
               format: tournament.format || "Single Elimination",
               entryFee: tournament.entryFee || 0,
+              tournamentType: tournament.tournamentType || "tax", // Default to tax if not specified
               location: tournament.location || "Online",
               status: tournament.status || "upcoming",
               requirements: Array.isArray(tournament.requirements)

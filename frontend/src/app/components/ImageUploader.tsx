@@ -56,9 +56,10 @@ export default function ImageUploader({
       formData.append("image", file);
 
       const token = localStorage.getItem("token");
-      console.log("🔍 Debug - Token:", token ? "Present" : "Missing");
-      console.log("🔍 Debug - Upload URL:", API_ENDPOINTS.UPLOAD.IMAGE);
-      console.log("🔍 Debug - File:", file.name, file.size, file.type);
+      if (!token) {
+        setError("Please log in to upload images");
+        return;
+      }
 
       const response = await safeFetch(API_ENDPOINTS.UPLOAD.IMAGE, {
         method: "POST",
@@ -70,31 +71,36 @@ export default function ImageUploader({
         timeoutMs: 12000,
       } as any);
 
-      console.log("🔍 Debug - Response status:", response.status);
-      console.log("🔍 Debug - Response headers:", response.headers);
-
       const data = (await parseJsonSafe(response)) || {};
-      console.log("🔍 Debug - Response data:", data);
-
       if (response.ok && data.success) {
-        console.log("🔍 Debug - Image upload successful:", {
-          url: data.url,
-          publicId: data.publicId,
-        });
         setUploadedImage(data.url);
         setUploadedPublicId(data.publicId);
         onImageUpload(data.url, data.publicId);
       } else {
-        setError(
-          (data && (data.message as string)) ||
-            (response.status === 413
-              ? "Image too large. Please upload under 5MB."
-              : "Failed to upload image")
-        );
+        let errorMessage = "Failed to upload image";
+
+        if (response.status === 503) {
+          errorMessage =
+            "Image upload service is not configured. Please contact administrator.";
+        } else if (response.status === 413) {
+          errorMessage = "Image too large. Please upload under 5MB.";
+        } else if (response.status === 401) {
+          errorMessage = "Please log in to upload images";
+        } else if (data && data.message) {
+          errorMessage = data.message;
+        }
+
+        setError(errorMessage);
       }
     } catch (error) {
       console.error("Upload error:", error);
-      setError("Failed to upload image. Please try again.");
+      if (error instanceof Error && error.name === "AbortError") {
+        setError("Upload timed out. Please try again.");
+      } else {
+        setError(
+          "Failed to upload image. Please check your connection and try again."
+        );
+      }
     } finally {
       setIsUploading(false);
     }
@@ -104,12 +110,26 @@ export default function ImageUploader({
     try {
       if (uploadedPublicId) {
         const token = localStorage.getItem("token");
-        await fetch(API_ENDPOINTS.UPLOAD.DELETE_IMAGE(uploadedPublicId), {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        if (!token) {
+          console.warn("No token available for image deletion");
+          // Still remove from UI
+        } else {
+          const response = await fetch(
+            API_ENDPOINTS.UPLOAD.DELETE_IMAGE(uploadedPublicId),
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (!response.ok) {
+            console.warn(
+              "Failed to delete image from server, but removing from UI"
+            );
+          }
+        }
       }
 
       setUploadedImage(null);

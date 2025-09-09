@@ -51,8 +51,6 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       count: number;
     }) => {
       try {
-        console.log("📬 Pending notifications received:", data);
-
         // Validate data structure
         if (!data.notifications || !Array.isArray(data.notifications)) {
           console.warn("📬 Invalid notifications data structure:", data);
@@ -97,8 +95,6 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       senderAvatar?: string;
     }) => {
       try {
-        console.log("📨 New message notification received:", data);
-
         // Validate data structure
         if (!data.content || !data.senderId) {
           console.warn("📨 Invalid message data structure:", data);

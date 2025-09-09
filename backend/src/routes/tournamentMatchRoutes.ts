@@ -380,6 +380,313 @@ const tournamentMatchRoutes: FastifyPluginAsync = async (
       });
     }
   });
+
+  // Create a new match (admin only)
+  fastify.post("/", async (request, reply) => {
+    try {
+      const {
+        tournamentId,
+        matchNumber,
+        round,
+        squad1Id,
+        squad2Id,
+        scheduledTime,
+        status = "scheduled",
+        bountyCoinAmount = 50,
+        matchType = "normal",
+      } = request.body as any;
+
+      if (!tournamentId || !matchNumber || !round || !squad1Id || !squad2Id) {
+        return reply.status(400).send({
+          success: false,
+          message:
+            "Tournament ID, match number, round, and both squad IDs are required",
+        });
+      }
+
+      // Validate tournament exists
+      const tournament = await Tournament.findById(tournamentId);
+      if (!tournament) {
+        return reply.status(404).send({
+          success: false,
+          message: "Tournament not found",
+        });
+      }
+
+      // Validate squads exist
+      const [squad1, squad2] = await Promise.all([
+        Squad.findById(squad1Id),
+        Squad.findById(squad2Id),
+      ]);
+
+      if (!squad1 || !squad2) {
+        return reply.status(404).send({
+          success: false,
+          message: "One or both squads not found",
+        });
+      }
+
+      if (squad1Id === squad2Id) {
+        return reply.status(400).send({
+          success: false,
+          message: "Squad 1 and Squad 2 cannot be the same",
+        });
+      }
+
+      // Check if match number already exists for this tournament
+      const existingMatch = await TournamentMatch.findOne({
+        tournament: tournamentId,
+        matchNumber,
+      });
+
+      if (existingMatch) {
+        return reply.status(400).send({
+          success: false,
+          message: `Match number ${matchNumber} already exists for this tournament`,
+        });
+      }
+
+      // Create new match
+      const newMatch = new TournamentMatch({
+        tournament: tournamentId,
+        matchNumber,
+        round,
+        squad1: squad1Id,
+        squad2: squad2Id,
+        status,
+        scheduledTime: scheduledTime ? new Date(scheduledTime) : undefined,
+        bountyCoinAmount,
+        matchType,
+        applyLoserDeduction: true,
+      });
+
+      await newMatch.save();
+
+      // Populate the match data
+      const populatedMatch = await TournamentMatch.findById(newMatch._id)
+        .populate("squad1", "name tag logo division currentBountyCoins level")
+        .populate("squad2", "name tag logo division currentBountyCoins level")
+        .lean();
+
+      return reply.status(201).send({
+        success: true,
+        message: "Match created successfully",
+        match: populatedMatch,
+      });
+    } catch (error) {
+      console.error("Error creating match:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Failed to create match",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  });
+
+  // Update match (admin only)
+  fastify.put("/:matchId", async (request, reply) => {
+    try {
+      const { matchId } = request.params as { matchId: string };
+      const updateData = request.body as any;
+
+      const match = await TournamentMatch.findById(matchId);
+      if (!match) {
+        return reply.status(404).send({
+          success: false,
+          message: "Match not found",
+        });
+      }
+
+      // Prevent updating completed matches
+      if (match.status === "completed") {
+        return reply.status(400).send({
+          success: false,
+          message: "Cannot update completed matches",
+        });
+      }
+
+      // Validate squads if being updated
+      if (updateData.squad1Id || updateData.squad2Id) {
+        const squad1Id = updateData.squad1Id || match.squad1;
+        const squad2Id = updateData.squad2Id || match.squad2;
+
+        if (squad1Id === squad2Id) {
+          return reply.status(400).send({
+            success: false,
+            message: "Squad 1 and Squad 2 cannot be the same",
+          });
+        }
+
+        // Validate squads exist
+        const [squad1, squad2] = await Promise.all([
+          Squad.findById(squad1Id),
+          Squad.findById(squad2Id),
+        ]);
+
+        if (!squad1 || !squad2) {
+          return reply.status(404).send({
+            success: false,
+            message: "One or both squads not found",
+          });
+        }
+      }
+
+      // Update match
+      const updatedMatch = await TournamentMatch.findByIdAndUpdate(
+        matchId,
+        {
+          ...updateData,
+          squad1: updateData.squad1Id || match.squad1,
+          squad2: updateData.squad2Id || match.squad2,
+          scheduledTime: updateData.scheduledTime
+            ? new Date(updateData.scheduledTime)
+            : match.scheduledTime,
+        },
+        { new: true, runValidators: true }
+      )
+        .populate("squad1", "name tag logo division currentBountyCoins level")
+        .populate("squad2", "name tag logo division currentBountyCoins level")
+        .lean();
+
+      return reply.status(200).send({
+        success: true,
+        message: "Match updated successfully",
+        match: updatedMatch,
+      });
+    } catch (error) {
+      console.error("Error updating match:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Failed to update match",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  });
+
+  // Update match status (admin only)
+  fastify.put("/:matchId/status", async (request, reply) => {
+    try {
+      const { matchId } = request.params as { matchId: string };
+      const { status } = request.body as { status: string };
+
+      if (
+        !status ||
+        !["scheduled", "in_progress", "completed", "cancelled"].includes(status)
+      ) {
+        return reply.status(400).send({
+          success: false,
+          message:
+            "Valid status is required (scheduled, in_progress, completed, cancelled)",
+        });
+      }
+
+      const match = await TournamentMatch.findById(matchId);
+      if (!match) {
+        return reply.status(404).send({
+          success: false,
+          message: "Match not found",
+        });
+      }
+
+      // Update status and timestamps
+      const updateData: any = { status };
+
+      if (status === "in_progress" && match.status === "scheduled") {
+        updateData.startTime = new Date();
+      } else if (status === "completed" && match.status === "in_progress") {
+        updateData.endTime = new Date();
+      }
+
+      const updatedMatch = await TournamentMatch.findByIdAndUpdate(
+        matchId,
+        updateData,
+        { new: true }
+      )
+        .populate("squad1", "name tag logo division currentBountyCoins level")
+        .populate("squad2", "name tag logo division currentBountyCoins level")
+        .lean();
+
+      return reply.status(200).send({
+        success: true,
+        message: "Match status updated successfully",
+        match: updatedMatch,
+      });
+    } catch (error) {
+      console.error("Error updating match status:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Failed to update match status",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  });
+
+  // Delete match (admin only)
+  fastify.delete("/:matchId", async (request, reply) => {
+    try {
+      const { matchId } = request.params as { matchId: string };
+
+      const match = await TournamentMatch.findById(matchId);
+      if (!match) {
+        return reply.status(404).send({
+          success: false,
+          message: "Match not found",
+        });
+      }
+
+      // Prevent deleting completed matches
+      if (match.status === "completed") {
+        return reply.status(400).send({
+          success: false,
+          message: "Cannot delete completed matches",
+        });
+      }
+
+      await TournamentMatch.findByIdAndDelete(matchId);
+
+      return reply.status(200).send({
+        success: true,
+        message: "Match deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting match:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Failed to delete match",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  });
+
+  // Get squads for tournament (for match creation)
+  fastify.get("/tournament/:tournamentId/squads", async (request, reply) => {
+    try {
+      const { tournamentId } = request.params as { tournamentId: string };
+
+      // Get all approved registrations for this tournament
+      const registrations = await TournamentRegistration.find({
+        tournament: tournamentId,
+        status: "approved",
+      }).populate("squad", "name tag logo division currentBountyCoins level");
+
+      const squads = registrations.map((reg: any) => reg.squad);
+
+      return reply.status(200).send({
+        success: true,
+        squads,
+      });
+    } catch (error) {
+      console.error("Error getting tournament squads:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Failed to get tournament squads",
+      });
+    }
+  });
 };
 
 export default tournamentMatchRoutes;

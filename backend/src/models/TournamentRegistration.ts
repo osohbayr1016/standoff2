@@ -13,6 +13,8 @@ export interface ITournamentRegistration extends Document {
   isApproved: boolean; // Admin approval
   approvedBy?: mongoose.Types.ObjectId; // Admin ID who approved
   approvedAt?: Date;
+  approvalStatus: "pending" | "approved" | "rejected"; // Approval status for tax tournaments
+  rejectionReason?: string; // Reason for rejection if applicable
   status:
     | "registered"
     | "active"
@@ -85,6 +87,16 @@ const tournamentRegistrationSchema = new Schema<ITournamentRegistration>(
     approvedAt: {
       type: Date,
     },
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    rejectionReason: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
     status: {
       type: String,
       enum: [
@@ -134,6 +146,7 @@ tournamentRegistrationSchema.index({ squad: 1 });
 tournamentRegistrationSchema.index({ squadLeader: 1 });
 tournamentRegistrationSchema.index({ paymentStatus: 1 });
 tournamentRegistrationSchema.index({ isApproved: 1 });
+tournamentRegistrationSchema.index({ approvalStatus: 1 }); // Add index for approval status
 tournamentRegistrationSchema.index({ status: 1 });
 
 // Validation: Ensure squad leader is in squad members

@@ -88,7 +88,7 @@ export default function DivisionsPage() {
         </div>
 
         {/* Division Leaderboard */}
-        <div className="bg-white rounded-lg shadow-sm border">
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm border">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900">
               {DivisionService.getDivisionDisplayName(selectedDivision)}{" "}

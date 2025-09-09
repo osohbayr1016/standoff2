@@ -1212,9 +1212,6 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     try {
       const { userId } = request.params as { userId: string };
 
-      console.log("Looking for squads for user ID:", userId);
-      console.log("User ID type:", typeof userId);
-
       const squads = await Squad.find({
         $or: [{ leader: userId }, { members: userId }],
       })
@@ -1222,9 +1219,6 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
         .populate("members", "name email avatar")
         .sort({ createdAt: -1 })
         .lean();
-
-      console.log("Found squads:", squads);
-      console.log("Number of squads found:", squads.length);
 
       return reply.status(200).send({
         success: true,

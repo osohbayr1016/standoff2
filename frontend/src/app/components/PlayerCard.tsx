@@ -84,13 +84,29 @@ export default function PlayerCard({
       <div className="relative p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
           <div className="relative flex-shrink-0">
-            <Image
-              src={player.avatar || "/default-avatar.png"}
-              alt={player.inGameName || player.name}
-              width={64}
-              height={64}
-              className="rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-lg"
-            />
+            {player.avatar ? (
+              <Image
+                src={player.avatar}
+                alt={player.inGameName || player.name}
+                width={64}
+                height={64}
+                className="rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-lg"
+                onError={(e) => {
+                  console.error(
+                    "Image load error for player:",
+                    player.name,
+                    "Avatar URL:",
+                    player.avatar
+                  );
+                  // Fallback to default avatar
+                  e.currentTarget.src = "/default-avatar.png";
+                }}
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 flex items-center justify-center text-white font-bold text-xl border-4 border-white dark:border-gray-700 shadow-lg">
+                {(player.inGameName || player.name).charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
           <div className="flex-1 text-center sm:text-left">
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center justify-center sm:justify-start gap-2 flex-wrap">

@@ -46,9 +46,6 @@ const playerProfileRoutes: FastifyPluginAsync = async (
       const profileData = request.body as any;
 
       // Debug logging
-      console.log("🔍 Debug - Creating profile for user:", decoded.id);
-      console.log("🔍 Debug - Profile data received:", profileData);
-
       // Validate required fields
       const requiredFields = [
         "category",
@@ -64,7 +61,6 @@ const playerProfileRoutes: FastifyPluginAsync = async (
       );
 
       if (missingFields.length > 0) {
-        console.log("🔍 Debug - Missing required fields:", missingFields);
         return reply.status(400).send({
           success: false,
           message: `Missing required fields: ${missingFields.join(", ")}`,
@@ -89,11 +85,7 @@ const playerProfileRoutes: FastifyPluginAsync = async (
         ...profileData,
       });
 
-      console.log("🔍 Debug - Profile object to save:", newProfile);
-
       await newProfile.save();
-
-      console.log("🔍 Debug - Profile saved successfully:", newProfile._id);
 
       return reply.status(201).send({
         success: true,
@@ -276,11 +268,8 @@ const playerProfileRoutes: FastifyPluginAsync = async (
     try {
       const { id } = request.params as { id: string };
 
-      console.log("🔍 Backend: Fetching profile with ID:", id);
-
       // Validate MongoDB ObjectId format
       if (!id || id.length !== 24) {
-        console.log("🔍 Backend: Invalid ID format:", id);
         return reply.status(400).send({
           success: false,
           message: "Invalid profile ID format",
@@ -291,8 +280,6 @@ const playerProfileRoutes: FastifyPluginAsync = async (
         "userId",
         "name email"
       );
-
-      console.log("🔍 Backend: Profile found:", profile ? "Yes" : "No");
 
       if (!profile) {
         return reply.status(404).send({

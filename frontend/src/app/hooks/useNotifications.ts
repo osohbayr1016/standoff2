@@ -181,8 +181,6 @@ export const useNotifications = () => {
       notifications: Notification[];
       count: number;
     }) => {
-      console.log("📬 Pending notifications received in hook:", data);
-
       setNotifications((prev) => {
         const existingIds = new Set(prev.map((n) => n._id));
         const newNotifications = data.notifications.filter(
@@ -203,7 +201,6 @@ export const useNotifications = () => {
       senderName: string;
       senderAvatar?: string;
     }) => {
-      console.log("📨 New message received in notifications hook:", data);
       // Update unread count when new message is received
       setUnreadCount((prev) => prev + 1);
     };

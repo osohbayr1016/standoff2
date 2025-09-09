@@ -1,4 +1,4 @@
-declare module 'cloudinary' {
+declare module "cloudinary" {
   interface UploadApiResponse {
     secure_url: string;
     public_id: string;
@@ -38,6 +38,6 @@ declare module 'cloudinary' {
     };
   }
 
-  const cloudinary: CloudinaryInstance;
-  export = cloudinary;
+  export const v2: CloudinaryInstance;
+  export = { v2: CloudinaryInstance };
 }

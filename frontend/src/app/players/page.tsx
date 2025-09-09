@@ -319,10 +319,14 @@ export default function PlayersPage() {
       const searchLower = searchTerm.toLowerCase().trim();
       filtered = filtered.filter((player) => {
         const playerName = (player.name || "").toLowerCase();
-        const playerBio = (player.bio || player.description || "").toLowerCase();
+        const playerBio = (
+          player.bio ||
+          player.description ||
+          ""
+        ).toLowerCase();
         const playerInGameName = (player.inGameName || "").toLowerCase();
         const playerMlbbId = (player.mlbbId || "").toLowerCase();
-        
+
         return (
           playerName.includes(searchLower) ||
           playerBio.includes(searchLower) ||
@@ -389,8 +393,7 @@ export default function PlayersPage() {
     } catch (error) {
       console.error("Error sorting players:", error);
       // If sorting fails, keep original order
-      console.log("Keeping original player order due to sorting error");
-    }
+      }
 
     setFilteredPlayers(filtered);
   }, [players, searchTerm, selectedRole, selectedRank, minStars, sortBy]);

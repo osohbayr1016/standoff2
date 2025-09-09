@@ -10,6 +10,9 @@ export async function GET(request: NextRequest) {
       queryString ? `?${queryString}` : ""
     }`;
 
+    console.log("Frontend API: Fetching from URL:", url);
+    console.log("API_BASE_URL:", API_BASE_URL);
+
     const authorization = request.headers.get("authorization");
     const response = await fetch(url, {
       method: "GET",
@@ -19,7 +22,25 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    console.log("Backend response status:", response.status);
+
+    if (!response.ok) {
+      console.error(
+        "Backend response not ok:",
+        response.status,
+        response.statusText
+      );
+      return NextResponse.json(
+        { success: false, message: "Backend request failed" },
+        { status: response.status }
+      );
+    }
+
     const data = await response.json();
+    console.log(
+      "Backend data received, squads count:",
+      data.squads?.length || 0
+    );
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error fetching squads:", error);

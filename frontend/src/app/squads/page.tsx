@@ -339,7 +339,7 @@ export default function SquadsPage() {
   const fetchSquads = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(API_ENDPOINTS.SQUADS.ALL, {
+      const response = await fetch(`${API_ENDPOINTS.SQUADS.ALL}?limit=50`, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
         },

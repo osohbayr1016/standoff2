@@ -114,10 +114,7 @@ export default function DivisionLeaderboard({
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {leaderboard.map((entry, index) => (
-              <tr
-                key={entry._id}
-                className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
+              <tr key={entry._id} className="bg-gray-50 dark:bg-gray-700">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRankColor(

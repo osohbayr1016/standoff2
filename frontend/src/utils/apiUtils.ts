@@ -38,9 +38,6 @@ export const robustApiCall = async (
 
       // For 5xx errors, retry if we have attempts left
       if (attempt < retries) {
-        console.log(
-          `API call failed with ${response.status}, retrying in ${retryDelay}ms...`
-        );
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
         continue;
       }
@@ -50,10 +47,8 @@ export const robustApiCall = async (
       lastError = error as Error;
 
       if (error.name === "AbortError") {
-        console.log(`API call timed out after ${timeout}ms`);
-      } else {
-        console.log(`API call failed:`, error);
-      }
+        } else {
+        }
 
       // If this is our last attempt, throw the error
       if (attempt >= retries) {
@@ -102,14 +97,10 @@ export const fetchWithFallback = async <T>(
       const data = await response.json();
       return { data: data.success ? data : fallbackData, isFromApi: true };
     } else {
-      console.log(
-        `API call failed with status ${response.status}, using fallback data`
-      );
       return { data: fallbackData, isFromApi: false };
     }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
-    console.log("API call failed, using fallback data:", message);
     return { data: fallbackData, isFromApi: false };
   }
 };

@@ -12,6 +12,7 @@ import {
   Plus,
   Calendar,
   Award,
+  Gamepad2,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -252,6 +253,24 @@ export default function AdminDashboard() {
       ),
       href: "/admin/match-results",
       color: "from-pink-500 to-rose-500",
+    },
+    {
+      id: "match-management",
+      title: "Match Management",
+      description:
+        "Create, edit, and manage tournament matches and player assignments",
+      icon: <Gamepad2 className="w-8 h-8" />,
+      href: "/admin/match-management",
+      color: "from-cyan-500 to-blue-500",
+    },
+    {
+      id: "matches",
+      title: "All Matches",
+      description:
+        "View and manage all matches across all tournaments with team matchups",
+      icon: <Trophy className="w-8 h-8" />,
+      href: "/admin/matches",
+      color: "from-indigo-500 to-purple-500",
     },
     {
       id: "withdraw-requests",

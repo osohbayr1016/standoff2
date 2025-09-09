@@ -82,18 +82,11 @@ export default function ProfilePage() {
         return;
       }
 
-      console.log(
-        "🔍 Debug - Fetching profile with token:",
-        token ? "Token exists" : "No token"
-      );
-
       const response = await fetch(API_ENDPOINTS.PLAYER_PROFILES.MY_PROFILE, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      console.log("🔍 Debug - Profile response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
@@ -118,7 +111,6 @@ export default function ProfilePage() {
   }, [getToken, router]);
 
   useEffect(() => {
-    console.log("🔍 Debug - User state:", { user });
     if (user) {
       fetchProfile();
     }
@@ -142,9 +134,6 @@ export default function ProfilePage() {
 
       const token = localStorage.getItem("token");
 
-      console.log("🔍 Debug - Saving profile data:", editData);
-      console.log("🔍 Debug - Highlight video:", editData.highlightVideo);
-
       const response = await fetch(API_ENDPOINTS.PLAYER_PROFILES.UPDATE, {
         method: "PUT",
         headers: {
@@ -154,11 +143,7 @@ export default function ProfilePage() {
         body: JSON.stringify(editData),
       });
 
-      console.log("🔍 Debug - Save response status:", response.status);
-
       const data = await response.json();
-      console.log("🔍 Debug - Save response data:", data);
-
       if (response.ok) {
         setProfile(data.profile);
         setIsEditing(false);
@@ -215,13 +200,11 @@ export default function ProfilePage() {
   };
 
   const handleVideoChange = (url: string) => {
-    console.log("🔍 Debug - Video change called with URL:", url);
     setEditData((prev) => {
       const newData = {
         ...prev,
         highlightVideo: url,
       };
-      console.log("🔍 Debug - Updated editData:", newData);
       return newData;
     });
   };

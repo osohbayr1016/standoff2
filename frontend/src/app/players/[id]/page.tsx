@@ -72,8 +72,6 @@ export default function PlayerDetailPage({
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
-    console.log("🔍 PlayerDetailPage: useEffect triggered with id:", id);
-
     // Fetch player from API
     const fetchPlayer = async () => {
       try {
@@ -81,8 +79,6 @@ export default function PlayerDetailPage({
 
         // Use the specific player endpoint
         const apiUrl = API_ENDPOINTS.PLAYER_PROFILES.GET(id);
-        console.log("🔍 Fetching player from:", apiUrl);
-
         // Try the main API endpoint first
         let response = await fetch(apiUrl, {
           method: "GET",
@@ -93,7 +89,6 @@ export default function PlayerDetailPage({
 
         // If the main endpoint fails, try a fallback
         if (!response.ok && response.status !== 404) {
-          console.log("🔍 Main endpoint failed, trying fallback...");
           const fallbackUrl = `${
             process.env.NEXT_PUBLIC_API_URL ||
             (typeof window !== "undefined" &&
@@ -101,8 +96,6 @@ export default function PlayerDetailPage({
               ? "https://e-sport-connection-0596.onrender.com"
               : "http://localhost:8000")
           }/api/player-profiles/profiles/${id}`;
-          console.log("🔍 Trying fallback URL:", fallbackUrl);
-
           response = await fetch(fallbackUrl, {
             method: "GET",
             headers: {
@@ -111,13 +104,8 @@ export default function PlayerDetailPage({
           });
         }
 
-        console.log("🔍 Response status:", response.status);
-        console.log("🔍 Response headers:", response.headers);
-
         if (response.ok) {
           const data = await response.json();
-          console.log("🔍 Player data received:", data);
-
           if (data.profile) {
             setPlayer(data.profile);
           } else {
@@ -125,7 +113,6 @@ export default function PlayerDetailPage({
             setPlayer(null);
           }
         } else if (response.status === 404) {
-          console.log("🔍 Player not found");
           setPlayer(null);
         } else {
           console.error("🔍 Failed to fetch player, status:", response.status);

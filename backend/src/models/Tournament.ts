@@ -28,6 +28,7 @@ export interface ITournament extends Document {
   rules: string;
   registrationDeadline: Date;
   entryFee: number; // Registration fee (5000 MNT)
+  tournamentType: "tax" | "free"; // Tournament type: tax (requires payment) or free
   format: string; // Tournament format (Single Elimination, Double Elimination, etc.)
   brackets?: any; // Tournament bracket structure
   createdAt: Date;
@@ -135,6 +136,12 @@ const tournamentSchema = new Schema<ITournament>(
       default: 5000, // 5000 MNT
       min: 0,
     },
+    tournamentType: {
+      type: String,
+      enum: ["tax", "free"],
+      required: true,
+      default: "tax", // Default to tax tournament
+    },
     format: {
       type: String,
       required: true,
@@ -155,6 +162,7 @@ tournamentSchema.index({ game: 1 });
 tournamentSchema.index({ status: 1 });
 tournamentSchema.index({ startDate: 1 });
 tournamentSchema.index({ organizer: 1 });
+tournamentSchema.index({ tournamentType: 1 }); // Add index for tournament type
 tournamentSchema.index({ name: "text", description: "text" });
 
 export default mongoose.model<ITournament>("Tournament", tournamentSchema);

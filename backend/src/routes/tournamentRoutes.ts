@@ -58,6 +58,7 @@ const tournamentRoutes: FastifyPluginAsync = async (
         registrationDeadline: 1,
         prizePool: 1,
         entryFee: 1,
+        tournamentType: 1,
         format: 1,
         location: 1,
         status: 1,

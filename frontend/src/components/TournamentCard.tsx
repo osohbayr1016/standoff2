@@ -36,6 +36,7 @@ export interface Tournament {
   currentParticipants: number;
   format: string;
   entryFee: number;
+  tournamentType: "tax" | "free"; // Tournament type: tax (requires payment) or free
   location: string;
   status:
     | "upcoming"
@@ -178,13 +179,24 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
         </div>
 
         {/* Status Badge */}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 flex flex-col space-y-2">
           <span
             className={`px-3 py-1 rounded-full text-white text-xs font-medium ${getStatusColor(
               tournament.status
             )} shadow-lg`}
           >
             {getStatusText(tournament.status)}
+          </span>
+
+          {/* Tournament Type Badge */}
+          <span
+            className={`px-3 py-1 rounded-full text-white text-xs font-medium ${
+              tournament.tournamentType === "free"
+                ? "bg-green-500"
+                : "bg-orange-500"
+            } shadow-lg`}
+          >
+            {tournament.tournamentType === "free" ? "Үнэгүй" : "Төлбөртэй"}
           </span>
         </div>
 

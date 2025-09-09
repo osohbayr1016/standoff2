@@ -158,6 +158,32 @@ const tournamentRegistrationRoutes: FastifyPluginAsync = async (
         });
       }
 
+      // Handle different tournament types
+      let paymentStatus = "pending";
+      let isApproved = false;
+      let approvalStatus = "pending";
+
+      // Default to tax tournament type if not specified (for backward compatibility)
+      const tournamentType = tournament.tournamentType || "tax";
+
+      if (tournamentType === "free") {
+        // Free tournaments are automatically approved
+        paymentStatus = "paid";
+        isApproved = true;
+        approvalStatus = "approved";
+      } else if (tournamentType === "tax") {
+        // Tax tournaments require payment proof and admin approval
+        if (!paymentProof) {
+          return reply.status(400).send({
+            success: false,
+            message: "Payment proof is required for tax tournaments",
+          });
+        }
+        paymentStatus = "pending";
+        isApproved = false;
+        approvalStatus = "pending";
+      }
+
       // Create registration
       const registration = new TournamentRegistration({
         tournament: tournamentId,
@@ -166,7 +192,9 @@ const tournamentRegistrationRoutes: FastifyPluginAsync = async (
         squadMembers: squad.members,
         registrationFee: tournament.entryFee,
         paymentProof,
-        paymentStatus: paymentProof ? "paid" : "pending",
+        paymentStatus,
+        isApproved,
+        approvalStatus,
         paymentDate: paymentProof ? new Date() : undefined,
       });
 
@@ -245,8 +273,24 @@ const tournamentRegistrationRoutes: FastifyPluginAsync = async (
   fastify.put("/:id/approve", async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
-      const { adminId, approved } = request.body as any;
+      const { adminId, action, reason } = request.body as any;
 
+      // Validate required fields
+      if (!adminId || !action) {
+        return reply.status(400).send({
+          success: false,
+          message: "Admin ID and action are required",
+        });
+      }
+
+      if (!["approve", "reject"].includes(action)) {
+        return reply.status(400).send({
+          success: false,
+          message: "Action must be either 'approve' or 'reject'",
+        });
+      }
+
+      // Check if registration exists
       const registration = await TournamentRegistration.findById(id);
       if (!registration) {
         return reply.status(404).send({
@@ -255,17 +299,42 @@ const tournamentRegistrationRoutes: FastifyPluginAsync = async (
         });
       }
 
-      registration.isApproved = approved;
-      if (approved) {
+      // Check if tournament is tax type
+      const tournament = await Tournament.findById(registration.tournament);
+      if (!tournament) {
+        return reply.status(404).send({
+          success: false,
+          message: "Tournament not found",
+        });
+      }
+      
+      // Default to tax tournament type if not specified (for backward compatibility)
+      const tournamentType = tournament.tournamentType || "tax";
+      if (tournamentType !== "tax") {
+        return reply.status(400).send({
+          success: false,
+          message: "Only tax tournament registrations can be approved/rejected",
+        });
+      }
+
+      // Update registration based on action
+      if (action === "approve") {
+        registration.isApproved = true;
+        registration.approvalStatus = "approved";
         registration.approvedBy = adminId;
         registration.approvedAt = new Date();
-        registration.status = "registered";
+        registration.paymentStatus = "paid";
+        registration.paymentDate = new Date();
+      } else if (action === "reject") {
+        registration.isApproved = false;
+        registration.approvalStatus = "rejected";
+        registration.rejectionReason = reason || "No reason provided";
       }
 
       await registration.save();
 
       const updatedRegistration = await TournamentRegistration.findById(id)
-        .populate("tournament", "name game startDate")
+        .populate("tournament", "name game startDate tournamentType")
         .populate("squad", "name tag")
         .populate("squadLeader", "name email")
         .populate("squadMembers", "name email")
@@ -274,16 +343,14 @@ const tournamentRegistrationRoutes: FastifyPluginAsync = async (
 
       return reply.status(200).send({
         success: true,
-        message: `Registration ${
-          approved ? "approved" : "rejected"
-        } successfully`,
+        message: `Registration ${action}d successfully`,
         registration: updatedRegistration,
       });
     } catch (error) {
-      console.error("Approve registration error:", error);
+      console.error("Admin approval error:", error);
       return reply.status(500).send({
         success: false,
-        message: "Failed to approve registration",
+        message: "Failed to process approval",
       });
     }
   });
@@ -393,6 +460,51 @@ const tournamentRegistrationRoutes: FastifyPluginAsync = async (
       return reply.status(500).send({
         success: false,
         message: "Failed to cancel registration",
+      });
+    }
+  });
+
+
+
+  // Get pending tax tournament registrations (admin only)
+  fastify.get("/pending-tax", async (request, reply) => {
+    try {
+      const { page = 1, limit = 10 } = request.query as any;
+
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+
+      const query = {
+        approvalStatus: "pending",
+      };
+
+      const [registrations, total] = await Promise.all([
+        TournamentRegistration.find(query)
+          .populate("tournament", "name game startDate tournamentType")
+          .populate("squad", "name tag")
+          .populate("squadLeader", "name email")
+          .populate("squadMembers", "name email")
+          .sort({ registrationDate: -1 })
+          .skip(skip)
+          .limit(parseInt(limit))
+          .lean(),
+        TournamentRegistration.countDocuments(query),
+      ]);
+
+      return reply.status(200).send({
+        success: true,
+        registrations,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      });
+    } catch (error) {
+      console.error("Get pending tax registrations error:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Failed to get pending tax registrations",
       });
     }
   });

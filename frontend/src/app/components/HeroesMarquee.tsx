@@ -64,11 +64,9 @@ export default function HeroesMarquee({
                   // Fallback to a placeholder if image fails to load
                   const target = e.target as HTMLImageElement;
                   target.src = "/default-avatar.png";
-                  console.log(`Failed to load image: ${h.src}`);
-                }}
+                  }}
                 onLoad={() => {
-                  console.log(`Successfully loaded image: ${h.src}`);
-                }}
+                  }}
               />
 
               {/* Hero name tooltip */}

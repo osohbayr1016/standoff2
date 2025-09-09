@@ -193,8 +193,6 @@ const InstagramChat: React.FC = () => {
       senderName: string;
       senderAvatar?: string;
     }) => {
-      console.log("📨 New message received in InstagramChat:", data);
-
       const newMessage: Message = {
         _id: data.id || Date.now().toString(),
         content: data.content,
