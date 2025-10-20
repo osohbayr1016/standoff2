@@ -22,6 +22,7 @@ import Image from "next/image";
 import NotificationCenter from "./NotificationCenter";
 import ProfileDropdown from "./ProfileDropdown";
 import InviteFriendModal from "./InviteFriendModal";
+import SearchModal from "./SearchModal";
 
 export default function Navigation() {
   const { isDarkMode, toggleDarkMode, isLoaded } = useDarkMode();
@@ -30,6 +31,7 @@ export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isInviteFriendModalOpen, setIsInviteFriendModalOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [userSquad, setUserSquad] = useState<{
     _id: string;
     name: string;
@@ -188,6 +190,7 @@ export default function Navigation() {
 
             <div className="hidden md:flex items-center space-x-4">
               <motion.button
+                onClick={() => setIsSearchModalOpen(true)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
@@ -317,6 +320,10 @@ export default function Navigation() {
                   {/* Mobile Actions */}
                   <div className="flex items-center space-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <motion.button
+                      onClick={() => {
+                        setIsSearchModalOpen(true);
+                        setIsMobileMenuOpen(false);
+                      }}
                       whileTap={{ scale: 0.95 }}
                       className="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
                     >
@@ -436,6 +443,11 @@ export default function Navigation() {
       <InviteFriendModal
         isOpen={isInviteFriendModalOpen}
         onClose={() => setIsInviteFriendModalOpen(false)}
+      />
+
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
       />
     </>
   );

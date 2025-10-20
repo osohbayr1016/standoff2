@@ -7,6 +7,8 @@ import ScrollReveal from "./components/ScrollReveal";
 import IntroOverlay from "./components/IntroOverlay";
 import HeroesMarquee from "./components/HeroesMarquee";
 import StatsRow from "./components/StatsRow";
+import OngoingTournaments from "./components/OngoingTournaments";
+import LatestNews from "./components/LatestNews";
 import { useAuth } from "./contexts/AuthContext";
 
 export default function Home() {
@@ -92,6 +94,9 @@ export default function Home() {
 
                   {/* Stats Row (live data) */}
                   <StatsRow />
+
+                  {/* Ongoing Tournaments */}
+                  <OngoingTournaments />
                 </div>
 
                 {/* Right side empty to show hero art background, reserved for future illustration */}
@@ -127,47 +132,59 @@ export default function Home() {
               <HeroesMarquee
                 heroes={[
                   {
-                    src: "https://static.wikia.nocookie.net/mobile-legends/images/8/8c/Alucard_skin_1.png",
-                    alt: "Alucard - The Dark Knight",
+                    src: "/heroes/akai.jpg",
+                    alt: "Akai - Panda Warrior",
                   },
                   {
-                    src: "https://static.wikia.nocookie.net/mobile-legends/images/2/2c/Gusion_skin_1.png",
-                    alt: "Gusion - The Mystic Blade",
+                    src: "/heroes/aldous.jpg",
+                    alt: "Aldous - Contractor",
                   },
                   {
-                    src: "https://static.wikia.nocookie.net/mobile-legends/images/4/4c/Kagura_skin_1.png",
-                    alt: "Kagura - The Onmyoji Master",
+                    src: "/heroes/alice.jpg",
+                    alt: "Alice - Queen of Blood",
                   },
                   {
-                    src: "https://static.wikia.nocookie.net/mobile-legends/images/7/7c/Layla_skin_1.png",
-                    alt: "Layla - The Malefic Gunner",
+                    src: "/heroes/alpha.jpg",
+                    alt: "Alpha - Blade of Enmity",
                   },
                   {
-                    src: "https://static.wikia.nocookie.net/mobile-legends/images/5/5c/Miya_skin_1.png",
-                    alt: "Miya - The Moonlight Archer",
+                    src: "/heroes/alucard.jpg",
+                    alt: "Alucard - Demon Hunter",
                   },
                   {
-                    src: "https://static.wikia.nocookie.net/mobile-legends/images/3/3c/Franco_skin_1.png",
-                    alt: "Franco - The Frozen Warrior",
+                    src: "/heroes/angela.jpg",
+                    alt: "Angela - Bunnylove",
                   },
                   {
-                    src: "https://static.wikia.nocookie.net/mobile-legends/images/1/1c/Angela_skin_1.png",
-                    alt: "Angela - The Sacred Oath",
+                    src: "/heroes/argus.jpg",
+                    alt: "Argus - Dark Angel",
                   },
                   {
-                    src: "https://static.wikia.nocookie.net/mobile-legends/images/9/9c/Bruno_skin_1.png",
-                    alt: "Bruno - The Mecha Legions",
+                    src: "/heroes/arlott.jpg",
+                    alt: "Arlott - Lone Lancer",
                   },
                   {
-                    src: "https://static.wikia.nocookie.net/mobile-legends/images/6/6c/Cyclops_skin_1.png",
-                    alt: "Cyclops - The Master of Magic",
+                    src: "/heroes/atlas.jpg",
+                    alt: "Atlas - Ocean Gladiator",
                   },
                   {
-                    src: "https://static.wikia.nocookie.net/mobile-legends/images/0/0c/Estes_skin_1.png",
-                    alt: "Estes - The Elf King",
+                    src: "/heroes/aulus.jpg",
+                    alt: "Aulus - Warrior of Ferocity",
+                  },
+                  {
+                    src: "/heroes/aurora.jpg",
+                    alt: "Aurora - Maiden of the Glacier",
+                  },
+                  {
+                    src: "/heroes/badang.jpg",
+                    alt: "Badang - Tribal Warrior",
+                  },
+                  {
+                    src: "/heroes/balmond.jpg",
+                    alt: "Balmond - Bloody Beast",
                   },
                 ]}
-                height={120}
+                height={180}
                 speed={30}
               />
             </ScrollReveal>
@@ -179,41 +196,12 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <ScrollReveal className="mb-10">
               <h2 className="text-3xl sm:text-4xl font-bold text-white">
-                FEATURED
+                LATEST NEWS
               </h2>
             </ScrollReveal>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <ScrollReveal>
-                <div className="aspect-[16/9] rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-purple-600/20 to-blue-600/20 shadow-xl relative group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-blue-900/30 to-black/60" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <h3 className="text-2xl font-bold mb-2">
-                        Tournament Highlights
-                      </h3>
-                      <p className="text-gray-300">
-                        Watch the best plays from recent tournaments
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </ScrollReveal>
-              <ScrollReveal>
-                <div className="aspect-[16/9] rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-green-600/20 to-teal-600/20 shadow-xl relative group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-900/40 via-teal-900/30 to-black/60" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <h3 className="text-2xl font-bold mb-2">
-                        Pro Player Spotlights
-                      </h3>
-                      <p className="text-gray-300">
-                        Meet the top players in the community
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </ScrollReveal>
-            </div>
+            <ScrollReveal>
+              <LatestNews />
+            </ScrollReveal>
           </div>
         </section>
       </>

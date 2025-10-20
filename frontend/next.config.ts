@@ -143,18 +143,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "example.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "*.example.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
         hostname: "localhost",
         port: "",
         pathname: "/**",
@@ -210,6 +198,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "instagram.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "liquipedia.net",
         port: "",
         pathname: "/**",
       },

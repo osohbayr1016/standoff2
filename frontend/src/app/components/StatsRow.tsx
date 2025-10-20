@@ -7,8 +7,8 @@ import { API_ENDPOINTS } from "../../config/api";
 export default function StatsRow() {
   const [stats, setStats] = useState({
     activePlayers: 0,
-    ongoingMatches: 0,
-    upcomingEvents: 0,
+    newsCount: 0,
+    ongoingTournaments: 0,
   });
 
   useEffect(() => {
@@ -46,8 +46,8 @@ export default function StatsRow() {
       transition={{ duration: 0.6, delay: 0.35 }}
     >
       <Stat value={stats.activePlayers} label="ACTIVE PLAYERS" />
-      <Stat value={stats.ongoingMatches} label="ONGOING MATCHES" />
-      <Stat value={stats.upcomingEvents} label="UPCOMING EVENTS" />
+      <Stat value={stats.newsCount} label="NEWS" />
+      <Stat value={stats.ongoingTournaments} label="ONGOING TOURNAMENTS" />
     </motion.div>
   );
 }

@@ -1,0 +1,22 @@
+================================================================================
+  COPY THIS CONNECTION STRING TO RENDER
+================================================================================
+
+mongodb+srv://osohbayar:5Fcy02ZLLpG7GYRO@mentormeet.xfipt6t.mongodb.net/e-sport-connection?retryWrites=true&w=majority
+
+================================================================================
+  WHERE TO PASTE IT:
+================================================================================
+
+1. Go to: https://dashboard.render.com
+2. Click: e-sport-connection-backend
+3. Click: Environment (left sidebar)
+4. Find: MONGODB_URI
+5. Click: Edit (pencil icon)
+6. Paste: The connection string above
+7. Click: Save Changes
+
+Render will auto-deploy and your MongoDB connection will work! ✅
+
+================================================================================
+

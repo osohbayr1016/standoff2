@@ -36,16 +36,16 @@ export default function DivisionCard({
     <div
       className={`relative cursor-pointer transition-all duration-300 transform hover:scale-105 ${
         isSelected ? "ring-4 ring-blue-500 ring-opacity-50" : ""
-      }`}
+      } h-full`}
       onClick={onSelect}
     >
       <div
         className={`bg-gradient-to-br ${getDivisionGradient(
           division.name
-        )} rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-600`}
+        )} rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-600 h-full flex flex-col`}
       >
         {/* Header */}
-        <div className="p-6 text-center bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500">
+        <div className="p-6 text-center bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 min-h-[160px] flex flex-col items-center justify-center">
           <div className="mb-3">{getDivisionIcon(division.name)}</div>
           <h3 className="text-2xl font-bold mb-2 text-white">
             {division.displayName}
@@ -54,7 +54,7 @@ export default function DivisionCard({
         </div>
 
         {/* Content */}
-        <div className="bg-white p-6">
+        <div className="bg-white p-6 flex-1 flex flex-col">
           {/* Upgrade Cost */}
           {division.upgradeCost && (
             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
@@ -74,7 +74,7 @@ export default function DivisionCard({
           </div>
 
           {/* Win/Lose Rewards */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 mt-auto">
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <div className="text-sm text-green-600 mb-1">Win</div>
               <div className="text-lg font-bold text-green-900">

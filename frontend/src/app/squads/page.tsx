@@ -546,7 +546,7 @@ export default function SquadsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 h-full flex flex-col"
               >
                 {/* Squad Header */}
                 <div className="relative h-36 bg-gradient-to-br from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500">
@@ -600,12 +600,17 @@ export default function SquadsPage() {
                 </div>
 
                 {/* Squad Content */}
-                <div className="p-6">
-                  {squad.description && (
-                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
-                      {squad.description}
-                    </p>
-                  )}
+                <div className="p-6 flex flex-col flex-1">
+                  {/* Ensure consistent space for description across cards */}
+                  <div className="mb-4 min-h-[40px]">
+                    {squad.description ? (
+                      <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">
+                        {squad.description}
+                      </p>
+                    ) : (
+                      <div className="h-[1px]" />
+                    )}
+                  </div>
 
                   {/* Division and BC Info */}
                   <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -682,7 +687,7 @@ export default function SquadsPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 mt-auto">
                     <Link href={`/squads/${squad._id}`}>
                       <motion.button
                         whileHover={{ scale: 1.05 }}

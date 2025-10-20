@@ -50,23 +50,26 @@ export default function HeroesMarquee({
             key={`${h.src}-${i}`}
             className="inline-flex items-center justify-center mx-6 group"
           >
-            <div className="relative">
+            <div
+              className="relative"
+              style={{ height: height, width: `calc(${height}px * 16 / 9)` }}
+            >
               {/* Hero image with glow effect */}
               <div className="absolute inset-0 bg-gradient-to-b from-blue-400/20 to-cyan-400/20 rounded-full blur-lg scale-110 group-hover:scale-125 transition-transform duration-300" />
               <Image
                 src={h.src}
                 alt={h.alt}
-                width={height}
-                height={height}
-                className="relative h-auto w-auto object-contain drop-shadow-2xl group-hover:scale-110 transition-transform duration-300"
+                width={1920}
+                height={1080}
+                className="relative object-cover drop-shadow-2xl group-hover:scale-110 transition-transform duration-300"
+                style={{ width: "100%", height: "100%" }}
                 unoptimized
                 onError={(e) => {
                   // Fallback to a placeholder if image fails to load
                   const target = e.target as HTMLImageElement;
                   target.src = "/default-avatar.png";
-                  }}
-                onLoad={() => {
-                  }}
+                }}
+                onLoad={() => {}}
               />
 
               {/* Hero name tooltip */}
