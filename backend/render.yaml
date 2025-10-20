@@ -12,6 +12,7 @@ services:
         value: production
       - key: MONGODB_URI
         sync: false
+        # Set in Render Dashboard to: mongodb+srv://osohbayar:5Fcy02ZLLpG7GYRO@mentormeet.xfipt6t.mongodb.net/e-sport-connection?retryWrites=true&w=majority
       - key: JWT_SECRET
         generateValue: true
       - key: SESSION_SECRET
