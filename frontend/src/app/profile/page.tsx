@@ -511,7 +511,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                       <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                        Highest Rank
+                        Highest Ranks
                       </h3>
                       {isEditing ? (
                         <div className="space-y-2">
