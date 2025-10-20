@@ -36,13 +36,11 @@ class SocketManager {
             }
         });
         this.io.on("connection", (socket) => {
-            console.log(`🔌 User connected: ${socket.data.userId}`);
             this.connectedUsers.set(socket.data.userId, socket.id);
             this.broadcastUserStatus(socket.data.userId, "online");
             socket.on("send_message", async (data) => {
                 try {
                     const { receiverId, content } = data;
-                    console.log(`📨 Message from ${socket.data.userId} to ${receiverId}: ${content}`);
                     const receiverSocketId = this.connectedUsers.get(receiverId);
                     if (receiverSocketId) {
                         this.io.to(receiverSocketId).emit("new_message", {
@@ -102,12 +100,10 @@ class SocketManager {
                 this.broadcastUserStatus(socket.data.userId, status);
             });
             socket.on("disconnect", () => {
-                console.log(`🔌 User disconnected: ${socket.data.userId}`);
                 this.connectedUsers.delete(socket.data.userId);
                 this.broadcastUserStatus(socket.data.userId, "offline");
             });
         });
-        console.log("✅ WebSocket server initialized");
     }
     broadcastUserStatus(userId, status) {
         if (this.io) {

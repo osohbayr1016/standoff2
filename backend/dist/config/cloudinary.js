@@ -9,7 +9,6 @@ if (!cloudName || !apiKey || !apiSecret) {
     console.warn("Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env file");
 }
 else {
-    console.log("✅ Cloudinary environment variables found");
 }
 cloudinary_1.v2.config({
     cloud_name: cloudName,

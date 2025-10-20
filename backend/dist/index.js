@@ -56,8 +56,6 @@ const connectDB = async () => {
             throw new Error("MONGODB_URI environment variable is required");
         }
         await mongoose_1.default.connect(mongoURI);
-        console.log("✅ Connected to MongoDB");
-        console.log(`📊 Database: ${mongoose_1.default.connection.name}`);
     }
     catch (error) {
         console.error("❌ MongoDB connection failed:", error);
@@ -111,112 +109,76 @@ fastify.get("/api/test-cors", async (request, reply) => {
         timestamp: new Date().toISOString(),
     };
 });
+fastify.get("/api/upload-test", async (request, reply) => {
+    return {
+        success: true,
+        message: "Upload test endpoint working",
+        timestamp: new Date().toISOString(),
+    };
+});
 fastify.get("/api/v1", async (request, reply) => {
     return { message: "E-Sport Connection API v1" };
 });
 async function registerRoutes() {
     try {
-        console.log("🔧 Registering auth routes...");
+        const { setupRateLimiting } = await Promise.resolve().then(() => __importStar(require("./config/rateLimit")));
+        await setupRateLimiting(fastify);
         const authRoutes = await Promise.resolve().then(() => __importStar(require("./routes/authRoutes")));
-        console.log("🔧 Auth routes imported:", !!authRoutes.default);
         fastify.register(authRoutes.default, { prefix: "/api/auth" });
-        console.log("🔧 Auth routes registered with prefix /api/auth");
-        console.log("🔧 Registering user routes...");
         const userRoutes = await Promise.resolve().then(() => __importStar(require("./routes/userRoutes")));
-        console.log("🔧 User routes imported:", !!userRoutes.default);
         fastify.register(userRoutes.default, { prefix: "/api/users" });
-        console.log("🔧 User routes registered with prefix /api/users");
-        console.log("🔧 Registering player profile routes...");
         const playerProfileRoutes = await Promise.resolve().then(() => __importStar(require("./routes/playerProfileRoutes")));
-        console.log("🔧 Player profile routes imported:", !!playerProfileRoutes.default);
         fastify.register(playerProfileRoutes.default, {
             prefix: "/api/player-profiles",
         });
-        console.log("🔧 Player profile routes registered with prefix /api/player-profiles");
-        console.log("🔧 Registering organization profile routes...");
         const organizationProfileRoutes = await Promise.resolve().then(() => __importStar(require("./routes/organizationProfileRoutes")));
-        console.log("🔧 Organization profile routes imported:", !!organizationProfileRoutes.default);
         fastify.register(organizationProfileRoutes.default, {
             prefix: "/api/organization-profiles",
         });
-        console.log("🔧 Organization profile routes registered with prefix /api/organization-profiles");
-        console.log("🔧 Registering notification routes...");
         const notificationRoutes = await Promise.resolve().then(() => __importStar(require("./routes/notificationRoutes")));
-        console.log("🔧 Notification routes imported:", !!notificationRoutes.default);
         fastify.register(notificationRoutes.default, { prefix: "/api" });
-        console.log("🔧 Notification routes registered with prefix /api");
-        console.log("🔧 Registering stats routes...");
         const statsRoutes = await Promise.resolve().then(() => __importStar(require("./routes/statsRoutes")));
-        console.log("🔧 Stats routes imported:", !!statsRoutes.default);
         fastify.register(statsRoutes.default, { prefix: "/api" });
-        console.log("🔧 Stats routes registered with prefix /api");
-        console.log("🔧 Registering test routes...");
         const testRoutes = await Promise.resolve().then(() => __importStar(require("./routes/testRoutes")));
-        console.log("🔧 Test routes imported:", !!testRoutes.default);
         fastify.register(testRoutes.default, { prefix: "/api/test" });
-        console.log("🔧 Test routes registered with prefix /api/test");
-        console.log("🔧 Registering upload routes...");
-        const uploadRoutes = await Promise.resolve().then(() => __importStar(require("./routes/uploadRoutes")));
-        console.log("🔧 Upload routes imported:", !!uploadRoutes.default);
-        fastify.register(uploadRoutes.default, { prefix: "/api/upload" });
-        console.log("🔧 Upload routes registered with prefix /api/upload");
-        console.log("🔧 Registering message routes...");
+        try {
+            const uploadRoutes = await Promise.resolve().then(() => __importStar(require("./routes/uploadRoutes")));
+            if (uploadRoutes.default) {
+                await fastify.register(uploadRoutes.default, { prefix: "/api/upload" });
+            }
+            else {
+                console.error("❌ Upload routes default export is undefined");
+            }
+        }
+        catch (error) {
+            console.error("❌ Error registering upload routes:", error);
+        }
         const messageRoutes = await Promise.resolve().then(() => __importStar(require("./routes/messageRoutes")));
-        console.log("🔧 Message routes imported:", !!messageRoutes.default);
         fastify.register(messageRoutes.default, { prefix: "/api" });
-        console.log("🔧 Message routes registered with prefix /api");
-        console.log("🔧 Registering news routes...");
         const newsRoutes = await Promise.resolve().then(() => __importStar(require("./routes/newsRoutes")));
-        console.log("🔧 News routes imported:", !!newsRoutes.default);
         fastify.register(newsRoutes.default, { prefix: "/api/news" });
-        console.log("🔧 News routes registered with prefix /api/news");
-        console.log("🔧 Registering tournament routes...");
         const tournamentRoutes = await Promise.resolve().then(() => __importStar(require("./routes/tournamentRoutes")));
-        console.log("🔧 Tournament routes imported:", !!tournamentRoutes.default);
         fastify.register(tournamentRoutes.default, { prefix: "/api/tournaments" });
-        console.log("🔧 Tournament routes registered with prefix /api/tournaments");
-        console.log("🔧 Registering tournament match routes...");
         const tournamentMatchRoutes = await Promise.resolve().then(() => __importStar(require("./routes/tournamentMatchRoutes")));
-        console.log("🔧 Tournament match routes imported:", !!tournamentMatchRoutes.default);
         fastify.register(tournamentMatchRoutes.default, {
             prefix: "/api/tournament-matches",
         });
-        console.log("🔧 Tournament match routes registered with prefix /api/tournament-matches");
-        console.log("🔧 Registering bounty coin routes...");
         const bountyCoinRoutes = await Promise.resolve().then(() => __importStar(require("./routes/bountyCoinRoutes")));
-        console.log("🔧 Bounty coin routes imported:", !!bountyCoinRoutes.default);
         fastify.register(bountyCoinRoutes.default, {
             prefix: "/api/bounty-coins",
         });
-        console.log("🔧 Bounty coin routes registered with prefix /api/bounty-coins");
-        console.log("🔧 Registering squad routes...");
         const squadRoutes = await Promise.resolve().then(() => __importStar(require("./routes/squadRoutes")));
-        console.log("🔧 Squad routes imported:", !!squadRoutes.default);
         fastify.register(squadRoutes.default, { prefix: "/api/squads" });
-        console.log("🔧 Squad routes registered with prefix /api/squads");
-        console.log("🔧 Registering division routes...");
         const divisionRoutes = await Promise.resolve().then(() => __importStar(require("./routes/divisionRoutes")));
-        console.log("🔧 Division routes imported:", !!divisionRoutes.default);
         fastify.register(divisionRoutes.default, { prefix: "/api/divisions" });
-        console.log("🔧 Division routes registered with prefix /api/divisions");
-        console.log("🔧 Registering tournament registration routes...");
         const tournamentRegistrationRoutes = await Promise.resolve().then(() => __importStar(require("./routes/tournamentRegistrationRoutes")));
-        console.log("🔧 Tournament registration routes imported:", !!tournamentRegistrationRoutes.default);
         fastify.register(tournamentRegistrationRoutes.default, {
             prefix: "/api/tournament-registrations",
         });
-        console.log("🔧 Tournament registration routes registered with prefix /api/tournament-registrations");
-        console.log("🔧 Registering dashboard routes...");
         const dashboardRoutes = await Promise.resolve().then(() => __importStar(require("./routes/dashboardRoutes")));
-        console.log("🔧 Dashboard routes imported:", !!dashboardRoutes.default);
         fastify.register(dashboardRoutes.default, { prefix: "/api/dashboard" });
-        console.log("🔧 Dashboard routes registered with prefix /api/dashboard");
-        console.log("🔧 Registering pro player routes...");
         const proPlayerRoutes = await Promise.resolve().then(() => __importStar(require("./routes/proPlayerRoutes")));
-        console.log("🔧 Pro player routes imported:", !!proPlayerRoutes.default);
         fastify.register(proPlayerRoutes.default, { prefix: "/api/pro-players" });
-        console.log("🔧 Pro player routes registered with prefix /api/pro-players");
-        console.log("✅ All routes registered successfully");
     }
     catch (error) {
         console.error("❌ Error registering routes:", error);
@@ -238,34 +200,22 @@ fastify.setNotFoundHandler((request, reply) => {
     });
 });
 process.on("SIGTERM", async () => {
-    console.log("Shutting down gracefully...");
     await fastify.close();
     process.exit(0);
 });
 process.on("SIGINT", async () => {
-    console.log("Shutting down gracefully...");
     await fastify.close();
     process.exit(0);
 });
 const startServer = async () => {
     try {
-        console.log("🚀 Starting DEBUG-FREE server...");
-        console.log("Environment:", process.env.NODE_ENV);
-        console.log("Port:", PORT);
         await connectDB();
-        console.log("✅ Database connected successfully");
         await registerRoutes();
         await fastify.listen({
             port: Number(PORT),
             host: "0.0.0.0",
         });
         socketManager.initialize(fastify.server);
-        console.log(`✅ HTTP Server with Socket.IO running on port ${PORT}`);
-        console.log(`✅ DEBUG-FREE Server running on port ${PORT}`);
-        console.log(`📡 Health check: http://localhost:${PORT}/health`);
-        console.log(`🚀 API endpoint: http://localhost:${PORT}/api/v1`);
-        console.log(`🔌 WebSocket endpoint: http://localhost:${PORT}`);
-        console.log(`🎯 NO DEBUG DEPENDENCIES - ERROR ELIMINATED!`);
     }
     catch (error) {
         console.error("❌ Failed to start server:", error);

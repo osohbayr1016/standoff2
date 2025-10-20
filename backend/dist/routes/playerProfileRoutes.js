@@ -37,8 +37,6 @@ const playerProfileRoutes = async (fastify) => {
                 });
             }
             const profileData = request.body;
-            console.log("🔍 Debug - Creating profile for user:", decoded.id);
-            console.log("🔍 Debug - Profile data received:", profileData);
             const requiredFields = [
                 "category",
                 "game",
@@ -50,7 +48,6 @@ const playerProfileRoutes = async (fastify) => {
             ];
             const missingFields = requiredFields.filter((field) => !profileData[field]);
             if (missingFields.length > 0) {
-                console.log("🔍 Debug - Missing required fields:", missingFields);
                 return reply.status(400).send({
                     success: false,
                     message: `Missing required fields: ${missingFields.join(", ")}`,
@@ -70,9 +67,7 @@ const playerProfileRoutes = async (fastify) => {
                 userId: decoded.id,
                 ...profileData,
             });
-            console.log("🔍 Debug - Profile object to save:", newProfile);
             await newProfile.save();
-            console.log("🔍 Debug - Profile saved successfully:", newProfile._id);
             return reply.status(201).send({
                 success: true,
                 message: "Profile created successfully",
@@ -219,16 +214,13 @@ const playerProfileRoutes = async (fastify) => {
     fastify.get("/profiles/:id", async (request, reply) => {
         try {
             const { id } = request.params;
-            console.log("🔍 Backend: Fetching profile with ID:", id);
             if (!id || id.length !== 24) {
-                console.log("🔍 Backend: Invalid ID format:", id);
                 return reply.status(400).send({
                     success: false,
                     message: "Invalid profile ID format",
                 });
             }
             const profile = await PlayerProfile_1.default.findById(id).populate("userId", "name email");
-            console.log("🔍 Backend: Profile found:", profile ? "Yes" : "No");
             if (!profile) {
                 return reply.status(404).send({
                     success: false,
