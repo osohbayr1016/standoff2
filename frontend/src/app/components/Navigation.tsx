@@ -16,7 +16,6 @@ import {
   Users,
   LogOut,
   ChevronDown,
-  MessageCircle,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -38,7 +37,6 @@ export default function Navigation() {
     name: string;
   } | null>(null);
   const [isLoadingSquad, setIsLoadingSquad] = useState(false);
-  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
   // Fetch the current user's squad for mobile access
   useEffect(() => {
@@ -80,67 +78,12 @@ export default function Navigation() {
     fetchUserSquad();
   }, [user?.id]);
 
-  // Fetch unread message count
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      if (!user?.id) {
-        setUnreadMessageCount(0);
-        return;
-      }
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(
-          `${
-            process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-          }/api/messages/unread/count`,
-          {
-            headers: {
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setUnreadMessageCount(data.count || 0);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching unread message count:", error);
-      }
-    };
-
-    fetchUnreadCount();
-
-    // Poll for unread count every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
-
-    // Listen for new messages to update count
-    const handleNewMessage = () => {
-      fetchUnreadCount();
-    };
-
-    const handleMessageRead = () => {
-      fetchUnreadCount();
-    };
-
-    window.addEventListener("new_message", handleNewMessage);
-    window.addEventListener("message_read", handleMessageRead);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("new_message", handleNewMessage);
-      window.removeEventListener("message_read", handleMessageRead);
-    };
-  }, [user?.id]);
-
   // Main navigation items (always visible)
   const mainNavItems: Array<{ name: string; href: string; icon?: string }> = [
     { name: "Нүүр", href: "/" },
     { name: "Тоглогчид", href: "/players" },
     { name: "Мэдээ", href: "/news" },
     { name: "Тэмцээнүүд", href: "/tournaments" },
-    ...(user ? [{ name: "Зурвас", href: "/messages" }] : []),
     { name: "Бидний", href: "/about" },
   ];
 
@@ -190,7 +133,7 @@ export default function Navigation() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium flex items-center space-x-2 relative"
+                  className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium flex items-center space-x-2"
                 >
                   {item.icon && (
                     <Image
@@ -202,11 +145,6 @@ export default function Navigation() {
                     />
                   )}
                   <span>{item.name}</span>
-                  {item.name === "Зурвас" && unreadMessageCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                      {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
-                    </span>
-                  )}
                 </Link>
               ))}
 
@@ -259,24 +197,6 @@ export default function Navigation() {
               >
                 <Search className="w-5 h-5" />
               </motion.button>
-
-              {/* Messages Button */}
-              {user && (
-                <Link href="/messages">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 relative"
-                  >
-                    <MessageCircle className="w-5 h-5" />
-                    {unreadMessageCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                        {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
-                      </span>
-                    )}
-                  </motion.button>
-                </Link>
-              )}
 
               <NotificationCenter />
 
@@ -379,16 +299,9 @@ export default function Navigation() {
                       key={item.name}
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium relative"
+                      className="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium"
                     >
-                      <span className="flex items-center justify-between">
-                        <span>{item.name}</span>
-                        {item.name === "Зурвас" && unreadMessageCount > 0 && (
-                          <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center ml-2">
-                            {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
-                          </span>
-                        )}
-                      </span>
+                      {item.name}
                     </Link>
                   ))}
 

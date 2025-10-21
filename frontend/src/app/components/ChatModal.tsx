@@ -85,7 +85,7 @@ export default function ChatModal({
         return;
       }
 
-      const response = await fetch(API_ENDPOINTS.MESSAGES.LIST(playerId), {
+      const response = await fetch(`/api/messages/${playerId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -252,7 +252,7 @@ export default function ChatModal({
         return;
       }
 
-      const response = await fetch(API_ENDPOINTS.MESSAGES.SEND, {
+      const response = await fetch("/api/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
