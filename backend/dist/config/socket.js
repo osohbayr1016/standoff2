@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SocketManager = void 0;
 const socket_io_1 = require("socket.io");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const Message_1 = __importDefault(require("../models/Message"));
+const User_1 = __importDefault(require("../models/User"));
 class SocketManager {
     constructor() {
         this.io = null;
@@ -35,30 +37,82 @@ class SocketManager {
                 next(new Error("Authentication error"));
             }
         });
-        this.io.on("connection", (socket) => {
+        this.io.on("connection", async (socket) => {
             this.connectedUsers.set(socket.data.userId, socket.id);
+            await User_1.default.findByIdAndUpdate(socket.data.userId, {
+                isOnline: true,
+                lastSeen: new Date(),
+            });
             this.broadcastUserStatus(socket.data.userId, "online");
             socket.on("send_message", async (data) => {
                 try {
                     const { receiverId, content } = data;
+                    const senderId = socket.data.userId;
+                    if (!receiverId || !content || !content.trim()) {
+                        socket.emit("message_error", {
+                            error: "Invalid message data",
+                        });
+                        return;
+                    }
+                    const sender = await User_1.default.findById(senderId).select("name avatar");
+                    if (!sender) {
+                        socket.emit("message_error", {
+                            error: "Sender not found",
+                        });
+                        return;
+                    }
+                    const receiver = await User_1.default.findById(receiverId).select("name avatar");
+                    if (!receiver) {
+                        socket.emit("message_error", {
+                            error: "Receiver not found",
+                        });
+                        return;
+                    }
+                    const newMessage = new Message_1.default({
+                        senderId,
+                        receiverId,
+                        content: content.trim(),
+                        status: "SENT",
+                        isRead: false,
+                    });
+                    await newMessage.save();
+                    const messageData = {
+                        id: newMessage._id.toString(),
+                        senderId,
+                        receiverId,
+                        content: newMessage.content,
+                        timestamp: newMessage.createdAt.toISOString(),
+                        sender: {
+                            id: senderId,
+                            name: sender.name,
+                            avatar: sender.avatar,
+                        },
+                        receiver: {
+                            id: receiverId,
+                            name: receiver.name,
+                            avatar: receiver.avatar,
+                        },
+                    };
                     const receiverSocketId = this.connectedUsers.get(receiverId);
                     if (receiverSocketId) {
-                        this.io.to(receiverSocketId).emit("new_message", {
-                            senderId: socket.data.userId,
-                            content,
-                            timestamp: new Date().toISOString(),
+                        this.io.to(receiverSocketId).emit("new_message", messageData);
+                        await Message_1.default.findByIdAndUpdate(newMessage._id, {
+                            status: "DELIVERED",
                         });
                         socket.emit("message_delivered", {
+                            messageId: newMessage._id.toString(),
                             receiverId,
                             timestamp: new Date().toISOString(),
                         });
                     }
                     else {
                         socket.emit("message_sent_offline", {
+                            messageId: newMessage._id.toString(),
                             receiverId,
                             timestamp: new Date().toISOString(),
                         });
                     }
+                    socket.emit("message_sent", messageData);
                 }
                 catch (error) {
                     console.error("Error sending message:", error);
@@ -85,22 +139,41 @@ class SocketManager {
                     });
                 }
             });
-            socket.on("mark_read", (data) => {
-                const { senderId } = data;
-                const senderSocketId = this.connectedUsers.get(senderId);
-                if (senderSocketId) {
-                    this.io.to(senderSocketId).emit("message_read", {
-                        readerId: socket.data.userId,
-                        timestamp: new Date().toISOString(),
+            socket.on("mark_read", async (data) => {
+                try {
+                    const { senderId } = data;
+                    const receiverId = socket.data.userId;
+                    await Message_1.default.updateMany({
+                        senderId,
+                        receiverId,
+                        isRead: false,
+                    }, {
+                        isRead: true,
+                        status: "READ",
+                        readAt: new Date(),
                     });
+                    const senderSocketId = this.connectedUsers.get(senderId);
+                    if (senderSocketId) {
+                        this.io.to(senderSocketId).emit("message_read", {
+                            readerId: receiverId,
+                            timestamp: new Date().toISOString(),
+                        });
+                    }
+                }
+                catch (error) {
+                    console.error("Error marking messages as read:", error);
                 }
             });
             socket.on("update_status", (data) => {
                 const { status } = data;
                 this.broadcastUserStatus(socket.data.userId, status);
             });
-            socket.on("disconnect", () => {
+            socket.on("disconnect", async () => {
                 this.connectedUsers.delete(socket.data.userId);
+                await User_1.default.findByIdAndUpdate(socket.data.userId, {
+                    isOnline: false,
+                    lastSeen: new Date(),
+                });
                 this.broadcastUserStatus(socket.data.userId, "offline");
             });
         });

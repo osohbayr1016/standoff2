@@ -4,7 +4,191 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const User_1 = __importDefault(require("../models/User"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const auth_1 = require("../middleware/auth");
 const userRoutes = async (fastify) => {
+    fastify.get("/", { preHandler: [auth_1.authenticateToken] }, async (request, reply) => {
+        try {
+            const user = request.user;
+            if (user?.role !== "ADMIN") {
+                return reply.status(403).send({
+                    success: false,
+                    message: "Admin only",
+                });
+            }
+            const users = await User_1.default.find({})
+                .select("-password")
+                .sort({ createdAt: -1 })
+                .lean();
+            return reply.send({
+                success: true,
+                users: users.map((u) => ({
+                    _id: u._id,
+                    name: u.name,
+                    email: u.email,
+                    role: u.role,
+                    avatar: u.avatar,
+                    isVerified: u.isVerified || false,
+                    createdAt: u.createdAt,
+                    updatedAt: u.updatedAt,
+                })),
+            });
+        }
+        catch (error) {
+            console.error("Error fetching users:", error);
+            return reply.status(500).send({
+                success: false,
+                message: "Internal server error",
+            });
+        }
+    });
+    fastify.post("/", { preHandler: [auth_1.authenticateToken] }, async (request, reply) => {
+        try {
+            const user = request.user;
+            if (user?.role !== "ADMIN") {
+                return reply.status(403).send({
+                    success: false,
+                    message: "Admin only",
+                });
+            }
+            const { name, email, password, role, isVerified } = request.body;
+            if (!name || !email || !password || !role) {
+                return reply.status(400).send({
+                    success: false,
+                    message: "Name, email, password, and role are required",
+                });
+            }
+            const validRoles = ["PLAYER", "COACH", "ORGANIZATION", "ADMIN"];
+            if (!validRoles.includes(role)) {
+                return reply.status(400).send({
+                    success: false,
+                    message: "Invalid role. Must be one of: PLAYER, COACH, ORGANIZATION, ADMIN",
+                });
+            }
+            const existingUser = await User_1.default.findOne({ email: email.toLowerCase() });
+            if (existingUser) {
+                return reply.status(400).send({
+                    success: false,
+                    message: "User with this email already exists",
+                });
+            }
+            const hashedPassword = await bcryptjs_1.default.hash(password, 10);
+            const newUser = new User_1.default({
+                name,
+                email: email.toLowerCase(),
+                password: hashedPassword,
+                role,
+                isVerified: isVerified || false,
+            });
+            await newUser.save();
+            return reply.status(201).send({
+                success: true,
+                message: "User created successfully",
+                user: {
+                    _id: newUser._id,
+                    name: newUser.name,
+                    email: newUser.email,
+                    role: newUser.role,
+                    isVerified: newUser.isVerified,
+                },
+            });
+        }
+        catch (error) {
+            console.error("Error creating user:", error);
+            return reply.status(500).send({
+                success: false,
+                message: "Internal server error",
+            });
+        }
+    });
+    fastify.patch("/:id", { preHandler: [auth_1.authenticateToken] }, async (request, reply) => {
+        try {
+            const user = request.user;
+            if (user?.role !== "ADMIN") {
+                return reply.status(403).send({
+                    success: false,
+                    message: "Admin only",
+                });
+            }
+            const { id } = request.params;
+            const { name, email, password, role, isVerified } = request.body;
+            const existingUser = await User_1.default.findById(id);
+            if (!existingUser) {
+                return reply.status(404).send({
+                    success: false,
+                    message: "User not found",
+                });
+            }
+            if (name)
+                existingUser.name = name;
+            if (email)
+                existingUser.email = email.toLowerCase();
+            if (role) {
+                const validRoles = ["PLAYER", "COACH", "ORGANIZATION", "ADMIN"];
+                if (!validRoles.includes(role)) {
+                    return reply.status(400).send({
+                        success: false,
+                        message: "Invalid role",
+                    });
+                }
+                existingUser.role = role;
+            }
+            if (typeof isVerified === "boolean")
+                existingUser.isVerified = isVerified;
+            if (password) {
+                existingUser.password = await bcryptjs_1.default.hash(password, 10);
+            }
+            await existingUser.save();
+            return reply.send({
+                success: true,
+                message: "User updated successfully",
+                user: {
+                    _id: existingUser._id,
+                    name: existingUser.name,
+                    email: existingUser.email,
+                    role: existingUser.role,
+                    isVerified: existingUser.isVerified,
+                },
+            });
+        }
+        catch (error) {
+            console.error("Error updating user:", error);
+            return reply.status(500).send({
+                success: false,
+                message: "Internal server error",
+            });
+        }
+    });
+    fastify.delete("/:id", { preHandler: [auth_1.authenticateToken] }, async (request, reply) => {
+        try {
+            const user = request.user;
+            if (user?.role !== "ADMIN") {
+                return reply.status(403).send({
+                    success: false,
+                    message: "Admin only",
+                });
+            }
+            const { id } = request.params;
+            const deletedUser = await User_1.default.findByIdAndDelete(id);
+            if (!deletedUser) {
+                return reply.status(404).send({
+                    success: false,
+                    message: "User not found",
+                });
+            }
+            return reply.send({
+                success: true,
+                message: "User deleted successfully",
+            });
+        }
+        catch (error) {
+            console.error("Error deleting user:", error);
+            return reply.status(500).send({
+                success: false,
+                message: "Internal server error",
+            });
+        }
+    });
     fastify.put("/update-role", async (request, reply) => {
         try {
             const { email, role } = request.body;

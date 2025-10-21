@@ -179,6 +179,8 @@ async function registerRoutes() {
         fastify.register(dashboardRoutes.default, { prefix: "/api/dashboard" });
         const proPlayerRoutes = await Promise.resolve().then(() => __importStar(require("./routes/proPlayerRoutes")));
         fastify.register(proPlayerRoutes.default, { prefix: "/api/pro-players" });
+        const settingsRoutes = await Promise.resolve().then(() => __importStar(require("./routes/settingsRoutes")));
+        fastify.register(settingsRoutes.default, { prefix: "/api/settings" });
     }
     catch (error) {
         console.error("❌ Error registering routes:", error);
