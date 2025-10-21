@@ -74,8 +74,9 @@ export default function AdminSettingsPage() {
       accentColor: "#06B6D4",
     },
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Check admin access (wait for auth load)
   useEffect(() => {
@@ -88,12 +89,53 @@ export default function AdminSettingsPage() {
     }
   }, [user, authLoading, router]);
 
+  // Fetch settings on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/settings");
+        const data = await response.json();
+
+        if (data.success && data.settings) {
+          setSettings(data.settings);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const isAdmin =
+      user?.role === "ADMIN" || user?.email === "admin@esport-connection.com";
+    if (!authLoading && user && isAdmin) {
+      fetchSettings();
+    }
+  }, [user, authLoading]);
+
   const handleSaveSettings = async () => {
     setSaving(true);
+    setSuccessMessage("");
     try {
-      // Mock save - in real implementation, this would be an API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert("Settings saved successfully!");
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify(settings),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setSuccessMessage("Settings saved successfully!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } else {
+        alert(`Error: ${data.message || "Failed to save settings"}`);
+      }
     } catch (error) {
       console.error("Error saving settings:", error);
       alert("Error saving settings");
@@ -160,6 +202,22 @@ export default function AdminSettingsPage() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+        <Navigation />
+        <main className="pt-20 pb-16">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+              <p className="mt-4 text-gray-300">Loading settings...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
       <Navigation />
@@ -182,7 +240,7 @@ export default function AdminSettingsPage() {
               </div>
               <button
                 onClick={handleSaveSettings}
-                disabled={saving}
+                disabled={saving || loading}
                 className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 {saving ? (
@@ -198,6 +256,11 @@ export default function AdminSettingsPage() {
                 )}
               </button>
             </div>
+            {successMessage && (
+              <div className="mt-4 p-4 bg-green-500/20 border border-green-500 text-green-400 rounded-lg">
+                {successMessage}
+              </div>
+            )}
           </motion.div>
 
           {/* Settings Sections */}

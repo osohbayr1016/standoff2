@@ -440,6 +440,53 @@ const bountyCoinRoutes: FastifyPluginAsync = async (
     }
   );
 
+  // Mark withdraw request as paid (admin only)
+  fastify.post(
+    "/withdraw/:id/mark-paid",
+    { preHandler: [authenticateToken] },
+    async (request: any, reply) => {
+      try {
+        const { id } = request.params as any;
+        const user = request.user;
+
+        if (user?.role !== "ADMIN") {
+          return reply
+            .status(403)
+            .send({ success: false, message: "Admin only" });
+        }
+
+        const wr = await WithdrawRequest.findById(id);
+        if (!wr)
+          return reply
+            .status(404)
+            .send({ success: false, message: "Request not found" });
+
+        if (wr.status !== "APPROVED") {
+          return reply.status(400).send({
+            success: false,
+            message: "Only approved requests can be marked as paid",
+          });
+        }
+
+        wr.status = "PAID";
+        wr.paidBy = user.id;
+        wr.paidAt = new Date();
+        await wr.save();
+
+        return reply.send({
+          success: true,
+          data: wr,
+          message: "Withdraw request marked as paid successfully",
+        });
+      } catch (error) {
+        console.error("Error marking withdraw as paid:", error);
+        return reply
+          .status(500)
+          .send({ success: false, message: "Internal server error" });
+      }
+    }
+  );
+
   // Request bounty coin purchase (squad leader only)
   fastify.post(
     "/request-purchase",

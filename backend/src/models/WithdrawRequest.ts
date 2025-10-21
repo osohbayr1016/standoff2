@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-export type WithdrawStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type WithdrawStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
 
 export interface IWithdrawRequest extends Document {
   squadId: Schema.Types.ObjectId;
@@ -13,6 +13,8 @@ export interface IWithdrawRequest extends Document {
   adminNotes?: string;
   processedBy?: Schema.Types.ObjectId; // admin user id
   processedAt?: Date;
+  paidBy?: Schema.Types.ObjectId; // admin who marked as paid
+  paidAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -55,7 +57,7 @@ const withdrawRequestSchema = new Schema<IWithdrawRequest>(
     },
     status: {
       type: String,
-      enum: ["PENDING", "APPROVED", "REJECTED"],
+      enum: ["PENDING", "APPROVED", "REJECTED", "PAID"],
       default: "PENDING",
       index: true,
     },
@@ -69,6 +71,13 @@ const withdrawRequestSchema = new Schema<IWithdrawRequest>(
       ref: "User",
     },
     processedAt: {
+      type: Date,
+    },
+    paidBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    paidAt: {
       type: Date,
     },
   },

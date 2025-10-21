@@ -67,44 +67,27 @@ export default function AdminAnalyticsPage() {
       try {
         setLoading(true);
 
-        // Fetch dashboard stats
-        const statsResponse = await fetch(API_ENDPOINTS.DASHBOARD.STATS);
-        const statsData = await statsResponse.json();
+        const response = await fetch("/api/analytics");
+        const data = await response.json();
 
-        // Mock analytics data for now
-        const mockAnalytics: AnalyticsData = {
-          totalUsers: statsData.success ? statsData.stats.users.total : 0,
-          totalProfiles: statsData.success ? statsData.stats.profiles.total : 0,
-          totalNews: statsData.success ? statsData.stats.news.total : 0,
-          totalTournaments: 5,
-          activeUsers: 42,
-          newUsersThisWeek: statsData.success ? statsData.stats.users.new : 0,
-          newProfilesThisWeek: statsData.success
-            ? statsData.stats.profiles.new
-            : 0,
-          newNewsThisWeek: statsData.success ? statsData.stats.news.new : 0,
-          userGrowth: 15.5,
-          profileGrowth: 23.2,
-          newsGrowth: 8.7,
-          topGames: [
-            { game: "Mobile Legends", count: 45 },
-            { game: "Valorant", count: 32 },
-            { game: "CS2", count: 28 },
-            { game: "Dota 2", count: 22 },
-            { game: "PUBG Mobile", count: 18 },
-          ],
-          userActivity: [
-            { date: "Mon", users: 120, profiles: 85, news: 3 },
-            { date: "Tue", users: 135, profiles: 92, news: 5 },
-            { date: "Wed", users: 142, profiles: 98, news: 2 },
-            { date: "Thu", users: 128, profiles: 87, news: 4 },
-            { date: "Fri", users: 156, profiles: 105, news: 6 },
-            { date: "Sat", users: 168, profiles: 112, news: 8 },
-            { date: "Sun", users: 145, profiles: 95, news: 3 },
-          ],
-        };
-
-        setAnalytics(mockAnalytics);
+        if (data.success && data.analytics) {
+          const analyticsData: AnalyticsData = {
+            totalUsers: data.analytics.totalUsers || 0,
+            totalProfiles: data.analytics.totalProfiles || 0,
+            totalNews: data.analytics.totalNews || 0,
+            totalTournaments: data.analytics.totalTournaments || 0,
+            activeUsers: data.analytics.activeUsers || 0,
+            newUsersThisWeek: data.analytics.newUsersThisWeek || 0,
+            newProfilesThisWeek: data.analytics.newProfilesThisWeek || 0,
+            newNewsThisWeek: data.analytics.newNewsThisWeek || 0,
+            userGrowth: data.analytics.userGrowth || 0,
+            profileGrowth: data.analytics.profileGrowth || 0,
+            newsGrowth: data.analytics.newsGrowth || 0,
+            topGames: data.analytics.topGames || [],
+            userActivity: data.analytics.userActivity || [],
+          };
+          setAnalytics(analyticsData);
+        }
       } catch (error) {
         console.error("Error fetching analytics:", error);
       } finally {

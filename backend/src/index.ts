@@ -197,6 +197,9 @@ async function registerRoutes() {
     // Pro player routes
     const proPlayerRoutes = await import("./routes/proPlayerRoutes");
     fastify.register(proPlayerRoutes.default, { prefix: "/api/pro-players" });
+    // Settings routes
+    const settingsRoutes = await import("./routes/settingsRoutes");
+    fastify.register(settingsRoutes.default, { prefix: "/api/settings" });
   } catch (error) {
     console.error("❌ Error registering routes:", error);
     // Continue without routes for basic health check

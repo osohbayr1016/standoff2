@@ -104,6 +104,7 @@ export const API_ENDPOINTS = {
     SEND: `${API_BASE_URL}/api/messages`,
     MARK_READ: `${API_BASE_URL}/api/messages/read`,
     UNREAD_COUNT: `${API_BASE_URL}/api/messages/unread/count`,
+    CONVERSATIONS: `${API_BASE_URL}/api/messages/conversations`,
   },
   NOTIFICATIONS: {
     ALL: `${API_BASE_URL}/api/notifications`,
@@ -132,6 +133,8 @@ export const API_ENDPOINTS = {
       `${API_BASE_URL}/api/bounty-coins/withdraw${params ? `?${params}` : ""}`,
     WITHDRAW_DECIDE: (id: string) =>
       `${API_BASE_URL}/api/bounty-coins/withdraw/${id}/decision`,
+    WITHDRAW_MARK_PAID: (id: string) =>
+      `${API_BASE_URL}/api/bounty-coins/withdraw/${id}/mark-paid`,
     REQUEST_PURCHASE: `${API_BASE_URL}/api/bounty-coins/request-purchase`,
     PURCHASE_LIST: (params?: string) =>
       `${API_BASE_URL}/api/bounty-coins/purchase${params ? `?${params}` : ""}`,

@@ -2,40 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export async function GET(request: NextRequest) {
-  try {
-    const token =
-      request.cookies.get("token")?.value ||
-      request.headers.get("authorization")?.split(" ")[1];
-
-    const response = await fetch(`${API_BASE_URL}/api/users`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
-
-    const data = await response.json();
-    return NextResponse.json(data, { status: response.status });
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    return NextResponse.json(
-      { success: false, message: "Failed to fetch users" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const token =
       request.cookies.get("token")?.value ||
       request.headers.get("authorization")?.split(" ")[1];
     const body = await request.json();
+    const { id } = params;
 
-    const response = await fetch(`${API_BASE_URL}/api/users`, {
-      method: "POST",
+    const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         ...(token && { Authorization: `Bearer ${token}` }),
@@ -46,9 +25,38 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error("Error creating user:", error);
+    console.error("Error updating user:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to create user" },
+      { success: false, message: "Failed to update user" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const token =
+      request.cookies.get("token")?.value ||
+      request.headers.get("authorization")?.split(" ")[1];
+    const { id } = params;
+
+    const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return NextResponse.json(
+      { success: false, message: "Failed to delete user" },
       { status: 500 }
     );
   }

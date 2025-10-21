@@ -20,6 +20,8 @@ import Image from "next/image";
 import Navigation from "../../components/Navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import AddUserModal from "../../components/AddUserModal";
+import EditUserModal from "../../components/EditUserModal";
 
 interface UserData {
   _id: string;
@@ -55,23 +57,28 @@ export default function AdminUsersPage() {
   }, [user, authLoading, router]);
 
   // Fetch users data
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/users");
-        const data = await response.json();
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/users", {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      const data = await response.json();
 
-        if (data.success) {
-          setUsers(data.users || []);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      } finally {
-        setLoading(false);
+      if (data.success) {
+        setUsers(data.users || []);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (!authLoading && user) {
       fetchUsers();
     }
@@ -107,8 +114,12 @@ export default function AdminUsersPage() {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(`/api/users/${id}`, {
           method: "DELETE",
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
         });
 
         if (response.ok) {
@@ -125,10 +136,12 @@ export default function AdminUsersPage() {
     currentStatus: boolean
   ) => {
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(`/api/users/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({ isVerified: !currentStatus }),
       });
@@ -436,43 +449,20 @@ export default function AdminUsersPage() {
         </div>
       </main>
 
-      {/* Create/Edit Modal would go here */}
+      {/* Create/Edit Modals */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl mx-4">
-            <h2 className="text-2xl font-bold text-white mb-4">Add New User</h2>
-            <p className="text-gray-400 mb-6">
-              This feature will be implemented in the next update.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors duration-200"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <AddUserModal
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={fetchUsers}
+        />
       )}
 
       {editingUser && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl mx-4">
-            <h2 className="text-2xl font-bold text-white mb-4">Edit User</h2>
-            <p className="text-gray-400 mb-6">
-              This feature will be implemented in the next update.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setEditingUser(null)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors duration-200"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <EditUserModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSuccess={fetchUsers}
+        />
       )}
     </div>
   );

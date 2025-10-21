@@ -16,10 +16,12 @@ interface WithdrawRequest {
   amountMNT: number;
   bankName: string;
   iban: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "PAID";
   adminNotes?: string;
   processedBy?: { _id: string; name: string; email: string } | string;
   processedAt?: string;
+  paidBy?: { _id: string; name: string; email: string } | string;
+  paidAt?: string;
   createdAt: string;
 }
 
@@ -29,7 +31,7 @@ export default function WithdrawTransactionsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<
-    "APPROVED" | "REJECTED" | "ALL"
+    "APPROVED" | "REJECTED" | "PAID" | "ALL"
   >("ALL");
 
   useEffect(() => {
@@ -161,6 +163,7 @@ export default function WithdrawTransactionsPage() {
               >
                 <option value="ALL">All</option>
                 <option value="APPROVED">Approved</option>
+                <option value="PAID">Paid</option>
                 <option value="REJECTED">Rejected</option>
               </select>
               <button
@@ -211,7 +214,19 @@ export default function WithdrawTransactionsPage() {
                           • Bank: {r.bankName}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          Status: {r.status}{" "}
+                          <span
+                            className={`font-medium ${
+                              r.status === "PAID"
+                                ? "text-green-400"
+                                : r.status === "APPROVED"
+                                ? "text-blue-400"
+                                : r.status === "REJECTED"
+                                ? "text-red-400"
+                                : ""
+                            }`}
+                          >
+                            Status: {r.status}
+                          </span>{" "}
                           {r.adminNotes ? `• Notes: ${r.adminNotes}` : ""}
                         </div>
                       </div>
@@ -223,6 +238,11 @@ export default function WithdrawTransactionsPage() {
                           <div>
                             Processed:{" "}
                             {new Date(r.processedAt).toLocaleString()}
+                          </div>
+                        )}
+                        {r.paidAt && (
+                          <div className="text-green-400 font-medium">
+                            Paid: {new Date(r.paidAt).toLocaleString()}
                           </div>
                         )}
                       </div>

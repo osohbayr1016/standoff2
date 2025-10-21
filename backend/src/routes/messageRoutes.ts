@@ -1,5 +1,8 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { authenticateToken, AuthenticatedRequest } from "../middleware/auth";
+import Message from "../models/Message";
+import User from "../models/User";
+import mongoose from "mongoose";
 
 const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   // Health check
@@ -29,12 +32,61 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           });
         }
 
-        // For now, return empty messages array with proper structure
-        // This can be extended with actual database queries later
+        // Validate userId
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+          return reply.status(400).send({
+            success: false,
+            message: "Invalid user ID",
+          });
+        }
+
+        // Fetch messages between current user and target user
+        const messages = await Message.find({
+          $or: [
+            { senderId: currentUserId, receiverId: userId },
+            { senderId: userId, receiverId: currentUserId },
+          ],
+        })
+          .sort({ createdAt: 1 }) // Sort oldest to newest
+          .populate("senderId", "name avatar")
+          .populate("receiverId", "name avatar")
+          .lean();
+
+        // Format messages for frontend
+        const formattedMessages = messages.map((msg: any) => ({
+          id: msg._id.toString(),
+          content: msg.content,
+          senderId: msg.senderId._id.toString(),
+          receiverId: msg.receiverId._id.toString(),
+          status: msg.status,
+          isRead: msg.isRead,
+          createdAt: msg.createdAt,
+          sender: {
+            id: msg.senderId._id.toString(),
+            name: msg.senderId.name || "Unknown",
+            avatar: msg.senderId.avatar,
+          },
+          receiver: {
+            id: msg.receiverId._id.toString(),
+            name: msg.receiverId.name || "Unknown",
+            avatar: msg.receiverId.avatar,
+          },
+        }));
+
+        // Mark messages as delivered
+        await Message.updateMany(
+          {
+            senderId: userId,
+            receiverId: currentUserId,
+            status: "SENT",
+          },
+          { status: "DELIVERED" }
+        );
+
         return reply.send({
           success: true,
-          messages: [],
-          count: 0,
+          messages: formattedMessages,
+          count: formattedMessages.length,
         });
       } catch (error) {
         console.error("Error fetching messages:", error);
@@ -82,13 +134,47 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           });
         }
 
-        // Create message object (this would normally be saved to database)
-        const message = {
-          id: Date.now().toString(),
-          content: content.trim(),
+        // Validate receiverId
+        if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+          return reply.status(400).send({
+            success: false,
+            message: "Invalid receiver ID",
+          });
+        }
+
+        // Check if receiver exists
+        const receiver = await User.findById(receiverId).select("name avatar");
+        if (!receiver) {
+          return reply.status(404).send({
+            success: false,
+            message: "Receiver not found",
+          });
+        }
+
+        // Create and save message to database
+        const newMessage = new Message({
           senderId: currentUserId,
           receiverId,
-          createdAt: new Date().toISOString(),
+          content: content.trim(),
+          status: "SENT",
+          isRead: false,
+        });
+
+        await newMessage.save();
+
+        // Populate sender and receiver info
+        await newMessage.populate("senderId", "name avatar");
+        await newMessage.populate("receiverId", "name avatar");
+
+        // Format response
+        const formattedMessage = {
+          id: newMessage._id.toString(),
+          content: newMessage.content,
+          senderId: currentUserId,
+          receiverId,
+          status: newMessage.status,
+          isRead: newMessage.isRead,
+          createdAt: newMessage.createdAt,
           sender: {
             id: currentUserId,
             name: request.user?.name || "Unknown",
@@ -96,15 +182,15 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           },
           receiver: {
             id: receiverId,
-            name: "Unknown", // This would be fetched from database
-            avatar: undefined,
+            name: receiver.name || "Unknown",
+            avatar: receiver.avatar,
           },
         };
 
         return reply.status(201).send({
           success: true,
           message: "Message sent successfully",
-          data: message,
+          data: formattedMessage,
         });
       } catch (error) {
         console.error("Error sending message:", error);
@@ -142,10 +228,32 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           });
         }
 
-        // This would normally update the database
+        // Validate senderId
+        if (!mongoose.Types.ObjectId.isValid(senderId)) {
+          return reply.status(400).send({
+            success: false,
+            message: "Invalid sender ID",
+          });
+        }
+
+        // Mark all unread messages from sender as read
+        const result = await Message.updateMany(
+          {
+            senderId,
+            receiverId: currentUserId,
+            isRead: false,
+          },
+          {
+            isRead: true,
+            status: "READ",
+            readAt: new Date(),
+          }
+        );
+
         return reply.send({
           success: true,
           message: "Messages marked as read",
+          count: result.modifiedCount,
         });
       } catch (error) {
         console.error("Error marking messages as read:", error);
@@ -175,16 +283,116 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           });
         }
 
-        // For now, return 0 unread messages
+        // Count unread messages for current user
+        const count = await Message.countDocuments({
+          receiverId: currentUserId,
+          isRead: false,
+        });
+
         return reply.send({
           success: true,
-          count: 0,
+          count,
         });
       } catch (error) {
         console.error("Error fetching unread count:", error);
         return reply.status(500).send({
           success: false,
           message: "Failed to fetch unread count",
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+  );
+
+  // Get all conversations (list of users the current user has chatted with)
+  fastify.get(
+    "/messages/conversations",
+    {
+      preHandler: authenticateToken,
+    },
+    async (request: AuthenticatedRequest, reply) => {
+      try {
+        const currentUserId = request.user?.id;
+
+        if (!currentUserId) {
+          return reply.status(401).send({
+            success: false,
+            message: "Authentication required",
+          });
+        }
+
+        // Get all unique user IDs that the current user has chatted with
+        const sentMessages = await Message.find({ senderId: currentUserId })
+          .distinct("receiverId")
+          .lean();
+
+        const receivedMessages = await Message.find({
+          receiverId: currentUserId,
+        })
+          .distinct("senderId")
+          .lean();
+
+        // Combine and get unique user IDs
+        const uniqueUserIds = [
+          ...new Set([...sentMessages, ...receivedMessages]),
+        ];
+
+        // Fetch user details and last message for each conversation
+        const conversations = await Promise.all(
+          uniqueUserIds.map(async (userId) => {
+            const user = await User.findById(userId).select("name avatar");
+
+            // Get last message in conversation
+            const lastMessage = await Message.findOne({
+              $or: [
+                { senderId: currentUserId, receiverId: userId },
+                { senderId: userId, receiverId: currentUserId },
+              ],
+            })
+              .sort({ createdAt: -1 })
+              .lean();
+
+            // Count unread messages from this user
+            const unreadCount = await Message.countDocuments({
+              senderId: userId,
+              receiverId: currentUserId,
+              isRead: false,
+            });
+
+            return {
+              userId: userId.toString(),
+              userName: user?.name || "Unknown",
+              userAvatar: user?.avatar,
+              lastMessage: lastMessage
+                ? {
+                    content: lastMessage.content,
+                    createdAt: lastMessage.createdAt,
+                    isOwnMessage:
+                      lastMessage.senderId.toString() === currentUserId,
+                  }
+                : null,
+              unreadCount,
+            };
+          })
+        );
+
+        // Sort by last message time (most recent first)
+        conversations.sort((a, b) => {
+          const aTime = a.lastMessage?.createdAt || new Date(0);
+          const bTime = b.lastMessage?.createdAt || new Date(0);
+          return new Date(bTime).getTime() - new Date(aTime).getTime();
+        });
+
+        return reply.send({
+          success: true,
+          conversations,
+          count: conversations.length,
+        });
+      } catch (error) {
+        console.error("Error fetching conversations:", error);
+        return reply.status(500).send({
+          success: false,
+          message: "Failed to fetch conversations",
           error: error instanceof Error ? error.message : "Unknown error",
         });
       }

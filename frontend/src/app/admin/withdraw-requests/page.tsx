@@ -15,9 +15,12 @@ interface WithdrawRequest {
   amountMNT: number;
   bankName: string;
   iban: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "PAID";
   adminNotes?: string;
+  processedBy?: { _id: string; name: string; email: string } | string;
   processedAt?: string;
+  paidBy?: { _id: string; name: string; email: string } | string;
+  paidAt?: string;
   createdAt: string;
 }
 
@@ -26,11 +29,12 @@ export default function WithdrawRequestsPage() {
   const [requests, setRequests] = useState<WithdrawRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<
-    "ALL" | "PENDING" | "APPROVED" | "REJECTED"
+    "ALL" | "PENDING" | "APPROVED" | "REJECTED" | "PAID"
   >("PENDING");
   const [decisionLoadingId, setDecisionLoadingId] = useState<string | null>(
     null
   );
+  const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && user) fetchData();
@@ -75,6 +79,42 @@ export default function WithdrawRequestsPage() {
       if (res.ok) await fetchData();
     } finally {
       setDecisionLoadingId(null);
+    }
+  };
+
+  const markAsPaid = async (id: string) => {
+    if (
+      !window.confirm(
+        "Mark this withdrawal as paid? This confirms payment has been sent to the squad."
+      )
+    ) {
+      return;
+    }
+    try {
+      setMarkingPaidId(id);
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        API_ENDPOINTS.BOUNTY_COINS.WITHDRAW_MARK_PAID(id),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
+      if (res.ok) {
+        await fetchData();
+        alert("Successfully marked as paid!");
+      } else {
+        const data = await res.json();
+        alert(`Failed: ${data.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error marking as paid:", error);
+      alert("Error marking as paid");
+    } finally {
+      setMarkingPaidId(null);
     }
   };
 
@@ -127,13 +167,13 @@ export default function WithdrawRequestsPage() {
                 onChange={(e) => setFilter(e.target.value as any)}
                 className="px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-700"
               >
-                {(["ALL", "PENDING", "APPROVED", "REJECTED"] as const).map(
-                  (f) => (
-                    <option key={f} value={f}>
-                      {f}
-                    </option>
-                  )
-                )}
+                {(
+                  ["ALL", "PENDING", "APPROVED", "PAID", "REJECTED"] as const
+                ).map((f) => (
+                  <option key={f} value={f}>
+                    {f}
+                  </option>
+                ))}
               </select>
               <button
                 onClick={fetchData}
@@ -203,6 +243,25 @@ export default function WithdrawRequestsPage() {
                             <X className="w-4 h-4" /> Reject
                           </button>
                         </>
+                      )}
+                      {r.status === "APPROVED" && (
+                        <button
+                          disabled={!!markingPaidId}
+                          onClick={() => markAsPaid(r._id)}
+                          className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
+                        >
+                          <Check className="w-4 h-4" /> Mark as Paid
+                        </button>
+                      )}
+                      {r.status === "PAID" && (
+                        <span className="px-3 py-2 rounded-lg text-sm font-medium bg-green-900/30 text-green-400 border border-green-700/30 flex items-center gap-1">
+                          <Check className="w-4 h-4" /> PAID
+                        </span>
+                      )}
+                      {r.status === "REJECTED" && (
+                        <span className="px-3 py-2 rounded-lg text-sm font-medium bg-red-900/30 text-red-400 border border-red-700/30 flex items-center gap-1">
+                          <X className="w-4 h-4" /> REJECTED
+                        </span>
                       )}
                     </div>
                   </motion.div>
