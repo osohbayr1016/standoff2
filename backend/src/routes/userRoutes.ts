@@ -373,6 +373,8 @@ const userRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
         role: user.role,
         isVerified: false, // Default to false for now
         joinedDate: user.createdAt,
+        isOnline: user.isOnline || false,
+        lastSeen: user.lastSeen,
         ...(user.role === "PLAYER" && {
           game: "Mobile Legends: Bang Bang", // Default game
           playerRole: "Player",
@@ -394,7 +396,8 @@ const userRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 
       return {
         success: true,
-        profile,
+        user: profile, // Changed from 'profile' to 'user' to match frontend expectation
+        profile, // Keep both for backward compatibility
       };
     } catch (error) {
       console.error("Error fetching user profile:", error);

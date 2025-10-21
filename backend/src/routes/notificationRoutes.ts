@@ -1,5 +1,7 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { authenticateToken, AuthenticatedRequest } from "../middleware/auth";
+import Notification from "../models/Notification";
+import mongoose from "mongoose";
 
 const notificationRoutes: FastifyPluginAsync = async (
   fastify: FastifyInstance
@@ -30,13 +32,46 @@ const notificationRoutes: FastifyPluginAsync = async (
           });
         }
 
-        // For now, return empty notifications array with proper structure
-        // This can be extended with actual database queries later
+        // Fetch notifications from database
+        const notifications = await Notification.find({
+          userId: currentUserId,
+          status: { $ne: "DELETED" },
+        })
+          .populate("senderId", "name avatar")
+          .sort({ createdAt: -1 })
+          .limit(50)
+          .lean();
+
+        // Count unread notifications
+        const unreadCount = await Notification.countDocuments({
+          userId: currentUserId,
+          status: "PENDING",
+        });
+
+        // Format notifications for frontend
+        const formattedNotifications = notifications.map((notif: any) => ({
+          _id: notif._id.toString(),
+          title: notif.title,
+          content: notif.content,
+          type: notif.type,
+          status: notif.status,
+          senderId: notif.senderId
+            ? {
+                _id: notif.senderId._id.toString(),
+                name: notif.senderId.name || "Unknown",
+                avatar: notif.senderId.avatar,
+              }
+            : undefined,
+          relatedMessageId: notif.relatedMessageId?.toString(),
+          relatedClanId: notif.relatedClanId?.toString(),
+          createdAt: notif.createdAt,
+        }));
+
         return reply.send({
           success: true,
-          notifications: [],
-          count: 0,
-          unreadCount: 0,
+          notifications: formattedNotifications,
+          count: formattedNotifications.length,
+          unreadCount,
         });
       } catch (error) {
         console.error("Error fetching notifications:", error);
@@ -66,10 +101,15 @@ const notificationRoutes: FastifyPluginAsync = async (
           });
         }
 
-        // For now, return 0 unread notifications
+        // Count unread notifications
+        const count = await Notification.countDocuments({
+          userId: currentUserId,
+          status: "PENDING",
+        });
+
         return reply.send({
           success: true,
-          count: 0,
+          count,
         });
       } catch (error) {
         console.error("Error fetching unread notification count:", error);
@@ -83,7 +123,7 @@ const notificationRoutes: FastifyPluginAsync = async (
   );
 
   // Mark notification as read
-  fastify.post(
+  fastify.patch(
     "/notifications/:notificationId/read",
     {
       preHandler: authenticateToken,
@@ -107,7 +147,33 @@ const notificationRoutes: FastifyPluginAsync = async (
           });
         }
 
-        // This would normally update the database
+        // Validate notificationId
+        if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+          return reply.status(400).send({
+            success: false,
+            message: "Invalid notification ID",
+          });
+        }
+
+        // Update notification status
+        const notification = await Notification.findOneAndUpdate(
+          {
+            _id: notificationId,
+            userId: currentUserId,
+          },
+          {
+            status: "SEEN",
+          },
+          { new: true }
+        );
+
+        if (!notification) {
+          return reply.status(404).send({
+            success: false,
+            message: "Notification not found",
+          });
+        }
+
         return reply.send({
           success: true,
           message: "Notification marked as read",
@@ -124,7 +190,7 @@ const notificationRoutes: FastifyPluginAsync = async (
   );
 
   // Mark all notifications as read
-  fastify.post(
+  fastify.patch(
     "/notifications/read-all",
     {
       preHandler: authenticateToken,
@@ -140,10 +206,21 @@ const notificationRoutes: FastifyPluginAsync = async (
           });
         }
 
-        // This would normally update the database
+        // Update all pending notifications to seen
+        const result = await Notification.updateMany(
+          {
+            userId: currentUserId,
+            status: "PENDING",
+          },
+          {
+            status: "SEEN",
+          }
+        );
+
         return reply.send({
           success: true,
           message: "All notifications marked as read",
+          count: result.modifiedCount,
         });
       } catch (error) {
         console.error("Error marking all notifications as read:", error);
@@ -181,7 +258,33 @@ const notificationRoutes: FastifyPluginAsync = async (
           });
         }
 
-        // This would normally delete from the database
+        // Validate notificationId
+        if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+          return reply.status(400).send({
+            success: false,
+            message: "Invalid notification ID",
+          });
+        }
+
+        // Soft delete - just mark as deleted
+        const notification = await Notification.findOneAndUpdate(
+          {
+            _id: notificationId,
+            userId: currentUserId,
+          },
+          {
+            status: "DELETED",
+          },
+          { new: true }
+        );
+
+        if (!notification) {
+          return reply.status(404).send({
+            success: false,
+            message: "Notification not found",
+          });
+        }
+
         return reply.send({
           success: true,
           message: "Notification deleted successfully",

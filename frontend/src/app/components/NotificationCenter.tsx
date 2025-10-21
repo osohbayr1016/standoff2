@@ -17,7 +17,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { API_ENDPOINTS } from "../../config/api";
 
-const NotificationCenter: React.FC = () => {
+interface NotificationCenterProps {
+  onMessageNotificationClick?: (
+    senderId: string,
+    senderName: string,
+    senderAvatar?: string
+  ) => void;
+}
+
+const NotificationCenter: React.FC<NotificationCenterProps> = ({
+  onMessageNotificationClick,
+}) => {
   const { getToken } = useAuth();
   const {
     notifications,
@@ -44,11 +54,30 @@ const NotificationCenter: React.FC = () => {
   const handleNotificationClick = async (notification: {
     _id: string;
     status: string;
+    type: string;
+    senderId?: {
+      _id: string;
+      name: string;
+      avatar?: string;
+    };
   }) => {
     if (notification.status === "PENDING") {
       await markAsSeen(notification._id);
     }
-    // You can add navigation logic here if needed
+
+    // If it's a message notification, open the chat
+    if (
+      notification.type === "MESSAGE" &&
+      notification.senderId &&
+      onMessageNotificationClick
+    ) {
+      setIsOpen(false);
+      onMessageNotificationClick(
+        notification.senderId._id,
+        notification.senderId.name,
+        notification.senderId.avatar
+      );
+    }
   };
 
   const formatTime = (timestamp: string) => {

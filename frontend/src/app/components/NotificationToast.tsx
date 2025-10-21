@@ -7,21 +7,15 @@ import { useSocket } from "../contexts/SocketContext";
 import { useAuth } from "../contexts/AuthContext";
 
 interface NotificationToastProps {
-  onNotificationClick?: (notification: {
-    _id: string;
-    title: string;
-    content: string;
-    senderId: {
-      _id: string;
-      name: string;
-      avatar?: string;
-    };
-    createdAt: string;
-  }) => void;
+  onMessageNotificationClick?: (
+    senderId: string,
+    senderName: string,
+    senderAvatar?: string
+  ) => void;
 }
 
 const NotificationToast: React.FC<NotificationToastProps> = ({
-  onNotificationClick,
+  onMessageNotificationClick,
 }) => {
   const { socket } = useSocket();
   const { user } = useAuth();
@@ -30,7 +24,9 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       id: string;
       title: string;
       content: string;
+      senderId: string;
       senderName: string;
+      senderAvatar?: string;
       timestamp: string;
     }>
   >([]);
@@ -45,7 +41,9 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
         title: string;
         content: string;
         senderId?: {
+          _id: string;
           name: string;
+          avatar?: string;
         };
       }>;
       count: number;
@@ -68,7 +66,9 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
             id: notification._id,
             title: notification.title,
             content: notification.content || "",
+            senderId: notification.senderId?._id || "",
             senderName: notification.senderId?.name || "Unknown",
+            senderAvatar: notification.senderId?.avatar,
             timestamp: new Date().toISOString(),
           };
 
@@ -105,12 +105,14 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
         if (data.receiverId === user?.id || data.receiverId === undefined) {
           const toast = {
             id: data.id || Date.now().toString(),
-            title: `${data.senderName || "Someone"} чам руу чат бичсэн байна`,
+            title: `${data.senderName || "Someone"} sent you a message`,
             content:
               data.content.length > 50
                 ? data.content.substring(0, 50) + "..."
                 : data.content,
+            senderId: data.senderId,
             senderName: data.senderName || "Unknown",
+            senderAvatar: data.senderAvatar,
             timestamp: data.timestamp || new Date().toISOString(),
           };
 
@@ -126,6 +128,46 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       }
     };
 
+    // Listen for new notification events
+    const handleNewNotification = (data: {
+      _id: string;
+      title: string;
+      content: string;
+      type: string;
+      senderId?: {
+        _id: string;
+        name: string;
+        avatar?: string;
+      };
+      createdAt: string;
+    }) => {
+      try {
+        if (!data._id || !data.title) {
+          console.warn("📬 Invalid notification data:", data);
+          return;
+        }
+
+        const toast = {
+          id: data._id,
+          title: data.title,
+          content: data.content || "",
+          senderId: data.senderId?._id || "",
+          senderName: data.senderId?.name || "System",
+          senderAvatar: data.senderId?.avatar,
+          timestamp: data.createdAt,
+        };
+
+        setToasts((prev) => [...prev, toast]);
+
+        // Auto-remove toast after 5 seconds
+        setTimeout(() => {
+          setToasts((prev) => prev.filter((t) => t.id !== toast.id));
+        }, 5000);
+      } catch (error) {
+        console.error("📬 Error handling new notification:", error);
+      }
+    };
+
     // Error handling for socket events
     const handleSocketError = (error: Error) => {
       console.error("🔌 Socket error in notification system:", error);
@@ -133,11 +175,13 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
 
     socket.on("pending_notifications", handlePendingNotifications);
     socket.on("new_message", handleNewMessage);
+    socket.on("new_notification", handleNewNotification);
     socket.on("error", handleSocketError);
 
     return () => {
       socket.off("pending_notifications", handlePendingNotifications);
       socket.off("new_message", handleNewMessage);
+      socket.off("new_notification", handleNewNotification);
       socket.off("error", handleSocketError);
     };
   }, [socket, user]);
@@ -150,21 +194,18 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
     id: string;
     title: string;
     content: string;
+    senderId: string;
     senderName: string;
+    senderAvatar?: string;
     timestamp: string;
   }) => {
-    if (onNotificationClick) {
-      onNotificationClick({
-        _id: toast.id,
-        title: toast.title,
-        content: toast.content,
-        senderId: {
-          _id: toast.id,
-          name: toast.senderName,
-          avatar: undefined,
-        },
-        createdAt: toast.timestamp,
-      });
+    // If there's a senderId, it's a message notification - open chat
+    if (toast.senderId && onMessageNotificationClick) {
+      onMessageNotificationClick(
+        toast.senderId,
+        toast.senderName,
+        toast.senderAvatar
+      );
     }
     removeToast(toast.id);
   };

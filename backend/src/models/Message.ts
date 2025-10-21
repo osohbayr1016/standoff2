@@ -9,6 +9,7 @@ export interface IMessage extends Document {
   status: MessageStatus;
   isRead: boolean;
   readAt?: Date;
+  replyToId?: Schema.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,6 +46,11 @@ const messageSchema = new Schema<IMessage>(
     },
     readAt: {
       type: Date,
+    },
+    replyToId: {
+      type: Schema.Types.ObjectId,
+      ref: "Message",
+      index: true,
     },
   },
   {

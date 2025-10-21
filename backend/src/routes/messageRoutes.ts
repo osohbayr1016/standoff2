@@ -50,6 +50,14 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           .sort({ createdAt: 1 }) // Sort oldest to newest
           .populate("senderId", "name avatar")
           .populate("receiverId", "name avatar")
+          .populate({
+            path: "replyToId",
+            select: "content senderId",
+            populate: {
+              path: "senderId",
+              select: "name",
+            },
+          })
           .lean();
 
         // Format messages for frontend
@@ -61,6 +69,16 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           status: msg.status,
           isRead: msg.isRead,
           createdAt: msg.createdAt,
+          replyToId: msg.replyToId?._id?.toString(),
+          replyTo: msg.replyToId
+            ? {
+                id: msg.replyToId._id.toString(),
+                content: msg.replyToId.content,
+                sender: {
+                  name: msg.replyToId.senderId?.name || "Unknown",
+                },
+              }
+            : undefined,
           sender: {
             id: msg.senderId._id.toString(),
             name: msg.senderId.name || "Unknown",
@@ -107,9 +125,10 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     },
     async (request: AuthenticatedRequest, reply) => {
       try {
-        const { receiverId, content } = request.body as {
+        const { receiverId, content, replyToId } = request.body as {
           receiverId: string;
           content: string;
+          replyToId?: string;
         };
         const currentUserId = request.user?.id;
 
@@ -142,6 +161,14 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           });
         }
 
+        // Validate replyToId if provided
+        if (replyToId && !mongoose.Types.ObjectId.isValid(replyToId)) {
+          return reply.status(400).send({
+            success: false,
+            message: "Invalid reply message ID",
+          });
+        }
+
         // Check if receiver exists
         const receiver = await User.findById(receiverId).select("name avatar");
         if (!receiver) {
@@ -158,6 +185,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           content: content.trim(),
           status: "SENT",
           isRead: false,
+          ...(replyToId && { replyToId }),
         });
 
         await newMessage.save();
@@ -165,6 +193,14 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
         // Populate sender and receiver info
         await newMessage.populate("senderId", "name avatar");
         await newMessage.populate("receiverId", "name avatar");
+        await newMessage.populate({
+          path: "replyToId",
+          select: "content senderId",
+          populate: {
+            path: "senderId",
+            select: "name",
+          },
+        });
 
         // Format response
         const formattedMessage = {
@@ -175,6 +211,17 @@ const messageRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           status: newMessage.status,
           isRead: newMessage.isRead,
           createdAt: newMessage.createdAt,
+          replyToId: (newMessage as any).replyToId?._id?.toString(),
+          replyTo: (newMessage as any).replyToId
+            ? {
+                id: (newMessage as any).replyToId._id.toString(),
+                content: (newMessage as any).replyToId.content,
+                sender: {
+                  name:
+                    (newMessage as any).replyToId.senderId?.name || "Unknown",
+                },
+              }
+            : undefined,
           sender: {
             id: currentUserId,
             name: request.user?.name || "Unknown",

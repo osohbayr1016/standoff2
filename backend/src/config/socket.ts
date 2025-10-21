@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { JWTPayload } from "../middleware/auth";
 import Message from "../models/Message";
 import User from "../models/User";
+import Notification from "../models/Notification";
 
 export class SocketManager {
   private io: SocketIOServer | null = null;
@@ -50,10 +51,48 @@ export class SocketManager {
       // Update user online status
       this.broadcastUserStatus(socket.data.userId, "online");
 
+      // Send pending notifications when user comes online
+      try {
+        const pendingNotifications = await Notification.find({
+          userId: socket.data.userId,
+          status: "PENDING",
+        })
+          .populate("senderId", "name avatar")
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .lean();
+
+        if (pendingNotifications.length > 0) {
+          const formattedNotifications = pendingNotifications.map(
+            (notif: any) => ({
+              _id: notif._id.toString(),
+              title: notif.title,
+              content: notif.content,
+              type: notif.type,
+              senderId: notif.senderId
+                ? {
+                    _id: notif.senderId._id.toString(),
+                    name: notif.senderId.name || "Unknown",
+                    avatar: notif.senderId.avatar,
+                  }
+                : undefined,
+              createdAt: notif.createdAt,
+            })
+          );
+
+          socket.emit("pending_notifications", {
+            notifications: formattedNotifications,
+            count: formattedNotifications.length,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching pending notifications:", error);
+      }
+
       // Handle message sending
       socket.on("send_message", async (data) => {
         try {
-          const { receiverId, content } = data;
+          const { receiverId, content, replyToId } = data;
           const senderId = socket.data.userId;
 
           if (!receiverId || !content || !content.trim()) {
@@ -90,9 +129,35 @@ export class SocketManager {
             content: content.trim(),
             status: "SENT",
             isRead: false,
+            ...(replyToId && { replyToId }),
           });
 
           await newMessage.save();
+
+          // Populate replyTo if exists
+          if (replyToId) {
+            await newMessage.populate({
+              path: "replyToId",
+              select: "content senderId",
+              populate: {
+                path: "senderId",
+                select: "name",
+              },
+            });
+          }
+
+          // Create notification for the receiver
+          const notification = new Notification({
+            userId: receiverId,
+            senderId: senderId,
+            title: `New message from ${sender.name}`,
+            content: content.trim().substring(0, 100),
+            type: "MESSAGE",
+            status: "PENDING",
+            relatedMessageId: newMessage._id,
+          });
+
+          await notification.save();
 
           // Prepare message data for real-time delivery
           const messageData = {
@@ -100,7 +165,22 @@ export class SocketManager {
             senderId,
             receiverId,
             content: newMessage.content,
+            status: newMessage.status,
+            isRead: newMessage.isRead,
             timestamp: newMessage.createdAt.toISOString(),
+            senderName: sender.name,
+            senderAvatar: sender.avatar,
+            replyToId: (newMessage as any).replyToId?._id?.toString(),
+            replyTo: (newMessage as any).replyToId
+              ? {
+                  id: (newMessage as any).replyToId._id.toString(),
+                  content: (newMessage as any).replyToId.content,
+                  sender: {
+                    name:
+                      (newMessage as any).replyToId.senderId?.name || "Unknown",
+                  },
+                }
+              : undefined,
             sender: {
               id: senderId,
               name: sender.name,
@@ -116,8 +196,23 @@ export class SocketManager {
           // Check if receiver is online
           const receiverSocketId = this.connectedUsers.get(receiverId);
           if (receiverSocketId) {
-            // Send to online user
+            // Send message to online user
             this.io!.to(receiverSocketId).emit("new_message", messageData);
+
+            // Send notification to online user
+            this.io!.to(receiverSocketId).emit("new_notification", {
+              _id: notification._id.toString(),
+              title: notification.title,
+              content: notification.content,
+              type: notification.type,
+              senderId: {
+                _id: senderId,
+                name: sender.name,
+                avatar: sender.avatar,
+              },
+              relatedMessageId: newMessage._id.toString(),
+              createdAt: notification.createdAt,
+            });
 
             // Update message status to DELIVERED
             await Message.findByIdAndUpdate(newMessage._id, {

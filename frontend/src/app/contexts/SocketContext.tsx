@@ -14,7 +14,11 @@ import { useAuth } from "./AuthContext";
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
-  sendMessage: (receiverId: string, content: string) => void;
+  sendMessage: (
+    receiverId: string,
+    content: string,
+    replyToId?: string
+  ) => void;
   sendTypingStart: (receiverId: string) => void;
   sendTypingStop: (receiverId: string) => void;
   markMessageAsRead: (senderId: string) => void;
@@ -44,21 +48,18 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Create socket connection with better error handling
-    const socket = io(
-      API_ENDPOINTS.HEALTH.replace('/health', ''),
-      {
-        auth: {
-          token: token,
-        },
-        transports: ["websocket", "polling"],
-        autoConnect: true,
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
-        timeout: 20000,
-      }
-    );
+    const socket = io(API_ENDPOINTS.HEALTH.replace("/health", ""), {
+      auth: {
+        token: token,
+      },
+      transports: ["websocket", "polling"],
+      autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+    });
 
     socketRef.current = socket;
 
@@ -125,6 +126,19 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       window.dispatchEvent(new CustomEvent("message_error", { detail: data }));
     });
 
+    // Notification events
+    socket.on("new_notification", (data) => {
+      window.dispatchEvent(
+        new CustomEvent("new_notification", { detail: data })
+      );
+    });
+
+    socket.on("pending_notifications", (data) => {
+      window.dispatchEvent(
+        new CustomEvent("pending_notifications", { detail: data })
+      );
+    });
+
     // Typing events
     socket.on("user_typing", (data) => {
       window.dispatchEvent(new CustomEvent("user_typing", { detail: data }));
@@ -159,9 +173,17 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     };
   }, [isAuthenticated, user]);
 
-  const sendMessage = (receiverId: string, content: string) => {
+  const sendMessage = (
+    receiverId: string,
+    content: string,
+    replyToId?: string
+  ) => {
     if (socketRef.current && isConnected) {
-      socketRef.current.emit("send_message", { receiverId, content });
+      socketRef.current.emit("send_message", {
+        receiverId,
+        content,
+        ...(replyToId && { replyToId }),
+      });
     }
   };
 

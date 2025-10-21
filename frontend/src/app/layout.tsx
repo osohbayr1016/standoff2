@@ -3,13 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
-import Footer from "./components/Footer";
 import { DarkModeProvider } from "./contexts/DarkModeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SocketProvider } from "./contexts/SocketContext";
-import Navigation from "./components/Navigation";
-import InstagramChat from "./components/InstagramChat";
-import NotificationToast from "./components/NotificationToast";
+import LayoutWrapper from "./components/LayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,15 +45,7 @@ export default function RootLayout({
         <DarkModeProvider>
           <AuthProvider>
             <SocketProvider>
-              <div className="min-h-screen flex flex-col theme-transition">
-                <Navigation />
-                <main className="flex-1 pt-16 theme-transition">
-                  {children}
-                </main>
-                <Footer />
-                <InstagramChat />
-                <NotificationToast />
-              </div>
+              <LayoutWrapper>{children}</LayoutWrapper>
             </SocketProvider>
           </AuthProvider>
         </DarkModeProvider>

@@ -24,6 +24,8 @@ import ProfileDropdown from "./ProfileDropdown";
 import InviteFriendModal from "./InviteFriendModal";
 import SearchModal from "./SearchModal";
 
+import ChatModal from "./ChatModal";
+
 export default function Navigation() {
   const { isDarkMode, toggleDarkMode, isLoaded } = useDarkMode();
   const { user, logout, hasProfile } = useAuth();
@@ -37,6 +39,29 @@ export default function Navigation() {
     name: string;
   } | null>(null);
   const [isLoadingSquad, setIsLoadingSquad] = useState(false);
+  const [chatModalState, setChatModalState] = useState<{
+    isOpen: boolean;
+    userId: string;
+    userName: string;
+    userAvatar?: string;
+  } | null>(null);
+
+  const handleOpenChatFromNotification = (
+    userId: string,
+    userName: string,
+    userAvatar?: string
+  ) => {
+    setChatModalState({
+      isOpen: true,
+      userId,
+      userName,
+      userAvatar,
+    });
+  };
+
+  const handleCloseChat = () => {
+    setChatModalState(null);
+  };
 
   // Fetch the current user's squad for mobile access
   useEffect(() => {
@@ -198,7 +223,9 @@ export default function Navigation() {
                 <Search className="w-5 h-5" />
               </motion.button>
 
-              <NotificationCenter />
+              <NotificationCenter
+                onMessageNotificationClick={handleOpenChatFromNotification}
+              />
 
               {/* Connection Status Indicator - Hidden on mobile */}
               {user && (
@@ -449,6 +476,17 @@ export default function Navigation() {
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
       />
+
+      {/* Chat Modal */}
+      {chatModalState && (
+        <ChatModal
+          isOpen={chatModalState.isOpen}
+          onClose={handleCloseChat}
+          playerId={chatModalState.userId}
+          playerName={chatModalState.userName}
+          playerAvatar={chatModalState.userAvatar}
+        />
+      )}
     </>
   );
 }
