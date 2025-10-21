@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { createServer } from "http";
 import SocketManager from "./config/socket";
+import { MatchDeadlineChecker } from "./services/matchDeadlineChecker";
 
 // Load environment variables
 dotenv.config();
@@ -200,6 +201,17 @@ async function registerRoutes() {
     // Settings routes
     const settingsRoutes = await import("./routes/settingsRoutes");
     fastify.register(settingsRoutes.default, { prefix: "/api/settings" });
+    // Match routes
+    const matchRoutes = await import("./routes/matchRoutes");
+    fastify.register(matchRoutes.default, { prefix: "/api/matches" });
+    // Match action routes
+    const matchActionRoutes = await import("./routes/matchActionRoutes");
+    fastify.register(matchActionRoutes.default, { prefix: "/api/matches" });
+    // Admin match routes
+    const adminMatchRoutes = await import("./routes/adminMatchRoutes");
+    fastify.register(adminMatchRoutes.default, {
+      prefix: "/api/admin/matches",
+    });
   } catch (error) {
     console.error("❌ Error registering routes:", error);
     // Continue without routes for basic health check
@@ -253,6 +265,10 @@ const startServer = async () => {
 
     // Initialize Socket.IO after Fastify starts
     socketManager.initialize(fastify.server);
+
+    // Start Match Deadline Checker
+    MatchDeadlineChecker.start();
+    console.log("✅ Match deadline checker started");
   } catch (error) {
     console.error("❌ Failed to start server:", error);
     console.error("Stack trace:", error.stack);

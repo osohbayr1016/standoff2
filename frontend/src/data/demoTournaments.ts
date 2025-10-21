@@ -22,6 +22,7 @@ export const demoTournaments: Tournament[] = [
     currentParticipants: 24,
     format: "Single Elimination",
     entryFee: 50000,
+    tournamentType: "tax",
     location: "Online",
     status: "registration_open",
     requirements: ["Level 15+", "Rank: Epic+"],
@@ -33,6 +34,7 @@ export const demoTournaments: Tournament[] = [
     _id: "2",
     name: "Valorant Championship 2024",
     game: "Valorant",
+    tournamentType: "free",
     description:
       "Valorant тоглогчдын хувьд зориулсан томоохон тэмцээн. Танджийн стратеги, багийн хамтын ажиллагаа, хувь хүний ур чадвар чухал.",
     organizer: {
@@ -61,6 +63,7 @@ export const demoTournaments: Tournament[] = [
     _id: "3",
     name: "CS:GO Masters Cup",
     game: "Counter-Strike: Global Offensive",
+    tournamentType: "tax",
     description:
       "CS:GO тоглогчдын хувьд зориулсан элит тэмцээн. Тоглоомын механик, багийн стратеги, хувь хүний ур чадвар чухал.",
     organizer: {
@@ -89,6 +92,7 @@ export const demoTournaments: Tournament[] = [
     _id: "4",
     name: "Mobile Legends Amateur League",
     game: "Mobile Legends: Bang Bang",
+    tournamentType: "free",
     description:
       "Шинэхэн тоглогчдын хувьд зориулсан тэмцээн. Туршлага багатай тоглогчид ч оролцож болно.",
     organizer: {
@@ -117,6 +121,7 @@ export const demoTournaments: Tournament[] = [
     _id: "5",
     name: "Valorant Open Tournament",
     game: "Valorant",
+    tournamentType: "tax",
     description:
       "Бүх түвшний тоглогчдын хувьд нээлттэй тэмцээн. Шинэхэн болон туршлагатай тоглогчид хамт оролцож болно.",
     organizer: {
@@ -145,6 +150,7 @@ export const demoTournaments: Tournament[] = [
     _id: "6",
     name: "CS:GO Community Cup",
     game: "Counter-Strike: Global Offensive",
+    tournamentType: "free",
     description:
       "CS:GO тоглогчдын хамтын тэмцээн. Багийн хамтын ажиллагаа, стратеги чухал.",
     organizer: {

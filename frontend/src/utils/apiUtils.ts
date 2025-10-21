@@ -46,9 +46,9 @@ export const robustApiCall = async (
     } catch (error) {
       lastError = error as Error;
 
-      if (error.name === "AbortError") {
-        } else {
-        }
+      if (error instanceof Error && error.name === "AbortError") {
+      } else {
+      }
 
       // If this is our last attempt, throw the error
       if (attempt >= retries) {

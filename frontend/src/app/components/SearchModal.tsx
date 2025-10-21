@@ -18,6 +18,7 @@ interface SearchResult {
   url: string;
   game?: string;
   playerId?: string;
+  category?: string;
 }
 
 interface SearchModalProps {
@@ -231,7 +232,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         }
       } catch (error) {
         console.error("Error searching players:", error);
-        console.error("Error details:", error.message);
+        console.error(
+          "Error details:",
+          error instanceof Error ? error.message : String(error)
+        );
       }
 
       console.log("=== END PLAYER SEARCH DEBUG ===");

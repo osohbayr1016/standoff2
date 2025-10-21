@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Navigation from "./Navigation";
 import Footer from "./Footer";
-import InstagramChat from "./InstagramChat";
 import NotificationToast from "./NotificationToast";
 import MessageListModal from "./MessageListModal";
 import ChatModal from "./ChatModal";
@@ -42,7 +41,6 @@ export default function LayoutWrapper({
       <Navigation />
       <main className="flex-1 pt-16 theme-transition">{children}</main>
       <Footer />
-      <InstagramChat />
       <NotificationToast onMessageNotificationClick={handleOpenChat} />
       <MessageListModal onOpenChat={handleOpenChat} />
       {chatModalState && (

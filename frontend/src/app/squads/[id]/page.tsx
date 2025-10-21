@@ -43,6 +43,7 @@ import {
 } from "../../../utils/squadService";
 import DivisionCoinImage from "../../../components/DivisionCoinImage";
 import { SquadDivision } from "../../../types/division";
+import MatchHistory from "./components/MatchHistory";
 
 interface Squad {
   _id: string;
@@ -2328,6 +2329,13 @@ export default function SquadDetailPage() {
               </div>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {/* Match History Section */}
+      {squad && (
+        <div className="mt-6">
+          <MatchHistory squadId={squad._id} />
         </div>
       )}
     </div>

@@ -31,6 +31,7 @@ const WS_BASE_URL =
     : "http://localhost:8000");
 
 export const API_ENDPOINTS = {
+  BASE_URL: API_BASE_URL,
   AUTH: {
     LOGIN: `${API_BASE_URL}/api/auth/login`,
     REGISTER: `${API_BASE_URL}/api/auth/register`,
@@ -164,6 +165,25 @@ export const API_ENDPOINTS = {
       `${API_BASE_URL}/api/divisions/purchase/${squadId}`,
     UPGRADE: (squadId: string) =>
       `${API_BASE_URL}/api/divisions/upgrade/${squadId}`,
+  },
+  MATCHES: {
+    ALL: `${API_BASE_URL}/api/matches`,
+    GET: (id: string) => `${API_BASE_URL}/api/matches/${id}`,
+    MY_SQUAD: `${API_BASE_URL}/api/matches/my-squad`,
+    HISTORY: `${API_BASE_URL}/api/matches/history`,
+    CREATE: `${API_BASE_URL}/api/matches`,
+    ACCEPT: (id: string) => `${API_BASE_URL}/api/matches/${id}/accept`,
+    START: (id: string) => `${API_BASE_URL}/api/matches/${id}/start`,
+    RESULT: (id: string) => `${API_BASE_URL}/api/matches/${id}/result`,
+    CANCEL: (id: string) => `${API_BASE_URL}/api/matches/${id}/cancel`,
+    DISPUTE: (id: string) => `${API_BASE_URL}/api/matches/${id}/dispute`,
+    CHAT: (id: string) => `${API_BASE_URL}/api/matches/${id}/chat`,
+  },
+  ADMIN_MATCHES: {
+    ALL: `${API_BASE_URL}/api/admin/matches`,
+    DISPUTES: `${API_BASE_URL}/api/admin/matches/disputes`,
+    RESOLVE: (id: string) => `${API_BASE_URL}/api/admin/matches/${id}/resolve`,
+    STATS: `${API_BASE_URL}/api/admin/matches/stats`,
   },
 
   HEALTH: `${API_BASE_URL}/health`,

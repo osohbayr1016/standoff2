@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import jwt from "jsonwebtoken";
-import User from "../models/User";
+import User, { UserRole } from "../models/User";
 
 export interface JWTPayload {
   id: string;
@@ -10,12 +10,14 @@ export interface JWTPayload {
 
 export interface AuthenticatedRequest extends FastifyRequest {
   user?: {
+    _id: string;
     id: string;
     email: string;
     name: string;
-    role: string;
+    role: UserRole;
     avatar?: string;
     isVerified: boolean;
+    isOnline?: boolean;
   };
 }
 
@@ -51,12 +53,14 @@ export const authenticateToken = async (
     }
 
     request.user = {
+      _id: user._id.toString(),
       id: user._id.toString(),
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: user.role as UserRole,
       avatar: user.avatar,
       isVerified: user.isVerified,
+      isOnline: user.isOnline,
     };
   } catch (error) {
     reply.status(403).send({

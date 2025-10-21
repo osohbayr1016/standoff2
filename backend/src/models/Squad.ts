@@ -34,6 +34,16 @@ export interface ISquad extends Document {
   protectionCount: number; // Number of protections remaining (0-2)
   consecutiveLosses: number; // Consecutive losses for division demotion
 
+  // Match Statistics
+  matchStats: {
+    wins: number;
+    losses: number;
+    draws: number;
+    totalMatches: number;
+    winRate: number;
+    totalEarned: number;
+  };
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -140,6 +150,40 @@ const squadSchema = new Schema<ISquad>(
       default: 0,
       min: 0,
     },
+
+    // Match Statistics
+    matchStats: {
+      wins: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      losses: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      draws: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      totalMatches: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      winRate: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100,
+      },
+      totalEarned: {
+        type: Number,
+        default: 0,
+      },
+    },
   },
   {
     timestamps: true,
@@ -166,6 +210,18 @@ squadSchema.pre("save", function (next) {
     return next(
       new Error(`Squad cannot have more than ${this.maxMembers} members`)
     );
+  }
+
+  // Initialize matchStats if not present (backwards compatibility)
+  if (!this.matchStats) {
+    this.matchStats = {
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      totalMatches: 0,
+      winRate: 0,
+      totalEarned: 0,
+    };
   }
 
   next();
