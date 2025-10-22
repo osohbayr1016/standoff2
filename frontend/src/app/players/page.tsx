@@ -424,13 +424,13 @@ export default function PlayersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gray-900">
         <Navigation />
         <main className="pt-20 pb-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-green-400 mx-auto"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-300">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto"></div>
+              <p className="mt-4 text-gray-300">
                 Loading {gameInfo.name} players...
               </p>
             </div>
@@ -441,7 +441,7 @@ export default function PlayersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gray-900">
       <Navigation />
 
       <main className="pt-20 pb-16">
@@ -454,13 +454,13 @@ export default function PlayersPage() {
             className="mb-8"
           >
             <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-green-400 dark:to-blue-400 bg-clip-text text-transparent mb-4">
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
                 {gameInfo.name}
               </h1>
-              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-4">
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-4">
                 {gameInfo.description}
               </p>
-              <div className="flex items-center justify-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center justify-center space-x-4 text-sm text-gray-400">
                 <div className="flex items-center space-x-1">
                   {getCategoryIcon(gameInfo.category)}
                   <span>{gameInfo.category}</span>
@@ -477,12 +477,12 @@ export default function PlayersPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 mb-6"
+              className="bg-yellow-900/50 border border-yellow-700 rounded-lg p-4 mb-6"
             >
-              <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+              <h3 className="text-lg font-semibold text-yellow-200 mb-2">
                 🐛 Debug Info (Development Only)
               </h3>
-              <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+              <div className="text-sm text-yellow-300 space-y-1">
                 <p>
                   <strong>Game Name:</strong> {gameInfo.name}
                 </p>
@@ -513,7 +513,7 @@ export default function PlayersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 mb-8"
+            className="bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 mb-8 border border-gray-700"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
               {/* Search */}
@@ -524,7 +524,7 @@ export default function PlayersPage() {
                   placeholder="Тоглогчдыг хайх..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
                 />
               </div>
 
@@ -532,7 +532,7 @@ export default function PlayersPage() {
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
-                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                className="px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
               >
                 <option value="Бүх Үүргүүд">Бүх Үүргүүд</option>
                 {gameInfo.roles.map((role) => (
@@ -546,7 +546,7 @@ export default function PlayersPage() {
               <select
                 value={selectedRank}
                 onChange={(e) => setSelectedRank(e.target.value)}
-                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                className="px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
               >
                 <option value="Бүх Ранкууд">Бүх Ранкууд</option>
                 {gameInfo.ranks.map((rank) => (
@@ -566,14 +566,14 @@ export default function PlayersPage() {
                   value={minStars || ""}
                   onChange={(e) => {
                     const value = e.target.value;
-                    setMinStars(value ? parseInt(value) : null);
-                  }}
-                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
-                  ⭐
+                      setMinStars(value ? parseInt(value) : null);
+                    }}
+                    className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
+                    ⭐
+                  </div>
                 </div>
-              </div>
 
               {/* Sort By */}
               <select
@@ -581,7 +581,7 @@ export default function PlayersPage() {
                 onChange={(e) =>
                   setSortBy(e.target.value as "stars" | "name" | "rank")
                 }
-                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                className="px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
               >
                 <option value="name">Нэрээр эрэмбэлэх</option>
                 <option value="rank">Ранкаар эрэмбэлэх</option>
@@ -603,7 +603,7 @@ export default function PlayersPage() {
                     setMinStars(null);
                     setSortBy("name");
                   }}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                  className="px-4 py-2 text-sm text-gray-300 hover:text-purple-400 transition-colors duration-200"
                 >
                   Шүүлтүүрүүдийг цэвэрлэх
                 </button>
@@ -619,9 +619,9 @@ export default function PlayersPage() {
             className="mb-6"
           >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-300">
                 Олдсон{" "}
-                <span className="font-semibold text-purple-600 dark:text-green-400">
+                <span className="font-semibold text-purple-400">
                   {filteredPlayers.length}
                 </span>{" "}
                 тоглогч
@@ -630,17 +630,17 @@ export default function PlayersPage() {
               {/* Active Filters Display */}
               <div className="flex flex-wrap gap-2 text-sm">
                 {selectedRank === "Mythical Glory" && minStars !== null && (
-                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full">
+                  <span className="px-2 py-1 bg-purple-900/50 text-purple-300 rounded-full border border-purple-700">
                     ⭐ {minStars}+ одтой Mythical Glory
                   </span>
                 )}
                 {sortBy === "stars" && (
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full">
+                  <span className="px-2 py-1 bg-blue-900/50 text-blue-300 rounded-full border border-blue-700">
                     Одоор эрэмбэлэгдсэн
                   </span>
                 )}
                 {sortBy === "rank" && (
-                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full">
+                  <span className="px-2 py-1 bg-green-900/50 text-green-300 rounded-full border border-green-700">
                     Ранкаар эрэмбэлэгдсэн
                   </span>
                 )}
@@ -672,11 +672,11 @@ export default function PlayersPage() {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">
                 Тоглогч олдсонгүй
               </h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-300">
                 Хайлтын нөхцөл эсвэл шүүлтүүрээ тохируулна уу
               </p>
             </motion.div>

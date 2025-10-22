@@ -177,16 +177,16 @@ export default function TournamentsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 pt-20">
+      <div className="min-h-screen bg-gray-900 pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="animate-pulse">
-            <div className="h-12 bg-gray-300 dark:bg-gray-600 rounded w-1/3 mb-8 mx-auto"></div>
-            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-1/2 mb-12 mx-auto"></div>
+            <div className="h-12 bg-gray-700 rounded w-1/3 mb-8 mx-auto"></div>
+            <div className="h-6 bg-gray-700 rounded w-1/2 mb-12 mx-auto"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className="h-96 bg-gray-300 dark:bg-gray-600 rounded-xl"
+                  className="h-96 bg-gray-800 rounded-xl"
                 ></div>
               ))}
             </div>
@@ -197,7 +197,7 @@ export default function TournamentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 pt-20">
+    <div className="min-h-screen bg-gray-900 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <motion.div
@@ -205,10 +205,10 @@ export default function TournamentsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-green-400 dark:to-blue-400 bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
             Удахгүй болох тэмцээнүүд
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Хамгийн том e-sports тэмцээнүүдэд оролцож, өөрийн чадварыг
             харуулаарай
           </p>
@@ -219,7 +219,7 @@ export default function TournamentsPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-center"
+            className="mb-6 p-4 bg-red-900/30 border border-red-700 rounded-lg text-center"
           >
             <p className="text-red-400 text-sm">{error}</p>
           </motion.div>
@@ -232,21 +232,21 @@ export default function TournamentsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-16"
           >
-            <Trophy className="w-24 h-24 text-gray-400 dark:text-gray-600 mx-auto mb-6" />
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            <Trophy className="w-24 h-24 text-gray-600 mx-auto mb-6" />
+            <h2 className="text-3xl font-bold text-white mb-4">
               Тэмцээн байхгүй байна
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
               Одоогоор идэвхтэй тэмцээн байхгүй байна. Шинэ тэмцээнүүд
               нэмэгдэхэд энд харагдана.
             </p>
             <div className="space-y-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-400">
                 Тэмцээн зохион байгуулах хүсэлтэй бол бидэнтэй холбогдоно уу.
               </p>
               <Link
                 href="/contact"
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-300"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
               >
                 Холбогдох
               </Link>
@@ -272,18 +272,18 @@ export default function TournamentsPage() {
                   placeholder="Тэмцээн хайх..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-400 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-600 bg-gray-800 text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent"
                 />
               </div>
 
               {/* Filters */}
               <div className="flex flex-wrap gap-4 justify-center">
                 <div className="flex items-center space-x-2">
-                  <Gamepad2 className="w-5 h-5 text-gray-500" />
+                  <Gamepad2 className="w-5 h-5 text-gray-400" />
                   <select
                     value={selectedGame}
                     onChange={(e) => setSelectedGame(e.target.value)}
-                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-400"
+                    className="px-4 py-2 rounded-lg border border-gray-600 bg-gray-800 text-white focus:ring-2 focus:ring-purple-400"
                   >
                     <option value="all">Бүх тоглоом</option>
                     {gameOptions.map((game) => (
@@ -295,11 +295,11 @@ export default function TournamentsPage() {
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <Calendar className="w-5 h-5 text-gray-500" />
+                  <Calendar className="w-5 h-5 text-gray-400" />
                   <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-400"
+                    className="px-4 py-2 rounded-lg border border-gray-600 bg-gray-800 text-white focus:ring-2 focus:ring-purple-400"
                   >
                     <option value="all">Бүх төлөв</option>
                     {statusOptions.map((status) => (
@@ -311,8 +311,8 @@ export default function TournamentsPage() {
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <Users className="w-5 h-5 text-gray-500" />
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                  <Users className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm text-gray-300">
                     {filteredTournaments.length} тэмцээн олдлоо
                   </span>
                 </div>
@@ -337,11 +337,11 @@ export default function TournamentsPage() {
                 animate={{ opacity: 1 }}
                 className="text-center py-12"
               >
-                <Filter className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+                <Filter className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-white mb-2">
                   Тэмцээн олдсонгүй
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-gray-300">
                   Одоогоор таны хайсан тэмцээн байхгүй байна. Дахин хайж үзнэ
                   үү.
                 </p>

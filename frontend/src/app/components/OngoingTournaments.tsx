@@ -91,12 +91,12 @@ export default function OngoingTournaments() {
         className="mt-10"
       >
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-1/3 mb-6"></div>
+          <div className="h-8 bg-gray-700 rounded w-1/3 mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-64 bg-gray-300 dark:bg-gray-600 rounded-xl"
+                className="h-64 bg-gray-800 rounded-xl"
               ></div>
             ))}
           </div>

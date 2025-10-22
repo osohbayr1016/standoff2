@@ -111,7 +111,7 @@ export default function LatestNews() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {[1, 2].map((i) => (
           <div key={i} className="animate-pulse">
-            <div className="aspect-[16/9] rounded-2xl bg-gray-300 dark:bg-gray-600"></div>
+            <div className="aspect-[16/9] rounded-2xl bg-gray-800"></div>
           </div>
         ))}
       </div>

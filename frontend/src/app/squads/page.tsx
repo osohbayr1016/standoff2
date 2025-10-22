@@ -171,7 +171,7 @@ function CreateSquadForm({
           type="text"
           value={formData.name}
           onChange={(e) => handleInputChange("name", e.target.value)}
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             errors.name
               ? "border-red-500"
               : "border-gray-300 dark:border-gray-600"
@@ -191,7 +191,7 @@ function CreateSquadForm({
           type="text"
           value={formData.tag}
           onChange={(e) => handleInputChange("tag", e.target.value)}
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             errors.tag
               ? "border-red-500"
               : "border-gray-300 dark:border-gray-600"
@@ -230,7 +230,7 @@ function CreateSquadForm({
           onChange={(e) =>
             handleInputChange("maxMembers", parseInt(e.target.value))
           }
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             errors.maxMembers
               ? "border-red-500"
               : "border-gray-300 dark:border-gray-600"
@@ -252,7 +252,7 @@ function CreateSquadForm({
           value={formData.description}
           onChange={(e) => handleInputChange("description", e.target.value)}
           rows={3}
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             errors.description
               ? "border-red-500"
               : "border-gray-300 dark:border-gray-600"
@@ -287,7 +287,7 @@ function CreateSquadForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white py-2 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
             <div className="flex items-center justify-center">
@@ -448,19 +448,19 @@ export default function SquadsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 pt-20">
+      <div className="min-h-screen bg-gray-900 pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-1/4 mb-8"></div>
+            <div className="h-8 bg-gray-700 rounded w-1/4 mb-8"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+                  className="bg-gray-800 rounded-lg shadow-lg p-6"
                 >
-                  <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-4"></div>
-                  <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/2 mb-4"></div>
-                  <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-2/3"></div>
+                  <div className="h-4 bg-gray-700 rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-gray-700 rounded w-1/2 mb-4"></div>
+                  <div className="h-4 bg-gray-700 rounded w-2/3"></div>
                 </div>
               ))}
             </div>
@@ -471,7 +471,7 @@ export default function SquadsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 pt-20">
+    <div className="min-h-screen bg-gray-900 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <motion.div
@@ -481,10 +481,10 @@ export default function SquadsPage() {
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-3xl font-bold text-white mb-2">
                 Squads
               </h1>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-300">
                 Find and join competitive gaming squads or create your own
               </p>
             </div>
@@ -492,7 +492,7 @@ export default function SquadsPage() {
               onClick={() => setShowCreateModal(true)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="mt-4 sm:mt-0 bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-300 flex items-center space-x-2"
+              className="mt-4 sm:mt-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 flex items-center space-x-2"
             >
               <Plus className="w-5 h-5" />
               <span>Create Squad</span>
@@ -503,29 +503,29 @@ export default function SquadsPage() {
         {/* Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
-        >
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search squads..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
-                />
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-8 bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700"
+          >
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Search squads..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="sm:w-64">
-              <select
-                value={selectedGame}
-                onChange={(e) => setSelectedGame(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
-              >
+              <div className="sm:w-64">
+                <select
+                  value={selectedGame}
+                  onChange={(e) => setSelectedGame(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                >
                 {games.map((game) => (
                   <option key={game} value={game}>
                     {game}
@@ -546,10 +546,10 @@ export default function SquadsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 h-full flex flex-col"
+                className="bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 h-full flex flex-col border border-gray-700"
               >
                 {/* Squad Header */}
-                <div className="relative h-36 bg-gradient-to-br from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500">
+                <div className="relative h-36 bg-gradient-to-br from-blue-600 to-blue-800">
                   {squad.logo && (
                     <div className="absolute inset-0 bg-black bg-opacity-20"></div>
                   )}
@@ -604,7 +604,7 @@ export default function SquadsPage() {
                   {/* Ensure consistent space for description across cards */}
                   <div className="mb-4 min-h-[40px]">
                     {squad.description ? (
-                      <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">
+                      <p className="text-gray-300 text-sm line-clamp-2">
                         {squad.description}
                       </p>
                     ) : (
@@ -613,19 +613,19 @@ export default function SquadsPage() {
                   </div>
 
                   {/* Division and BC Info */}
-                  <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center justify-between mb-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        <span className="text-xs font-medium text-gray-400">
                           Division
                         </span>
-                        <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">
+                        <span className="text-sm font-bold text-yellow-400">
                           {squad.division || "SILVER"}
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-xs text-gray-400">
                         {squad.currentBountyCoins || 0} BC
                       </span>
                     </div>
@@ -645,12 +645,12 @@ export default function SquadsPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center space-x-1">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          <span className="text-sm font-medium text-white">
                             {squad.leader.name}
                           </span>
                           <Crown className="w-3 h-3 text-yellow-500" />
                         </div>
-                        <span className="text-xs text-gray-500">Leader</span>
+                        <span className="text-xs text-gray-400">Leader</span>
                       </div>
                     </div>
                   )}
@@ -659,7 +659,7 @@ export default function SquadsPage() {
                   <div className="mb-4">
                     <div className="flex items-center space-x-1 mb-2">
                       <Users className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-300">
                         Members ({squad.members ? squad.members.length : 0})
                       </span>
                     </div>
@@ -672,13 +672,13 @@ export default function SquadsPage() {
                               alt={member.name}
                               fill
                               sizes="24px"
-                              className="rounded-full object-cover border-2 border-white dark:border-gray-800"
+                              className="rounded-full object-cover border-2 border-gray-800"
                             />
                           </div>
                         ))}
                       {squad.members && squad.members.length > 5 && (
-                        <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
-                          <span className="text-xs text-gray-600 dark:text-gray-300">
+                        <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center border-2 border-gray-800">
+                          <span className="text-xs text-gray-300">
                             +{squad.members.length - 5}
                           </span>
                         </div>
@@ -692,7 +692,7 @@ export default function SquadsPage() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        className="flex-1 bg-gray-700 text-gray-300 py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors border border-gray-600"
                       >
                         View Details
                       </motion.button>
@@ -706,7 +706,7 @@ export default function SquadsPage() {
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleUpgradeDivision(squad)}
                             disabled={!!upgrading[squad._id]}
-                            className="px-3 py-2 text-xs rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50"
+                            className="px-3 py-2 text-xs rounded-lg bg-yellow-600 text-white hover:bg-yellow-700 disabled:opacity-50"
                             title={`Upgrade to ${
                               squad.division === "SILVER" ? "Gold" : "Diamond"
                             } Division (${getUpgradeCost(
@@ -723,7 +723,7 @@ export default function SquadsPage() {
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                          className="p-2 text-gray-400 hover:text-gray-200 transition-colors"
                         >
                           <Edit className="w-4 h-4" />
                         </motion.button>
@@ -733,7 +733,7 @@ export default function SquadsPage() {
 
                   {/* Available Slots */}
                   {squad.members && squad.members.length < squad.maxMembers && (
-                    <div className="mt-6 p-4 border-2 border-dashed border-gray-600 rounded-lg text-center">
+                    <div className="mt-6 p-4 border-2 border-dashed border-gray-700 rounded-lg text-center">
                       <UserPlus className="w-8 h-8 text-gray-500 mx-auto mb-2" />
                       <p className="text-gray-400">
                         {squad.maxMembers - squad.members.length} slot(s)
@@ -754,11 +754,11 @@ export default function SquadsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-12"
           >
-            <Users className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">
               No squads found
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-gray-300 mb-6">
               {searchInput || selectedGame !== "All"
                 ? "Try adjusting your search criteria"
                 : "Be the first to create a squad!"}
@@ -768,7 +768,7 @@ export default function SquadsPage() {
                 onClick={() => setShowCreateModal(true)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-300"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300"
               >
                 Create First Squad
               </motion.button>
@@ -784,15 +784,15 @@ export default function SquadsPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto"
+            className="bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-700"
           >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-xl font-semibold text-white">
                 Create New Squad
               </h3>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                className="text-gray-400 hover:text-gray-200"
               >
                 <X className="w-6 h-6" />
               </button>

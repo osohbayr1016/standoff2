@@ -34,7 +34,7 @@ export default function DivisionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -42,13 +42,13 @@ export default function DivisionsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Алдаа</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h2 className="text-2xl font-bold text-red-400 mb-4">Алдаа</h2>
+          <p className="text-gray-300 mb-4">{error}</p>
           <button
             onClick={fetchDivisions}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             Дахин оролдох
           </button>
@@ -58,15 +58,15 @@ export default function DivisionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
+    <div className="min-h-screen bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-800 shadow-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            <h1 className="text-4xl font-bold text-white mb-4">
               Дивизийн систем
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Тэмцээнүүдэд оролцож Bounty Coin цуглуулан дивизүүдээр ахина уу.
               Дивиз бүр өөрийн гэсэн сорилт, шагналтай.
             </p>
@@ -88,13 +88,13 @@ export default function DivisionsPage() {
         </div>
 
         {/* Division Leaderboard */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm border">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">
+        <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700">
+          <div className="px-6 py-4 border-b border-gray-700">
+            <h2 className="text-2xl font-bold text-white">
               {DivisionService.getDivisionDisplayName(selectedDivision)}{" "}
               Лидерборд
             </h2>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-300 mt-1">
               Тэргүүлэгч багууд:{" "}
               {DivisionService.getDivisionDisplayName(
                 selectedDivision
@@ -107,17 +107,17 @@ export default function DivisionsPage() {
 
       {/* Division Rules */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        <div className="bg-gray-800 rounded-lg shadow-sm border border-gray-700 p-6">
+          <h3 className="text-2xl font-bold text-white mb-6">
             Дивизийн дүрэм
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              <h4 className="text-lg font-semibold text-gray-200 mb-4">
                 Ахиц дэвшил
               </h4>
-              <ul className="space-y-3 text-gray-600 dark:text-gray-300">
+              <ul className="space-y-3 text-gray-300">
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
                   <span>
@@ -146,10 +146,10 @@ export default function DivisionsPage() {
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              <h4 className="text-lg font-semibold text-gray-200 mb-4">
                 Хамгаалалтын систем
               </h4>
-              <ul className="space-y-3 text-gray-600 dark:text-gray-300">
+              <ul className="space-y-3 text-gray-300">
                 <li className="flex items-start">
                   <span className="text-blue-500 mr-2">🛡️</span>
                   <span>
@@ -174,41 +174,41 @@ export default function DivisionsPage() {
             </div>
           </div>
 
-          <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-            <h4 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
+          <div className="mt-8 p-4 bg-blue-900/30 rounded-lg border border-blue-700">
+            <h4 className="text-lg font-semibold text-blue-200 mb-2">
               Bounty Coin систем
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="text-center">
-                <div className="font-semibold text-blue-700 dark:text-blue-300">
+                <div className="font-semibold text-blue-300">
                   Silver дивиз
                 </div>
-                <div className="text-blue-600 dark:text-blue-400">
+                <div className="text-blue-400">
                   50 coin = 10,000 MNT
                 </div>
-                <div className="text-blue-600 dark:text-blue-400">
+                <div className="text-blue-400">
                   Ялалт: +50, Ялагдал: -25
                 </div>
               </div>
               <div className="text-center">
-                <div className="font-semibold text-blue-700 dark:text-blue-300">
+                <div className="font-semibold text-blue-300">
                   Gold дивиз
                 </div>
-                <div className="text-blue-600 dark:text-blue-400">
+                <div className="text-blue-400">
                   50 coin = 20,000 MNT
                 </div>
-                <div className="text-blue-600 dark:text-blue-400">
+                <div className="text-blue-400">
                   Ялалт: +50, Ялагдал: -25
                 </div>
               </div>
               <div className="text-center">
-                <div className="font-semibold text-blue-700 dark:text-blue-300">
+                <div className="font-semibold text-blue-300">
                   Diamond дивиз
                 </div>
-                <div className="text-blue-600 dark:text-blue-400">
+                <div className="text-blue-400">
                   50 coin = 30,000 MNT
                 </div>
-                <div className="text-blue-600 dark:text-blue-400">
+                <div className="text-blue-400">
                   Ялалт: +50, Ялагдал: -25
                 </div>
               </div>

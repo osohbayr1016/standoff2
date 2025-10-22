@@ -138,7 +138,7 @@ export default function Navigation() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md border-b border-gray-800 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <motion.div
@@ -147,7 +147,7 @@ export default function Navigation() {
             >
               <Link
                 href="/"
-                className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-green-400 dark:to-blue-400 bg-clip-text text-transparent transition-all duration-300"
+                className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent transition-all duration-300"
               >
                 E-Sport Connection
               </Link>
@@ -159,7 +159,7 @@ export default function Navigation() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium flex items-center space-x-2"
+                  className="text-gray-300 hover:text-purple-400 transition-colors duration-200 font-medium flex items-center space-x-2"
                 >
                   {item.icon && (
                     <Image
@@ -180,7 +180,7 @@ export default function Navigation() {
                   <button
                     onMouseEnter={() => setIsMoreMenuOpen(true)}
                     onMouseLeave={() => setIsMoreMenuOpen(false)}
-                    className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium"
+                    className="flex items-center space-x-1 text-gray-300 hover:text-purple-400 transition-colors duration-200 font-medium"
                   >
                     <span>Бусад</span>
                     <ChevronDown className="w-4 h-4" />
@@ -195,13 +195,13 @@ export default function Navigation() {
                         transition={{ duration: 0.2 }}
                         onMouseEnter={() => setIsMoreMenuOpen(true)}
                         onMouseLeave={() => setIsMoreMenuOpen(false)}
-                        className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50"
+                        className="absolute top-full right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg border border-gray-700 py-2 z-50"
                       >
                         {moreNavItems.map((item) => (
                           <Link
                             key={item.name}
                             href={item.href}
-                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-gray-700 hover:text-purple-600 dark:hover:text-green-400 transition-colors"
+                            className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-purple-400 transition-colors"
                             onClick={() => setIsMoreMenuOpen(false)}
                           >
                             {item.name}
@@ -219,7 +219,7 @@ export default function Navigation() {
                 onClick={() => setIsSearchModalOpen(true)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                className="p-2 text-gray-400 hover:text-purple-400 transition-colors duration-200"
               >
                 <Search className="w-5 h-5" />
               </motion.button>
@@ -236,7 +236,7 @@ export default function Navigation() {
                       isConnected ? "bg-green-500" : "bg-red-500"
                     }`}
                   />
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-gray-400">
                     {isConnected ? "Connected" : "Disconnected"}
                   </span>
                 </div>
@@ -252,7 +252,7 @@ export default function Navigation() {
                     onClick={toggleDarkMode}
                     whileHover={{ scale: 1.05, rotate: 180 }}
                     whileTap={{ scale: 0.95 }}
-                    className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 border border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-green-400"
+                    className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 transition-all duration-300 border border-gray-700 hover:border-purple-400"
                     title={
                       isDarkMode
                         ? "Switch to Light Mode"
@@ -275,7 +275,7 @@ export default function Navigation() {
                     onClick={logout}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+                    className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 transition-colors duration-200"
                     title="Гарах"
                   >
                     <LogOut className="w-5 h-5" />
@@ -286,7 +286,7 @@ export default function Navigation() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl"
                   >
                     <User className="w-5 h-5" />
                   </motion.button>
@@ -299,7 +299,7 @@ export default function Navigation() {
               <motion.button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+                className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 transition-colors duration-200"
               >
                 {isMobileMenuOpen ? (
                   <X className="w-6 h-6" />
@@ -320,14 +320,14 @@ export default function Navigation() {
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="md:hidden overflow-hidden"
               >
-                <div className="py-4 space-y-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="py-4 space-y-4 border-t border-gray-800">
                   {/* Main Navigation Items */}
                   {mainNavItems.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium"
+                      className="block text-gray-300 hover:text-purple-400 transition-colors duration-200 font-medium"
                     >
                       {item.name}
                     </Link>
@@ -339,28 +339,28 @@ export default function Navigation() {
                       key={item.name}
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium ml-4 text-sm"
+                      className="block text-gray-300 hover:text-purple-400 transition-colors duration-200 font-medium ml-4 text-sm"
                     >
                       • {item.name}
                     </Link>
                   ))}
 
                   {/* Mobile Actions */}
-                  <div className="flex items-center space-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center space-x-4 pt-4 border-t border-gray-800">
                     <motion.button
                       onClick={() => {
                         setIsSearchModalOpen(true);
                         setIsMobileMenuOpen(false);
                       }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                      className="p-2 text-gray-400 hover:text-purple-400 transition-colors duration-200"
                     >
                       <Search className="w-5 h-5" />
                     </motion.button>
 
                     <motion.button
                       whileTap={{ scale: 0.95 }}
-                      className="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                      className="p-2 text-gray-400 hover:text-purple-400 transition-colors duration-200"
                     >
                       <Bell className="w-5 h-5" />
                     </motion.button>
@@ -374,7 +374,7 @@ export default function Navigation() {
                           exit={{ scale: 0.8, opacity: 0 }}
                           onClick={toggleDarkMode}
                           whileTap={{ scale: 0.95 }}
-                          className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+                          className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 transition-colors duration-200"
                         >
                           {isDarkMode ? (
                             <Sun className="w-5 h-5 text-yellow-500" />
@@ -388,10 +388,10 @@ export default function Navigation() {
 
                   {/* Mobile User Actions */}
                   {user ? (
-                    <div className="flex flex-col space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex flex-col space-y-3 pt-4 border-t border-gray-800">
                       {/* My Squad / Join Squad for mobile */}
                       {isLoadingSquad ? (
-                        <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center space-x-2 text-gray-400">
                           <Users className="w-5 h-5 animate-pulse" />
                           <span>Loading squad...</span>
                         </div>
@@ -399,7 +399,7 @@ export default function Navigation() {
                         <Link
                           href={`/squads/${userSquad._id}`}
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                          className="flex items-center space-x-2 text-gray-300 hover:text-purple-400 transition-colors duration-200"
                         >
                           <Users className="w-5 h-5" />
                           <span>My Squad: {userSquad.name}</span>
@@ -408,7 +408,7 @@ export default function Navigation() {
                         <Link
                           href="/squads"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                          className="flex items-center space-x-2 text-gray-300 hover:text-purple-400 transition-colors duration-200"
                         >
                           <Users className="w-5 h-5" />
                           <span>Join Squad</span>
@@ -425,7 +425,7 @@ export default function Navigation() {
                             : "/create-organization-profile"
                         }
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200"
+                        className="flex items-center space-x-2 text-gray-300 hover:text-purple-400 transition-colors duration-200"
                       >
                         <User className="w-5 h-5" />
                         <span>
@@ -443,18 +443,18 @@ export default function Navigation() {
                           logout();
                           setIsMobileMenuOpen(false);
                         }}
-                        className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200"
+                        className="flex items-center space-x-2 text-gray-300 hover:text-red-400 transition-colors duration-200"
                       >
                         <LogOut className="w-5 h-5" />
                         <span>Гарах</span>
                       </button>
                     </div>
                   ) : (
-                    <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="pt-4 border-t border-gray-800">
                       <Link
                         href="/auth/login"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-green-400 transition-colors duration-200 font-medium"
+                        className="block text-gray-300 hover:text-purple-400 transition-colors duration-200 font-medium"
                       >
                         Нэвтрэх
                       </Link>

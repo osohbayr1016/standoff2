@@ -151,7 +151,7 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-200 dark:border-gray-700"
+      className="bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-700"
     >
       {/* Tournament Header */}
       <div
@@ -237,7 +237,7 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
             )}
           </div>
           <div className="flex items-center space-x-1">
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
+            <span className="text-sm font-medium text-white">
               {tournament.organizer.name}
             </span>
             {tournament.organizer.isVerified && (
@@ -249,7 +249,7 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
         {/* Tournament Info */}
         <div className="space-y-3 mb-4">
           {/* Date */}
-          <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
+          <div className="flex items-center space-x-2 text-gray-300">
             <Calendar className="w-4 h-4 text-blue-500" />
             <span className="text-sm">
               {formatDate(tournament.startDate)} -{" "}
@@ -258,10 +258,10 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
           </div>
 
           {/* Prize Pool */}
-          <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
+          <div className="flex items-center space-x-2 text-gray-300">
             <Trophy className="w-4 h-4 text-yellow-500" />
             <div className="text-sm">
-              <span className="font-semibold text-green-600 dark:text-green-400">
+              <span className="font-semibold text-green-400">
                 {formatPrizePool(tournament.prizePool, tournament.currency)}
               </span>
             </div>
@@ -269,11 +269,11 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
 
           {/* Entry Fee */}
           {tournament.entryFee > 0 && (
-            <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center space-x-2 text-gray-300">
               <DollarSign className="w-4 h-4 text-green-500" />
               <span className="text-sm">
                 Оролтын хураамж:{" "}
-                <span className="font-semibold text-green-600 dark:text-green-400">
+                <span className="font-semibold text-green-400">
                   {formatPrizePool(tournament.entryFee, tournament.currency)}
                 </span>
               </span>
@@ -281,7 +281,7 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
           )}
 
           {/* Participants */}
-          <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
+          <div className="flex items-center space-x-2 text-gray-300">
             <Users className="w-4 h-4 text-purple-500" />
             <span className="text-sm">
               {tournament.currentParticipants}/{tournament.maxParticipants}{" "}
@@ -290,13 +290,13 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
           </div>
 
           {/* Location */}
-          <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
+          <div className="flex items-center space-x-2 text-gray-300">
             <MapPin className="w-4 h-4 text-red-500" />
             <span className="text-sm">{tournament.location}</span>
           </div>
 
           {/* Registration Deadline */}
-          <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
+          <div className="flex items-center space-x-2 text-gray-300">
             <Clock className="w-4 h-4 text-orange-500" />
             <span className="text-sm">
               Бүртгэлийн хугацаа: {formatDate(tournament.registrationDeadline)}
@@ -305,7 +305,7 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-4">
+        <div className="w-full bg-gray-700 rounded-full h-3 mb-4">
           <div
             className={`h-3 rounded-full transition-all duration-300 ${
               getParticipantPercentage() >= 80
@@ -321,13 +321,13 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
         </div>
 
         {/* Progress Info */}
-        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-4">
+        <div className="flex justify-between text-xs text-gray-400 mb-4">
           <span>Оролцогчдын тоо</span>
           <span>{getParticipantPercentage().toFixed(1)}%</span>
         </div>
 
         {/* Description */}
-        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
+        <p className="text-gray-300 text-sm mb-4 line-clamp-3">
           {tournament.description}
         </p>
 
