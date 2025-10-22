@@ -116,7 +116,6 @@ export default function Navigation() {
   const moreNavItems = [
     { name: "Squads", href: "/squads" },
     { name: "Matchmaking", href: "/matchmaking" },
-    { name: "Leaderboard", href: "/leaderboard" },
     { name: "Divisions", href: "/divisions" },
     {
       name: "Bounty Coins",

@@ -25,9 +25,9 @@ export class MatchService {
       throw new Error("Та squad-ийн лидер биш байна");
     }
 
-    // Хамгийн багадаа 1 member шаардлагатай
-    if (squad.members.length < 1) {
-      throw new Error("Squad-д хамгийн багадаа 1 гишүүн байх ёстой");
+    // Хамгийн багадаа 5 member шаардлагатай
+    if (squad.members.length < 5) {
+      throw new Error("Squad-д хамгийн багадаа 5 гишүүн байх ёстой");
     }
 
     // Bounty coin шалгах
@@ -51,8 +51,8 @@ export class MatchService {
         throw new Error("Opponent squad олдсонгүй");
       }
 
-      if (opponentSquad.members.length < 1) {
-        throw new Error("Opponent squad-д хамгийн багадаа 1 гишүүн байх ёстой");
+      if (opponentSquad.members.length < 5) {
+        throw new Error("Opponent squad-д хамгийн багадаа 5 гишүүн байх ёстой");
       }
 
       if (opponentSquad.currentBountyCoins < bountyAmount) {
@@ -126,8 +126,8 @@ export class MatchService {
     }
 
     // Squad шаардлага шалгах
-    if (squad.members.length < 1) {
-      throw new Error("Squad-д хамгийн багадаа 1 гишүүн байх ёстой");
+    if (squad.members.length < 5) {
+      throw new Error("Squad-д хамгийн багадаа 5 гишүүн байх ёстой");
     }
 
     if (squad.currentBountyCoins < match.bountyAmount) {

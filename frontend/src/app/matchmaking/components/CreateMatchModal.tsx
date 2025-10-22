@@ -54,8 +54,8 @@ export default function CreateMatchModal({
       return;
     }
 
-    if (userSquad.members.length < 1) {
-      setError("Squad-д хамгийн багадаа 1 гишүүн байх ёстой");
+    if (userSquad.members.length < 5) {
+      setError("Squad-д хамгийн багадаа 5 гишүүн байх ёстой");
       return;
     }
 
@@ -185,21 +185,11 @@ export default function CreateMatchModal({
             </label>
             <input
               type="number"
-              value={bountyAmount === 0 ? "" : bountyAmount}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === "" || value === "0") {
-                  setBountyAmount(0);
-                } else {
-                  setBountyAmount(Number(value));
-                }
-              }}
-              onBlur={(e) => {
-                if (e.target.value === "" || e.target.value === "0") {
-                  setBountyAmount(10);
-                }
-              }}
-              className="w-full bg-gray-700 text-white p-3 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              min="1"
+              max={userSquad?.currentBountyCoins || 0}
+              value={bountyAmount}
+              onChange={(e) => setBountyAmount(Number(e.target.value))}
+              className="w-full bg-gray-700 text-white p-3 rounded-lg"
               required
             />
           </div>
@@ -210,31 +200,14 @@ export default function CreateMatchModal({
               <Calendar className="w-5 h-5" />
               Тоглолт эхлэх цаг
             </label>
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={deadline.split("T")[0] || ""}
-                onChange={(e) => {
-                  const time = deadline.split("T")[1] || "12:00";
-                  setDeadline(`${e.target.value}T${time}`);
-                }}
-                className="flex-1 bg-gray-700 text-white p-3 rounded-lg"
-                required
-                min={new Date().toISOString().split("T")[0]}
-              />
-              <input
-                type="time"
-                value={deadline.split("T")[1] || "12:00"}
-                onChange={(e) => {
-                  const date =
-                    deadline.split("T")[0] ||
-                    new Date().toISOString().split("T")[0];
-                  setDeadline(`${date}T${e.target.value}`);
-                }}
-                className="flex-1 bg-gray-700 text-white p-3 rounded-lg"
-                required
-              />
-            </div>
+            <input
+              type="datetime-local"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              className="w-full bg-gray-700 text-white p-3 rounded-lg"
+              required
+              min={new Date().toISOString().slice(0, 16)}
+            />
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
