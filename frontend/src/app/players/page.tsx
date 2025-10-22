@@ -416,9 +416,9 @@ export default function PlayersPage() {
 
   const getCategoryIcon = (category: "PC" | "Mobile") => {
     return category === "PC" ? (
-      <Monitor className="w-4 h-4" />
+      <Monitor className="w-4 h-4 text-blue-400" />
     ) : (
-      <Smartphone className="w-4 h-4" />
+      <Smartphone className="w-4 h-4 text-blue-400" />
     );
   };
 
@@ -429,7 +429,7 @@ export default function PlayersPage() {
         <main className="pt-20 pb-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
               <p className="mt-4 text-gray-300">
                 Loading {gameInfo.name} players...
               </p>
@@ -454,7 +454,7 @@ export default function PlayersPage() {
             className="mb-8"
           >
             <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent mb-4">
                 {gameInfo.name}
               </h1>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-4">
@@ -621,7 +621,7 @@ export default function PlayersPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <p className="text-gray-300">
                 Олдсон{" "}
-                <span className="font-semibold text-purple-400">
+                <span className="font-semibold text-blue-400">
                   {filteredPlayers.length}
                 </span>{" "}
                 тоглогч

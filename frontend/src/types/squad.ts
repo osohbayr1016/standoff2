@@ -105,7 +105,6 @@ export interface SquadInviteResponse {
 }
 
 export interface SquadApplicationRequest {
-  userId: string;
   message?: string;
 }
 

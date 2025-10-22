@@ -15,7 +15,7 @@ export default function CreateMatchModal({
   onSuccess,
   userSquad,
 }: CreateMatchModalProps) {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [type, setType] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
   const [bountyAmount, setBountyAmount] = useState<number>(10);
   const [deadline, setDeadline] = useState<string>("");
@@ -83,10 +83,12 @@ export default function CreateMatchModal({
     setLoading(true);
 
     try {
+      const token = getToken();
       const response = await fetch(`${API_ENDPOINTS.BASE_URL}/api/matches`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         credentials: "include",
         body: JSON.stringify({
@@ -135,7 +137,7 @@ export default function CreateMatchModal({
                 onClick={() => setType("PUBLIC")}
                 className={`flex-1 p-3 rounded-lg flex items-center justify-center gap-2 ${
                   type === "PUBLIC"
-                    ? "bg-purple-600 text-white"
+                    ? "bg-blue-600 text-white"
                     : "bg-gray-700 text-gray-300"
                 }`}
               >
@@ -147,7 +149,7 @@ export default function CreateMatchModal({
                 onClick={() => setType("PRIVATE")}
                 className={`flex-1 p-3 rounded-lg flex items-center justify-center gap-2 ${
                   type === "PRIVATE"
-                    ? "bg-purple-600 text-white"
+                    ? "bg-blue-600 text-white"
                     : "bg-gray-700 text-gray-300"
                 }`}
               >
@@ -185,11 +187,9 @@ export default function CreateMatchModal({
             </label>
             <input
               type="number"
-              min="1"
-              max={userSquad?.currentBountyCoins || 0}
               value={bountyAmount}
               onChange={(e) => setBountyAmount(Number(e.target.value))}
-              className="w-full bg-gray-700 text-white p-3 rounded-lg"
+              className="w-full bg-gray-700 text-white p-3 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               required
             />
           </div>
@@ -200,14 +200,46 @@ export default function CreateMatchModal({
               <Calendar className="w-5 h-5" />
               Тоглолт эхлэх цаг
             </label>
-            <input
-              type="datetime-local"
-              value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
-              className="w-full bg-gray-700 text-white p-3 rounded-lg"
-              required
-              min={new Date().toISOString().slice(0, 16)}
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Огноо</label>
+                <input
+                  type="date"
+                  value={deadline ? deadline.split('T')[0] : ''}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    const time = deadline ? deadline.split('T')[1] : '12:00';
+                    setDeadline(`${date}T${time}`);
+                  }}
+                  className="w-full bg-gray-700 text-white p-3 rounded-lg"
+                  required
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Цаг</label>
+                <input
+                  type="time"
+                  value={deadline ? deadline.split('T')[1] : '12:00'}
+                  onChange={(e) => {
+                    const date = deadline ? deadline.split('T')[0] : new Date().toISOString().split('T')[0];
+                    const time = e.target.value;
+                    setDeadline(`${date}T${time}`);
+                  }}
+                  className="w-full bg-gray-700 text-white p-3 rounded-lg"
+                  required
+                />
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-gray-400">
+              Тоглолт: {deadline && deadline.trim() ? new Date(deadline).toLocaleString('mn-MN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }) : 'Огноо сонгоно уу'}
+            </div>
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -215,7 +247,7 @@ export default function CreateMatchModal({
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold disabled:opacity-50"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold disabled:opacity-50"
           >
             {loading ? "Үүсгэж байна..." : "Үүсгэх"}
           </button>

@@ -32,7 +32,7 @@ interface Match {
 }
 
 export default function MatchmakingPage() {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [activeTab, setActiveTab] = useState<
     "create" | "active" | "my" | "history"
   >("active");
@@ -62,12 +62,16 @@ export default function MatchmakingPage() {
   const fetchUserSquad = async () => {
     if (!user) return;
     try {
-      const response = await fetch(`${API_ENDPOINTS.SQUADS}/user/${user.id}`, {
+      const token = getToken();
+      const response = await fetch(API_ENDPOINTS.SQUADS.USER_SQUADS(user.id), {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         credentials: "include",
       });
       const data = await response.json();
-      if (data.success && data.data.length > 0) {
-        setUserSquad(data.data[0]);
+      if (data.success && data.squads.length > 0) {
+        setUserSquad(data.squads[0]);
       }
     } catch (error) {
       console.error("Error fetching squad:", error);
@@ -86,7 +90,11 @@ export default function MatchmakingPage() {
         endpoint = `${API_ENDPOINTS.BASE_URL}/api/matches/history`;
       }
 
+      const token = getToken();
       const response = await fetch(endpoint, {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         credentials: "include",
       });
       const data = await response.json();
@@ -102,14 +110,14 @@ export default function MatchmakingPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-gray-900 to-gray-900 flex items-center justify-center">
         <p className="text-white text-xl">Нэвтэрч орно уу</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-6 pt-24">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-gray-900 to-gray-900 p-6 pt-24">
       <div className="max-w-7xl mx-auto">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
@@ -133,7 +141,7 @@ export default function MatchmakingPage() {
               }}
               className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
                 activeTab === tab.id
-                  ? "bg-purple-600 text-white"
+                  ? "bg-blue-600 text-white"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
               }`}
             >
@@ -149,7 +157,7 @@ export default function MatchmakingPage() {
             <p className="text-gray-300 mb-4">Шинэ тоглолт үүсгэх</p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"
             >
               Үүсгэх
             </button>

@@ -30,7 +30,7 @@ export default function MatchDetailsModal({
   onUpdate,
   userSquad,
 }: MatchDetailsModalProps) {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [showChat, setShowChat] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
@@ -61,10 +61,14 @@ export default function MatchDetailsModal({
     setError("");
 
     try {
+      const token = getToken();
       const response = await fetch(
         `${API_ENDPOINTS.BASE_URL}/api/matches/${match._id}/accept`,
         {
           method: "POST",
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
           credentials: "include",
         }
       );
@@ -91,10 +95,14 @@ export default function MatchDetailsModal({
     setError("");
 
     try {
+      const token = getToken();
       const response = await fetch(
         `${API_ENDPOINTS.BASE_URL}/api/matches/${match._id}/start`,
         {
           method: "POST",
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
           credentials: "include",
         }
       );
@@ -120,10 +128,14 @@ export default function MatchDetailsModal({
     setError("");
 
     try {
+      const token = getToken();
       const response = await fetch(
         `${API_ENDPOINTS.BASE_URL}/api/matches/${match._id}/cancel`,
         {
           method: "POST",
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
           credentials: "include",
         }
       );

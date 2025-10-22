@@ -311,10 +311,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-2xl mx-4 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50"
+            className="fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-2xl mx-4 bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 z-50"
           >
             {/* Search Input */}
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="p-6 border-b border-gray-700">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -323,11 +323,11 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   placeholder="Хайх..."
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  className="w-full pl-12 pr-12 py-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-400 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 />
                 <button
                   onClick={onClose}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-300 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -338,16 +338,16 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             <div className="max-h-96 overflow-y-auto">
               {isLoading ? (
                 <div className="p-6 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 dark:border-green-400 mx-auto"></div>
-                  <p className="mt-2 text-gray-500 dark:text-gray-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+                  <p className="mt-2 text-gray-400">
                     Хайж байна...
                   </p>
                 </div>
               ) : hasSearched && results.length === 0 ? (
                 <div className="p-6 text-center">
                   <Search className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">
-                    "{searchQuery}" гэсэн үр дүн олдсонгүй
+                  <p className="text-gray-400">
+                    &quot;{searchQuery}&quot; гэсэн үр дүн олдсонгүй
                   </p>
                 </div>
               ) : results.length > 0 ? (
@@ -362,7 +362,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                       <Link
                         href={result.url}
                         onClick={onClose}
-                        className="block p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-lg group"
+                        className="block p-4 hover:bg-gray-700 transition-colors rounded-lg group"
                       >
                         <div className="flex items-start space-x-4">
                           {/* Image */}
@@ -376,7 +376,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                                 onError={handleImageError}
                               />
                             ) : (
-                              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center">
+                              <div className="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center">
                                 {getResultIcon(result.type)}
                               </div>
                             )}
@@ -388,26 +388,26 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                               <div className={`${getResultColor(result.type)}`}>
                                 {getResultIcon(result.type)}
                               </div>
-                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400 capitalize">
+                              <span className="text-sm font-medium text-gray-400 capitalize">
                                 {result.type}
                               </span>
                               {result.category && (
-                                <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded">
+                                <span className="text-xs text-gray-300 bg-gray-600 px-2 py-1 rounded">
                                   {result.category}
                                 </span>
                               )}
                             </div>
 
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-green-400 transition-colors line-clamp-1">
+                            <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors line-clamp-1">
                               {result.title}
                             </h3>
 
-                            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mt-1">
+                            <p className="text-sm text-gray-300 line-clamp-2 mt-1">
                               {result.description}
                             </p>
 
                             {/* Meta info */}
-                            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-400">
                               {result.game && (
                                 <span className="flex items-center space-x-1">
                                   <Gamepad2 className="w-3 h-3" />
@@ -415,14 +415,14 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                                 </span>
                               )}
                               {result.playerId && (
-                                <span className="bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded">
+                                <span className="bg-gray-600 px-2 py-1 rounded">
                                   ID: {result.playerId}
                                 </span>
                               )}
                             </div>
                           </div>
 
-                          <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-500 dark:group-hover:text-green-400 transition-colors flex-shrink-0" />
+                          <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors flex-shrink-0" />
                         </div>
                       </Link>
                     </motion.div>
@@ -431,7 +431,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
               ) : (
                 <div className="p-6 text-center">
                   <Search className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-gray-400">
                     Хайх зүйлээ оруулна уу
                   </p>
                 </div>

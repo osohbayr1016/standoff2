@@ -109,6 +109,7 @@ export default function Navigation() {
     { name: "Тоглогчид", href: "/players" },
     { name: "Мэдээ", href: "/news" },
     { name: "Тэмцээнүүд", href: "/tournaments" },
+    { name: "Leaderboard", href: "/leaderboard" },
     { name: "Бидний", href: "/about" },
   ];
 
@@ -147,7 +148,7 @@ export default function Navigation() {
             >
               <Link
                 href="/"
-                className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent transition-all duration-300"
+                className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent transition-all duration-300"
               >
                 E-Sport Connection
               </Link>
@@ -159,7 +160,7 @@ export default function Navigation() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-gray-300 hover:text-purple-400 transition-colors duration-200 font-medium flex items-center space-x-2"
+                  className="text-gray-300 hover:text-blue-400 transition-colors duration-200 font-medium flex items-center space-x-2"
                 >
                   {item.icon && (
                     <Image
@@ -180,7 +181,7 @@ export default function Navigation() {
                   <button
                     onMouseEnter={() => setIsMoreMenuOpen(true)}
                     onMouseLeave={() => setIsMoreMenuOpen(false)}
-                    className="flex items-center space-x-1 text-gray-300 hover:text-purple-400 transition-colors duration-200 font-medium"
+                    className="flex items-center space-x-1 text-gray-300 hover:text-blue-400 transition-colors duration-200 font-medium"
                   >
                     <span>Бусад</span>
                     <ChevronDown className="w-4 h-4" />
@@ -201,7 +202,7 @@ export default function Navigation() {
                           <Link
                             key={item.name}
                             href={item.href}
-                            className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-purple-400 transition-colors"
+                            className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-blue-400 transition-colors"
                             onClick={() => setIsMoreMenuOpen(false)}
                           >
                             {item.name}
@@ -219,7 +220,7 @@ export default function Navigation() {
                 onClick={() => setIsSearchModalOpen(true)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-2 text-gray-400 hover:text-purple-400 transition-colors duration-200"
+                className="p-2 text-gray-400 hover:text-blue-400 transition-colors duration-200"
               >
                 <Search className="w-5 h-5" />
               </motion.button>
@@ -252,7 +253,7 @@ export default function Navigation() {
                     onClick={toggleDarkMode}
                     whileHover={{ scale: 1.05, rotate: 180 }}
                     whileTap={{ scale: 0.95 }}
-                    className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 transition-all duration-300 border border-gray-700 hover:border-purple-400"
+                    className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 transition-all duration-300 border border-gray-700 hover:border-blue-400"
                     title={
                       isDarkMode
                         ? "Switch to Light Mode"
@@ -286,7 +287,7 @@ export default function Navigation() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
                   >
                     <User className="w-5 h-5" />
                   </motion.button>
@@ -327,7 +328,7 @@ export default function Navigation() {
                       key={item.name}
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="block text-gray-300 hover:text-purple-400 transition-colors duration-200 font-medium"
+                      className="block text-gray-300 hover:text-blue-400 transition-colors duration-200 font-medium"
                     >
                       {item.name}
                     </Link>
@@ -339,7 +340,7 @@ export default function Navigation() {
                       key={item.name}
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="block text-gray-300 hover:text-purple-400 transition-colors duration-200 font-medium ml-4 text-sm"
+                      className="block text-gray-300 hover:text-blue-400 transition-colors duration-200 font-medium ml-4 text-sm"
                     >
                       • {item.name}
                     </Link>
@@ -353,14 +354,14 @@ export default function Navigation() {
                         setIsMobileMenuOpen(false);
                       }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-2 text-gray-400 hover:text-purple-400 transition-colors duration-200"
+                      className="p-2 text-gray-400 hover:text-blue-400 transition-colors duration-200"
                     >
                       <Search className="w-5 h-5" />
                     </motion.button>
 
                     <motion.button
                       whileTap={{ scale: 0.95 }}
-                      className="p-2 text-gray-400 hover:text-purple-400 transition-colors duration-200"
+                      className="p-2 text-gray-400 hover:text-blue-400 transition-colors duration-200"
                     >
                       <Bell className="w-5 h-5" />
                     </motion.button>
@@ -399,7 +400,7 @@ export default function Navigation() {
                         <Link
                           href={`/squads/${userSquad._id}`}
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center space-x-2 text-gray-300 hover:text-purple-400 transition-colors duration-200"
+                          className="flex items-center space-x-2 text-gray-300 hover:text-blue-400 transition-colors duration-200"
                         >
                           <Users className="w-5 h-5" />
                           <span>My Squad: {userSquad.name}</span>
@@ -408,7 +409,7 @@ export default function Navigation() {
                         <Link
                           href="/squads"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center space-x-2 text-gray-300 hover:text-purple-400 transition-colors duration-200"
+                          className="flex items-center space-x-2 text-gray-300 hover:text-blue-400 transition-colors duration-200"
                         >
                           <Users className="w-5 h-5" />
                           <span>Join Squad</span>
@@ -425,7 +426,7 @@ export default function Navigation() {
                             : "/create-organization-profile"
                         }
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center space-x-2 text-gray-300 hover:text-purple-400 transition-colors duration-200"
+                        className="flex items-center space-x-2 text-gray-300 hover:text-blue-400 transition-colors duration-200"
                       >
                         <User className="w-5 h-5" />
                         <span>
@@ -454,7 +455,7 @@ export default function Navigation() {
                       <Link
                         href="/auth/login"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="block text-gray-300 hover:text-purple-400 transition-colors duration-200 font-medium"
+                        className="block text-gray-300 hover:text-blue-400 transition-colors duration-200 font-medium"
                       >
                         Нэвтрэх
                       </Link>

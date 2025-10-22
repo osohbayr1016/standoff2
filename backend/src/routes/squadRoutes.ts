@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
+import mongoose from "mongoose";
 import Squad from "../models/Squad";
 import User from "../models/User";
 import SquadInvitation from "../models/SquadInvitation";
@@ -6,6 +7,7 @@ import SquadApplication from "../models/SquadApplication";
 import { SquadJoinType } from "../models/Squad";
 import { InvitationStatus } from "../models/SquadInvitation";
 import { ApplicationStatus } from "../models/SquadApplication";
+import { authenticateToken, AuthenticatedRequest } from "../middleware/auth";
 
 const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   // Health check
@@ -15,6 +17,99 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
       message: "Squad routes available",
       timestamp: new Date().toISOString(),
     });
+  });
+
+
+  // Get leaderboard data
+  fastify.get("/leaderboard", async (request, reply) => {
+    try {
+      const { limit = 50, sortBy = "totalEarned" } = request.query as any;
+
+      // Get all active squads with their match statistics
+      const squads = await Squad.find({ isActive: true })
+        .populate("leader", "name email avatar")
+        .populate("members", "name email avatar")
+        .select(
+          "name tag logo division level matchStats totalBountyCoinsEarned currentBountyCoins createdAt"
+        )
+        .lean();
+
+      // Calculate leaderboard scores and sort
+      const leaderboardData = squads
+        .map((squad) => {
+          const matchStats = squad.matchStats || {
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            totalMatches: 0,
+            winRate: 0,
+            totalEarned: 0,
+          };
+
+          // Calculate score based on multiple factors
+          const totalMatches = matchStats.totalMatches || 0;
+          const winRate = matchStats.winRate || 0;
+          const totalEarned = matchStats.totalEarned || 0;
+
+          // Only include squads that have actually played matches
+          if (totalMatches === 0) {
+            return null;
+          }
+
+          // Leaderboard score calculation:
+          // - Win rate weight: 50%
+          // - Total earned bounty coins weight: 30%
+          // - Total matches weight: 20%
+          const score = 
+            (winRate * 0.5) + 
+            (totalEarned * 0.3) + 
+            (totalMatches * 0.2);
+
+          return {
+            _id: squad._id,
+            name: squad.name,
+            tag: squad.tag,
+            logo: squad.logo,
+            division: squad.division,
+            level: squad.level,
+            leader: squad.leader,
+            members: squad.members,
+            matchStats: {
+              wins: matchStats.wins,
+              losses: matchStats.losses,
+              draws: matchStats.draws,
+              totalMatches: totalMatches,
+              winRate: winRate,
+              totalEarned: totalEarned,
+            },
+            currentBountyCoins: squad.currentBountyCoins || 0,
+            totalBountyCoinsEarned: squad.totalBountyCoinsEarned || 0,
+            score: score,
+            createdAt: squad.createdAt,
+          };
+        })
+        .filter(squad => squad !== null) // Remove squads with no matches
+        .sort((a, b) => {
+          // Sort by score (descending), then by total matches (descending), then by win rate (descending)
+          if (b.score !== a.score) return b.score - a.score;
+          if (b.matchStats.totalMatches !== a.matchStats.totalMatches) 
+            return b.matchStats.totalMatches - a.matchStats.totalMatches;
+          return b.matchStats.winRate - a.matchStats.winRate;
+        })
+        .slice(0, parseInt(limit));
+
+      return reply.send({
+        success: true,
+        data: leaderboardData,
+        total: squads.length,
+      });
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Internal server error",
+      });
+    }
   });
 
   // Get all squads with pagination and filtering
@@ -350,7 +445,11 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
       }
 
       // Check if squad is full
-      if (squad.members.length >= squad.maxMembers) {
+      // Fix for squads with invalid maxMembers (should be 5-7)
+      // Also handle case where maxMembers is 3 (invalid)
+      const validMaxMembers = squad.maxMembers < 5 || squad.maxMembers === 3 ? 7 : squad.maxMembers;
+      
+      if (squad.members.length >= validMaxMembers) {
         return reply.status(400).send({
           success: false,
           message: "Squad is full",
@@ -514,15 +613,24 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   });
 
   // Apply to join squad
-  fastify.post("/:id/apply", async (request, reply) => {
+  fastify.post("/:id/apply", { preHandler: authenticateToken }, async (request: AuthenticatedRequest, reply) => {
     try {
       const { id } = request.params as { id: string };
-      const { userId, message } = request.body as any;
+      const { message } = request.body as any;
+      const userId = request.user?.id;
 
       if (!userId) {
+        return reply.status(401).send({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      // Validate ObjectId format
+      if (!mongoose.Types.ObjectId.isValid(id)) {
         return reply.status(400).send({
           success: false,
-          message: "User ID is required",
+          message: "Invalid squad ID format",
         });
       }
 
@@ -550,7 +658,11 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
       }
 
       // Check if squad is full
-      if (squad.members.length >= squad.maxMembers) {
+      // Fix for squads with invalid maxMembers (should be 5-7)
+      // Also handle case where maxMembers is 3 (invalid)
+      const validMaxMembers = squad.maxMembers < 5 || squad.maxMembers === 3 ? 7 : squad.maxMembers;
+      
+      if (squad.members.length >= validMaxMembers) {
         return reply.status(400).send({
           success: false,
           message: "Squad is full",
@@ -566,6 +678,7 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
       }
 
       // Check if user already has a pending application
+      // Only prevent if they're not currently in the squad
       const existingApplication = await SquadApplication.findOne({
         squad: id,
         applicant: userId,
@@ -586,14 +699,33 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
         message,
       });
 
-      await application.save();
+      try {
+        await application.save();
+      } catch (saveError: any) {
+        // Handle duplicate key error from unique index
+        if (saveError.code === 11000) {
+          return reply.status(400).send({
+            success: false,
+            message: "You already have a pending application to this squad",
+          });
+        }
+        // Re-throw other errors to be caught by the outer catch block
+        throw saveError;
+      }
 
-      const populatedApplication = await SquadApplication.findById(
-        application._id
-      )
-        .populate("applicant", "name email avatar")
-        .populate("squad", "name tag")
-        .lean();
+      let populatedApplication;
+      try {
+        populatedApplication = await SquadApplication.findById(
+          application._id
+        )
+          .populate("applicant", "name email avatar")
+          .populate("squad", "name tag")
+          .lean();
+      } catch (populateError) {
+        console.error("Error populating application:", populateError);
+        // Return the application without population if populate fails
+        populatedApplication = application.toObject();
+      }
 
       return reply.status(201).send({
         success: true,
@@ -753,10 +885,25 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   });
 
   // Get squad applications (for squad leader)
-  fastify.get("/:id/applications", async (request, reply) => {
+  fastify.get("/:id/applications", { preHandler: authenticateToken }, async (request: AuthenticatedRequest, reply) => {
     try {
       const { id } = request.params as { id: string };
-      const { userId } = request.query as any;
+      const userId = request.user?.id;
+
+      if (!userId) {
+        return reply.status(401).send({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      // Validate ObjectId format
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return reply.status(400).send({
+          success: false,
+          message: "Invalid squad ID format",
+        });
+      }
 
       const squad = await Squad.findById(id);
       if (!squad) {
@@ -820,12 +967,21 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   });
 
   // Get user's applications
-  fastify.get("/user/:userId/applications", async (request, reply) => {
+  fastify.get("/user/:userId/applications", { preHandler: authenticateToken }, async (request: AuthenticatedRequest, reply) => {
     try {
-      const { userId } = request.params as { userId: string };
+      const authenticatedUserId = request.user?.id;
 
+      if (!authenticatedUserId) {
+        return reply.status(401).send({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      // Always use authenticated user's ID instead of URL parameter
+      // This ensures users can only view their own applications
       const applications = await SquadApplication.find({
-        applicant: userId,
+        applicant: authenticatedUserId,
       })
         .populate("squad", "name tag game logo")
         .sort({ createdAt: -1 })
@@ -888,7 +1044,11 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
         });
       }
 
-      if (squad.members.length >= squad.maxMembers) {
+      // Fix for squads with invalid maxMembers (should be 5-7)
+      // Also handle case where maxMembers is 3 (invalid)
+      const validMaxMembers = squad.maxMembers < 5 || squad.maxMembers === 3 ? 7 : squad.maxMembers;
+      
+      if (squad.members.length >= validMaxMembers) {
         return reply.status(400).send({
           success: false,
           message: "Squad is full",
@@ -966,6 +1126,19 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
       );
       await squad.save();
 
+      // Clean up any existing applications from this user to this squad
+      // This allows them to reapply if they want to join again
+      try {
+        await SquadApplication.deleteMany({
+          squad: id,
+          applicant: userId,
+        });
+        console.log(`Cleaned up applications for user ${userId} from squad ${id}`);
+      } catch (error) {
+        console.error("Error cleaning up applications:", error);
+        // Continue even if cleanup fails
+      }
+
       const populatedSquad = await Squad.findById(squad._id)
         .populate("leader", "name email avatar")
         .populate("members", "name email avatar")
@@ -1013,7 +1186,11 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
         });
       }
 
-      if (squad.members.length >= squad.maxMembers) {
+      // Fix for squads with invalid maxMembers (should be 5-7)
+      // Also handle case where maxMembers is 3 (invalid)
+      const validMaxMembers = squad.maxMembers < 5 || squad.maxMembers === 3 ? 7 : squad.maxMembers;
+      
+      if (squad.members.length >= validMaxMembers) {
         return reply
           .status(400)
           .send({ success: false, message: "Squad is full" });
@@ -1094,6 +1271,19 @@ const squadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 
       squad.members = squad.members.filter((m) => m.toString() !== memberId);
       await squad.save();
+
+      // Clean up any existing applications from this user to this squad
+      // This allows them to reapply if they want to join again
+      try {
+        await SquadApplication.deleteMany({
+          squad: id,
+          applicant: memberId,
+        });
+        console.log(`Cleaned up applications for user ${memberId} from squad ${id}`);
+      } catch (error) {
+        console.error("Error cleaning up applications:", error);
+        // Continue even if cleanup fails
+      }
 
       const populatedSquad = await Squad.findById(squad._id)
         .populate("leader", "name email avatar")

@@ -429,8 +429,8 @@ export default function MatchManagementPage() {
                     <div>
                       Filtered tournaments: {filteredTournaments.length}
                     </div>
-                    <div>Search term: "{searchTerm}"</div>
-                    <div>Status filter: "{statusFilter}"</div>
+                    <div>Search term: &quot;{searchTerm}&quot;</div>
+                    <div>Status filter: &quot;{statusFilter}&quot;</div>
                     <div>API endpoint: {API_ENDPOINTS.TOURNAMENTS.ALL}</div>
                   </div>
                 </div>

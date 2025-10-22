@@ -124,13 +124,13 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
   const getGameBackground = (game: string) => {
     // Dynamic background based on game type
     if (game.toLowerCase().includes("mobile legends")) {
-      return "from-blue-600 to-purple-600";
+      return "from-blue-600 to-indigo-600";
     } else if (game.toLowerCase().includes("valorant")) {
       return "from-red-600 to-orange-600";
     } else if (game.toLowerCase().includes("csgo")) {
       return "from-yellow-600 to-orange-600";
     } else {
-      return "from-purple-600 to-pink-600";
+      return "from-blue-600 to-indigo-600";
     }
   };
 
@@ -345,7 +345,7 @@ function TournamentCardComponent({ tournament, index }: TournamentCardProps) {
                 : isUpcoming
                 ? "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
                 : isOngoing
-                ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                ? "bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
                 : isCompleted
                 ? "bg-gray-500 hover:bg-gray-600 text-white"
                 : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"

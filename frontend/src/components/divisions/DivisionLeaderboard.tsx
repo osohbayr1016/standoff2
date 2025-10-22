@@ -49,13 +49,13 @@ export default function DivisionLeaderboard({
   const getRankColor = (index: number) => {
     switch (index) {
       case 0:
-        return "text-yellow-600 bg-yellow-100";
+        return "text-yellow-300 bg-yellow-900/30 border border-yellow-700";
       case 1:
-        return "text-gray-600 bg-gray-100";
+        return "text-gray-300 bg-gray-800 border border-gray-700";
       case 2:
-        return "text-amber-600 bg-amber-100";
+        return "text-amber-300 bg-amber-900/30 border border-amber-700";
       default:
-        return "text-gray-500 bg-gray-50";
+        return "text-gray-300 bg-gray-800 border border-gray-700";
     }
   };
 
@@ -90,31 +90,31 @@ export default function DivisionLeaderboard({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+    <div className="overflow-hidden rounded-lg shadow-lg border border-gray-700">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-700">
+        <table className="min-w-full divide-y divide-gray-700">
+          <thead className="bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                 Rank
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                 Squad
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                 Current Coins
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                 Total Earned
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                 Level
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="divide-y divide-gray-700">
             {leaderboard.map((entry, index) => (
-              <tr key={entry._id} className="bg-gray-50 dark:bg-gray-700">
+              <tr key={entry._id} className="bg-gray-800">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRankColor(
@@ -127,38 +127,38 @@ export default function DivisionLeaderboard({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-10 w-10">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold">
                         {entry.tag.charAt(0)}
                       </div>
                     </div>
                     <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      <div className="text-sm font-medium text-white">
                         {entry.name}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-sm text-gray-400">
                         {entry.tag}
                       </div>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                  <div className="text-sm font-medium text-white">
                     {entry.currentBountyCoins.toLocaleString()}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-gray-400">
                     coins
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                  <div className="text-sm font-medium text-white">
                     {entry.totalBountyCoinsEarned.toLocaleString()}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-gray-400">
                     total
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                  <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/40 text-blue-200 border border-blue-700">
                     Level {entry.level}
                   </div>
                 </td>
@@ -169,8 +169,8 @@ export default function DivisionLeaderboard({
       </div>
 
       {/* Summary */}
-      <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
-        <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-300">
+      <div className="bg-gray-800 px-6 py-4 border-t border-gray-700">
+        <div className="flex justify-between items-center text-sm text-gray-300">
           <span>Showing {leaderboard.length} squads</span>
           <span>Last updated: {new Date().toLocaleTimeString()}</span>
         </div>

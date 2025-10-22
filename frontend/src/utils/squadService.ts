@@ -189,7 +189,7 @@ export const applyToSquad = async (
   applicationData: SquadApplicationRequest,
   token: string
 ): Promise<SquadApplication> => {
-  const response = await fetch(`${API_BASE_URL}/api/squads/${squadId}/apply`, {
+  const response = await fetch(`/api/squads/${squadId}/apply`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -213,7 +213,7 @@ export const respondToApplication = async (
   token: string
 ): Promise<any> => {
   const response = await fetch(
-    `${API_BASE_URL}/api/squads/${squadId}/respond-application`,
+    `/api/squads/${squadId}/respond-application`,
     {
       method: "POST",
       headers: {
@@ -239,7 +239,7 @@ export const getSquadApplications = async (
   token: string
 ): Promise<SquadApplication[]> => {
   const response = await fetch(
-    `${API_BASE_URL}/api/squads/${squadId}/applications?userId=${userId}`,
+    `${API_BASE_URL}/api/squads/${squadId}/applications`,
     {
       method: "GET",
       headers: {

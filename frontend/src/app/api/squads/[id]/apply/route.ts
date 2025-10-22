@@ -4,10 +4,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const authorization = request.headers.get("authorization");
     const body = await request.json();
 
@@ -20,12 +20,21 @@ export async function POST(
       body: JSON.stringify(body),
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Backend error response:", errorText);
+      return NextResponse.json(
+        { success: false, message: `Backend error: ${response.status} ${errorText}` },
+        { status: response.status }
+      );
+    }
+
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error applying to squad:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to apply to squad" },
+      { success: false, message: `Failed to apply to squad: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }

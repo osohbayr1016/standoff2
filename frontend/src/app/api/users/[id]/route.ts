@@ -4,14 +4,14 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token =
       request.cookies.get("token")?.value ||
       request.headers.get("authorization")?.split(" ")[1];
     const body = await request.json();
-    const { id } = params;
+    const { id } = await params;
 
     const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
       method: "PATCH",
@@ -35,13 +35,13 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token =
       request.cookies.get("token")?.value ||
       request.headers.get("authorization")?.split(" ")[1];
-    const { id } = params;
+    const { id } = await params;
 
     const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
       method: "DELETE",

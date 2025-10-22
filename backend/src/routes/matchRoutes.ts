@@ -5,6 +5,7 @@ import { MatchService2 } from "../services/matchService2";
 import { MatchService3 } from "../services/matchService3";
 import { MatchService4 } from "../services/matchService4";
 import Squad from "../models/Squad";
+import { authenticateToken } from "../middleware/auth";
 
 const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   // Бүх идэвхтэй matches
@@ -58,14 +59,8 @@ const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   });
 
   // Миний squad-ийн matches
-  fastify.get("/my-squad", async (request, reply) => {
+  fastify.get("/my-squad", { preHandler: authenticateToken }, async (request, reply) => {
     try {
-      if (!request.user?.id) {
-        return reply
-          .status(401)
-          .send({ success: false, message: "Нэвтрэх шаардлагатай" });
-      }
-
       const { status, limit = 20, page = 1 } = request.query as any;
       const squad = await Squad.findOne({ members: request.user.id });
 
@@ -174,14 +169,8 @@ const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   });
 
   // Match үүсгэх
-  fastify.post("/", async (request, reply) => {
+  fastify.post("/", { preHandler: authenticateToken }, async (request, reply) => {
     try {
-      if (!request.user?.id) {
-        return reply
-          .status(401)
-          .send({ success: false, message: "Нэвтрэх шаардлагатай" });
-      }
-
       const { type, opponentSquadId, bountyAmount, deadline } =
         request.body as any;
 

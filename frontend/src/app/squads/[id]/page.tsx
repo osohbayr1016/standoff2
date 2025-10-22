@@ -635,7 +635,6 @@ export default function SquadDetailPage() {
       await applyToSquad(
         squadId,
         {
-          userId: user.id,
           message: applicationMessage.trim() || undefined,
         },
         token || ""

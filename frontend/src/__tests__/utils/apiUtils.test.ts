@@ -20,8 +20,8 @@ describe("API Utils", () => {
   });
 
   describe("API_ENDPOINTS", () => {
-    it("should have all required endpoint categories", () => {
-      const { API_ENDPOINTS } = require("../../config/api");
+    it("should have all required endpoint categories", async () => {
+      const { API_ENDPOINTS } = await import("../../config/api");
 
       expect(API_ENDPOINTS).toHaveProperty("AUTH");
       expect(API_ENDPOINTS).toHaveProperty("USERS");
@@ -30,8 +30,8 @@ describe("API Utils", () => {
       expect(API_ENDPOINTS).toHaveProperty("UPLOAD");
     });
 
-    it("should have valid auth endpoints", () => {
-      const { API_ENDPOINTS } = require("../../config/api");
+    it("should have valid auth endpoints", async () => {
+      const { API_ENDPOINTS } = await import("../../config/api");
 
       expect(API_ENDPOINTS.AUTH).toHaveProperty("LOGIN");
       expect(API_ENDPOINTS.AUTH).toHaveProperty("REGISTER");
@@ -42,8 +42,8 @@ describe("API Utils", () => {
       expect(API_ENDPOINTS.AUTH.ME).toContain("/api/auth/me");
     });
 
-    it("should have valid tournament endpoints", () => {
-      const { API_ENDPOINTS } = require("../../config/api");
+    it("should have valid tournament endpoints", async () => {
+      const { API_ENDPOINTS } = await import("../../config/api");
 
       expect(API_ENDPOINTS.TOURNAMENTS).toHaveProperty("ALL");
       expect(API_ENDPOINTS.TOURNAMENTS).toHaveProperty("CREATE");

@@ -60,7 +60,8 @@ const squadApplicationSchema = new Schema<ISquadApplication>(
 );
 
 // Indexes for efficient queries
-squadApplicationSchema.index({ squad: 1, applicant: 1 }, { unique: true });
+// Only prevent duplicate pending applications, not all applications
+squadApplicationSchema.index({ squad: 1, applicant: 1, status: 1 }, { unique: true, partialFilterExpression: { status: ApplicationStatus.PENDING } });
 squadApplicationSchema.index({ applicant: 1, status: 1 });
 squadApplicationSchema.index({ squad: 1, status: 1 });
 squadApplicationSchema.index({ createdAt: -1 });
@@ -68,18 +69,23 @@ squadApplicationSchema.index({ createdAt: -1 });
 // Validation: Prevent duplicate pending applications
 squadApplicationSchema.pre("save", async function (next) {
   if (this.isNew && this.status === ApplicationStatus.PENDING) {
-    const existingApplication = await mongoose
-      .model("SquadApplication")
-      .findOne({
-        squad: this.squad,
-        applicant: this.applicant,
-        status: ApplicationStatus.PENDING,
-      });
+    try {
+      const existingApplication = await mongoose
+        .model("SquadApplication")
+        .findOne({
+          squad: this.squad,
+          applicant: this.applicant,
+          status: ApplicationStatus.PENDING,
+        });
 
-    if (existingApplication) {
-      return next(
-        new Error("User already has a pending application to this squad")
-      );
+      if (existingApplication) {
+        return next(
+          new Error("User already has a pending application to this squad")
+        );
+      }
+    } catch (error) {
+      // If there's an error checking for duplicates, let the unique index handle it
+      console.warn("Error checking for duplicate application:", error);
     }
   }
   next();

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { X, Upload, AlertTriangle, Image as ImageIcon } from "lucide-react";
 import { API_ENDPOINTS } from "../../../config/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface DisputeModalProps {
   matchId: string;
@@ -14,6 +15,7 @@ export default function DisputeModal({
   onClose,
   onSuccess,
 }: DisputeModalProps) {
+  const { getToken } = useAuth();
   const [images, setImages] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -78,12 +80,14 @@ export default function DisputeModal({
     setLoading(true);
 
     try {
+      const token = getToken();
       const response = await fetch(
         `${API_ENDPOINTS.BASE_URL}/api/matches/${matchId}/dispute`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
           },
           credentials: "include",
           body: JSON.stringify({

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { X, Trophy, XCircle } from "lucide-react";
 import { API_ENDPOINTS } from "../../../config/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface ResultSubmitModalProps {
   matchId: string;
@@ -14,6 +15,7 @@ export default function ResultSubmitModal({
   onClose,
   onSuccess,
 }: ResultSubmitModalProps) {
+  const { getToken } = useAuth();
   const [result, setResult] = useState<"WIN" | "LOSS" | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -36,12 +38,14 @@ export default function ResultSubmitModal({
     setError("");
 
     try {
+      const token = getToken();
       const response = await fetch(
         `${API_ENDPOINTS.BASE_URL}/api/matches/${matchId}/result`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
           },
           credentials: "include",
           body: JSON.stringify({ result }),

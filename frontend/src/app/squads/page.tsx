@@ -164,17 +164,17 @@ function CreateSquadForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-white mb-1">
           Squad Name *
         </label>
         <input
           type="text"
           value={formData.name}
           onChange={(e) => handleInputChange("name", e.target.value)}
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             errors.name
               ? "border-red-500"
-              : "border-gray-300 dark:border-gray-600"
+              : "border-gray-600"
           }`}
           placeholder="Enter squad name"
         />
@@ -184,17 +184,17 @@ function CreateSquadForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-white mb-1">
           Squad Tag *
         </label>
         <input
           type="text"
           value={formData.tag}
           onChange={(e) => handleInputChange("tag", e.target.value)}
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             errors.tag
               ? "border-red-500"
-              : "border-gray-300 dark:border-gray-600"
+              : "border-gray-600"
           }`}
           placeholder="e.g., THN, FIRE, etc."
         />
@@ -204,22 +204,22 @@ function CreateSquadForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-white mb-1">
           Game *
         </label>
         <input
           type="text"
           value={formData.game}
           readOnly
-          className="w-full px-3 py-2 border rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 cursor-not-allowed"
+          className="w-full px-3 py-2 border rounded-lg bg-gray-700 text-gray-300 border-gray-600 cursor-not-allowed"
         />
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-300 text-sm mt-1">
           All squads are created for Mobile Legends: Bang Bang
         </p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-white mb-1">
           Max Members
         </label>
         <input
@@ -230,39 +230,39 @@ function CreateSquadForm({
           onChange={(e) =>
             handleInputChange("maxMembers", parseInt(e.target.value))
           }
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             errors.maxMembers
               ? "border-red-500"
-              : "border-gray-300 dark:border-gray-600"
+              : "border-gray-600"
           }`}
         />
         {errors.maxMembers && (
           <p className="text-red-500 text-sm mt-1">{errors.maxMembers}</p>
         )}
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-300 text-sm mt-1">
           Minimum 5, Maximum 10 members (including leader)
         </p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-white mb-1">
           Description
         </label>
         <textarea
           value={formData.description}
           onChange={(e) => handleInputChange("description", e.target.value)}
           rows={3}
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             errors.description
               ? "border-red-500"
-              : "border-gray-300 dark:border-gray-600"
+              : "border-gray-600"
           }`}
           placeholder="Describe your squad and what you're looking for..."
         />
         {errors.description && (
           <p className="text-red-500 text-sm mt-1">{errors.description}</p>
         )}
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-300 text-sm mt-1">
           {formData.description.length}/500 characters
         </p>
       </div>

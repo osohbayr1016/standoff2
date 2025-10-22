@@ -242,6 +242,7 @@ export default function PendingApplicationsPage() {
     (app) => app.status !== ApplicationStatus.PENDING
   );
 
+
   return (
     <div className="min-h-screen bg-gray-900">
       {/* Header */}
@@ -329,10 +330,10 @@ export default function PendingApplicationsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
                         <div className="relative">
-                          {application.applicant.avatar ? (
+                          {application.applicant?.avatar ? (
                             <Image
-                              src={application.applicant.avatar}
-                              alt={application.applicant.name}
+                              src={application.applicant?.avatar}
+                              alt={application.applicant?.name || 'Unknown User'}
                               width={48}
                               height={48}
                               className="rounded-full"
@@ -346,10 +347,10 @@ export default function PendingApplicationsPage() {
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
                             <h3 className="text-white font-medium">
-                              {application.applicant.name}
+                              {application.applicant?.name || 'Unknown User'}
                             </h3>
                             <span className="text-gray-400 text-sm">
-                              {application.applicant.email}
+                              {application.applicant?.email || 'No email available'}
                             </span>
                           </div>
                           {application.message && (
@@ -440,10 +441,10 @@ export default function PendingApplicationsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
                         <div className="relative">
-                          {application.applicant.avatar ? (
+                          {application.applicant?.avatar ? (
                             <Image
-                              src={application.applicant.avatar}
-                              alt={application.applicant.name}
+                              src={application.applicant?.avatar}
+                              alt={application.applicant?.name || 'Unknown User'}
                               width={48}
                               height={48}
                               className="rounded-full"
@@ -457,10 +458,10 @@ export default function PendingApplicationsPage() {
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
                             <h3 className="text-white font-medium">
-                              {application.applicant.name}
+                              {application.applicant?.name || 'Unknown User'}
                             </h3>
                             <span className="text-gray-400 text-sm">
-                              {application.applicant.email}
+                              {application.applicant?.email || 'No email available'}
                             </span>
                           </div>
                           {application.message && (

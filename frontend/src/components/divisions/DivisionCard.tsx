@@ -28,8 +28,8 @@ export default function DivisionCard({
   };
 
   const getDivisionGradient = (divisionName: SquadDivision) => {
-    // Remove colored gradients and use consistent background
-    return "from-white to-gray-50 dark:from-gray-800 dark:to-gray-700";
+    // Use consistent dark gray background
+    return "from-gray-800 to-gray-800";
   };
 
   return (
@@ -42,48 +42,48 @@ export default function DivisionCard({
       <div
         className={`bg-gradient-to-br ${getDivisionGradient(
           division.name
-        )} rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-600 h-full flex flex-col`}
+        )} rounded-xl shadow-lg overflow-hidden border border-gray-700 h-full flex flex-col`}
       >
         {/* Header */}
-        <div className="p-6 text-center bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 min-h-[160px] flex flex-col items-center justify-center">
+        <div className="p-6 text-center bg-gradient-to-r from-blue-600 to-indigo-700 min-h-[160px] flex flex-col items-center justify-center">
           <div className="mb-3">{getDivisionIcon(division.name)}</div>
           <h3 className="text-2xl font-bold mb-2 text-white">
             {division.displayName}
           </h3>
-          <p className="text-white/90 text-sm">{division.requirements}</p>
+          <p className="text-blue-100 text-sm">{division.requirements}</p>
         </div>
 
         {/* Content */}
-        <div className="bg-white p-6 flex-1 flex flex-col">
+        <div className="bg-gray-800 p-6 flex-1 flex flex-col">
           {/* Upgrade Cost */}
           {division.upgradeCost && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-600 mb-1">Upgrade Cost</div>
-              <div className="text-lg font-bold text-gray-900">
+            <div className="mb-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
+              <div className="text-sm text-gray-300 mb-1">Upgrade Cost</div>
+              <div className="text-lg font-bold text-white">
                 {division.upgradeCost} Bounty Coins
               </div>
             </div>
           )}
 
           {/* Bounty Coin Price */}
-          <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-            <div className="text-sm text-blue-600 mb-1">50 Bounty Coins</div>
-            <div className="text-lg font-bold text-blue-900">
+          <div className="mb-4 p-3 bg-blue-900/30 rounded-lg border border-blue-700">
+            <div className="text-sm text-blue-300 mb-1">50 Bounty Coins</div>
+            <div className="text-lg font-bold text-blue-200">
               {division.bountyCoinPrice.toLocaleString()} MNT
             </div>
           </div>
 
           {/* Win/Lose Rewards */}
           <div className="grid grid-cols-2 gap-3 mt-auto">
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="text-sm text-green-600 mb-1">Win</div>
-              <div className="text-lg font-bold text-green-900">
+            <div className="text-center p-3 bg-green-900/30 rounded-lg border border-green-700">
+              <div className="text-sm text-green-300 mb-1">Win</div>
+              <div className="text-lg font-bold text-green-200">
                 +{division.bountyCoinAmount}
               </div>
             </div>
-            <div className="text-center p-3 bg-red-50 rounded-lg">
-              <div className="text-sm text-red-600 mb-1">Lose</div>
-              <div className="text-lg font-bold text-red-900">
+            <div className="text-center p-3 bg-red-900/30 rounded-lg border border-red-700">
+              <div className="text-sm text-red-300 mb-1">Lose</div>
+              <div className="text-lg font-bold text-red-200">
                 -{division.deductionAmount}
               </div>
             </div>

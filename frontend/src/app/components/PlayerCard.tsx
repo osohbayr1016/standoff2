@@ -105,7 +105,7 @@ export default function PlayerCard({
                 }}
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xl border-4 border-gray-700 shadow-lg">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xl border-4 border-gray-700 shadow-lg">
                 {(player.inGameName || player.name).charAt(0).toUpperCase()}
               </div>
             )}
@@ -113,7 +113,7 @@ export default function PlayerCard({
           <div className="flex-1 text-center sm:text-left">
             <h3 className="text-lg sm:text-xl font-bold text-white flex items-center justify-center sm:justify-start gap-2 flex-wrap">
               {player.clan && (
-                <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 py-1 rounded-full text-xs font-bold">
                   [{player.clan.tag}]
                 </span>
               )}

@@ -145,7 +145,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -162,7 +162,7 @@ export default function RegisterPage() {
               E-Sport Connection
             </motion.h1>
           </Link>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-white">
             Бүртгэлээ үүсгээд бидэнтэй нэгдээрэй
           </p>
         </div>
@@ -172,12 +172,12 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
+          className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700"
         >
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Role Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <label className="block text-sm font-medium text-white mb-3">
                 Би бол...
               </label>
               <div className="space-y-3">
@@ -192,7 +192,7 @@ export default function RegisterPage() {
                     className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed ${
                       selectedRole === role.id
                         ? `border-transparent bg-gradient-to-r ${role.color} text-white shadow-lg`
-                        : "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500"
+                        : "border-gray-700 bg-gray-800 text-white hover:border-gray-600"
                     }`}
                   >
                     <div className="flex items-center space-x-3">
@@ -211,7 +211,7 @@ export default function RegisterPage() {
 
             {/* Name Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-white mb-2">
                 Бүтэн Нэр
               </label>
               <div className="relative">
@@ -223,7 +223,7 @@ export default function RegisterPage() {
                   onChange={handleInputChange}
                   required
                   disabled={isLoading}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Бүтэн нэрээ оруулна уу"
                 />
               </div>
@@ -231,7 +231,7 @@ export default function RegisterPage() {
 
             {/* Email Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-white mb-2">
                 И-мэйл Хаяг
               </label>
               <input
@@ -241,14 +241,14 @@ export default function RegisterPage() {
                 onChange={handleInputChange}
                 required
                 disabled={isLoading}
-                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="И-мэйл хаягаа оруулна уу"
               />
             </div>
 
             {/* Password Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-white mb-2">
                 Нууц Үг
               </label>
               <div className="relative">
@@ -259,14 +259,14 @@ export default function RegisterPage() {
                   onChange={handleInputChange}
                   required
                   disabled={isLoading}
-                  className="w-full pr-12 px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pr-12 px-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Нууц үг үүсгэнэ үү"
                 />
                 <button
                   type="button"
                   disabled={isLoading}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-white disabled:opacity-50"
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -282,7 +282,7 @@ export default function RegisterPage() {
                   ) : (
                     <AlertCircle className="w-4 h-4 text-yellow-500" />
                   )}
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-gray-300">
                     Хамгийн багадаа 6 тэмдэгт
                   </span>
                 </div>
@@ -291,7 +291,7 @@ export default function RegisterPage() {
 
             {/* Confirm Password Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-white mb-2">
                 Нууц Үг Баталгаажуулах
               </label>
               <div className="relative">
@@ -302,14 +302,14 @@ export default function RegisterPage() {
                   onChange={handleInputChange}
                   required
                   disabled={isLoading}
-                  className="w-full pr-12 px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pr-12 px-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Нууц үгээ баталгаажуулна уу"
                 />
                 <button
                   type="button"
                   disabled={isLoading}
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-white disabled:opacity-50"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -325,7 +325,7 @@ export default function RegisterPage() {
                   ) : (
                     <AlertCircle className="w-4 h-4 text-red-500" />
                   )}
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-gray-300">
                     {formData.password === formData.confirmPassword
                       ? "Нууц үгнүүд таарч байна"
                       : "Нууц үгнүүд таарахгүй байна"}
@@ -339,7 +339,7 @@ export default function RegisterPage() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-center space-x-2"
+                className="p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-300 text-sm flex items-center space-x-2"
               >
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 <span>{error}</span>
@@ -352,7 +352,7 @@ export default function RegisterPage() {
               disabled={isLoading}
               whileHover={{ scale: isLoading ? 1 : 1.02 }}
               whileTap={{ scale: isLoading ? 1 : 0.98 }}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white py-3 px-4 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full relative overflow-hidden bg-gradient-to-r from-amber-500 via-fuchsia-500 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold shadow-lg hover:from-amber-400 hover:via-fuchsia-500 hover:to-indigo-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-fuchsia-400 focus:ring-offset-2 focus:ring-offset-gray-800"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center space-x-2">
@@ -367,11 +367,11 @@ export default function RegisterPage() {
 
           {/* Login Link */}
           <div className="mt-6 text-center">
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-white">
               Хэрэглэгч байгаа юу?{" "}
               <Link
                 href="/auth/login"
-                className="text-purple-600 dark:text-green-400 hover:text-purple-700 dark:hover:text-green-300 font-medium transition-colors duration-200"
+                className="text-purple-400 hover:text-purple-300 font-medium transition-colors duration-200"
               >
                 Нэвтрэх
               </Link>

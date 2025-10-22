@@ -4,19 +4,14 @@ import { MatchService2 } from "../services/matchService2";
 import { MatchService3 } from "../services/matchService3";
 import { MatchService4 } from "../services/matchService4";
 import { MatchResult } from "../models/Match";
+import { authenticateToken } from "../middleware/auth";
 
 const matchActionRoutes: FastifyPluginAsync = async (
   fastify: FastifyInstance
 ) => {
   // Accept хийх
-  fastify.post("/:id/accept", async (request, reply) => {
+  fastify.post("/:id/accept", { preHandler: authenticateToken }, async (request, reply) => {
     try {
-      if (!request.user?.id) {
-        return reply
-          .status(401)
-          .send({ success: false, message: "Нэвтрэх шаардлагатай" });
-      }
-
       const { id } = request.params as any;
       const match = await MatchService.acceptMatch(id, request.user.id);
 
@@ -27,14 +22,8 @@ const matchActionRoutes: FastifyPluginAsync = async (
   });
 
   // Тоглолт эхлүүлэх
-  fastify.post("/:id/start", async (request, reply) => {
+  fastify.post("/:id/start", { preHandler: authenticateToken }, async (request, reply) => {
     try {
-      if (!request.user?.id) {
-        return reply
-          .status(401)
-          .send({ success: false, message: "Нэвтрэх шаардлагатай" });
-      }
-
       const { id } = request.params as any;
       const match = await MatchService2.startMatch(id, request.user.id);
 
@@ -45,14 +34,8 @@ const matchActionRoutes: FastifyPluginAsync = async (
   });
 
   // Үр дүн оруулах
-  fastify.post("/:id/result", async (request, reply) => {
+  fastify.post("/:id/result", { preHandler: authenticateToken }, async (request, reply) => {
     try {
-      if (!request.user?.id) {
-        return reply
-          .status(401)
-          .send({ success: false, message: "Нэвтрэх шаардлагатай" });
-      }
-
       const { id } = request.params as any;
       const { result } = request.body as any;
 
@@ -78,14 +61,8 @@ const matchActionRoutes: FastifyPluginAsync = async (
   });
 
   // Dispute үүсгэх
-  fastify.post("/:id/dispute", async (request, reply) => {
+  fastify.post("/:id/dispute", { preHandler: authenticateToken }, async (request, reply) => {
     try {
-      if (!request.user?.id) {
-        return reply
-          .status(401)
-          .send({ success: false, message: "Нэвтрэх шаардлагатай" });
-      }
-
       const { id } = request.params as any;
       const { images, description } = request.body as any;
 
@@ -112,14 +89,8 @@ const matchActionRoutes: FastifyPluginAsync = async (
   });
 
   // Цуцлах
-  fastify.post("/:id/cancel", async (request, reply) => {
+  fastify.post("/:id/cancel", { preHandler: authenticateToken }, async (request, reply) => {
     try {
-      if (!request.user?.id) {
-        return reply
-          .status(401)
-          .send({ success: false, message: "Нэвтрэх шаардлагатай" });
-      }
-
       const { id } = request.params as any;
       const match = await MatchService4.cancelMatch(id, request.user.id);
 
@@ -130,14 +101,8 @@ const matchActionRoutes: FastifyPluginAsync = async (
   });
 
   // Chat харах
-  fastify.get("/:id/chat", async (request, reply) => {
+  fastify.get("/:id/chat", { preHandler: authenticateToken }, async (request, reply) => {
     try {
-      if (!request.user?.id) {
-        return reply
-          .status(401)
-          .send({ success: false, message: "Нэвтрэх шаардлагатай" });
-      }
-
       const { id } = request.params as any;
       const messages = await MatchService4.getChatMessages(id, request.user.id);
 
@@ -148,14 +113,8 @@ const matchActionRoutes: FastifyPluginAsync = async (
   });
 
   // Chat илгээх
-  fastify.post("/:id/chat", async (request, reply) => {
+  fastify.post("/:id/chat", { preHandler: authenticateToken }, async (request, reply) => {
     try {
-      if (!request.user?.id) {
-        return reply
-          .status(401)
-          .send({ success: false, message: "Нэвтрэх шаардлагатай" });
-      }
-
       const { id } = request.params as any;
       const { message } = request.body as any;
 

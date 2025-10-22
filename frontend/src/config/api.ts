@@ -154,6 +154,7 @@ export const API_ENDPOINTS = {
     LEAVE: (id: string) => `${API_BASE_URL}/api/squads/${id}/leave`,
     USER_SQUADS: (userId: string) =>
       `${API_BASE_URL}/api/squads/user/${userId}`,
+    LEADERBOARD: `${API_BASE_URL}/api/squads/leaderboard`,
   },
   DIVISIONS: {
     INFO: `${API_BASE_URL}/api/divisions/info`,

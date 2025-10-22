@@ -192,16 +192,16 @@ export default function PlayerDetailPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-gray-900 to-gray-900">
         <Navigation />
         <main className="pt-20 pb-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-green-400 mx-auto"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-300">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+              <p className="mt-4 text-gray-300">
                 Loading player details...
               </p>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-sm text-gray-400">
                 Player ID: {id}
               </p>
             </div>
@@ -214,22 +214,22 @@ export default function PlayerDetailPage({
 
   if (!player) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-gray-900 to-gray-900">
         <Navigation />
         <main className="pt-20 pb-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center py-12">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              <h1 className="text-2xl font-bold text-white mb-4">
                 Player not found
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
+              <p className="text-gray-300 mb-4">
                 The player profile you&apos;re looking for doesn&apos;t exist or
                 has been removed.
               </p>
               <div className="space-y-4">
                 <Link
                   href="/players"
-                  className="inline-flex items-center space-x-2 text-purple-600 dark:text-green-400 hover:underline"
+                  className="inline-flex items-center space-x-2 text-blue-400 hover:underline"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Back to Players</span>
@@ -237,7 +237,7 @@ export default function PlayerDetailPage({
                 <br />
                 <Link
                   href="/players"
-                  className="inline-flex items-center space-x-2 text-purple-600 dark:text-green-400 hover:underline"
+                  className="inline-flex items-center space-x-2 text-blue-400 hover:underline"
                 >
                   <span>Browse Mobile Legends Players</span>
                 </Link>
@@ -251,7 +251,7 @@ export default function PlayerDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-gray-900 to-gray-900">
       <Navigation />
 
       <main className="pt-20 pb-16">
@@ -265,7 +265,7 @@ export default function PlayerDetailPage({
           >
             <Link
               href="/players"
-              className="inline-flex items-center space-x-2 text-purple-600 dark:text-green-400 hover:text-purple-700 dark:hover:text-green-300 transition-colors duration-200"
+              className="inline-flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors duration-200"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Players</span>
@@ -277,7 +277,7 @@ export default function PlayerDetailPage({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-8"
+            className="bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-8 border border-gray-700"
           >
             <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
               {/* Player Image */}
@@ -287,13 +287,13 @@ export default function PlayerDetailPage({
                   alt={player.name}
                   width={200}
                   height={200}
-                  className="rounded-2xl object-cover border-4 border-white dark:border-gray-700 shadow-lg w-32 h-32 sm:w-48 sm:h-48 lg:w-52 lg:h-52"
+                  className="rounded-2xl object-cover border-4 border-gray-700 shadow-lg w-32 h-32 sm:w-48 sm:h-48 lg:w-52 lg:h-52"
                 />
               </div>
 
               {/* Player Info */}
               <div className="flex-1 text-center lg:text-left">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2 sm:gap-3">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2 sm:gap-3">
                   <span className="text-center lg:text-left">
                     {player.realName || player.name}
                   </span>
@@ -303,7 +303,7 @@ export default function PlayerDetailPage({
                   player.inGameName &&
                   player.realName !== player.inGameName && (
                     <div className="mb-4">
-                      <span className="inline-block px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 rounded-full text-sm font-medium">
+                      <span className="inline-block px-3 py-1 bg-blue-900/50 text-blue-200 border border-blue-700 rounded-full text-sm font-medium">
                         Тоглоомын нэр: {player.inGameName}
                       </span>
                     </div>
@@ -312,49 +312,49 @@ export default function PlayerDetailPage({
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-6">
                   <div className="flex items-center space-x-2">
                     {getCategoryIcon(player.category)}
-                    <span className="text-lg text-gray-600 dark:text-gray-400">
+                    <span className="text-lg text-gray-300">
                       {player.category}
                     </span>
                   </div>
                   <span className="text-gray-300">•</span>
-                  <span className="text-lg text-gray-600 dark:text-gray-400">
+                  <span className="text-lg text-gray-300">
                     {player.game}
                   </span>
                   <span className="text-gray-300">•</span>
                   <div className="flex items-center space-x-2">
                     {getRoleIcon(player.roles[0])}
-                    <span className="text-lg text-gray-600 dark:text-gray-400">
+                    <span className="text-lg text-gray-300">
                       {player.roles.join(", ")}
                     </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  <div className="bg-gray-700 rounded-lg p-4 border border-gray-600">
+                    <h3 className="text-sm font-medium text-gray-400 mb-1">
                       In-Game Name
                     </h3>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <p className="text-lg font-semibold text-white">
                       {player.inGameName}
                     </p>
                   </div>
                   {/* MLBB Game ID */}
                   {player.mlbbId && (
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    <div className="bg-gray-700 rounded-lg p-4 border border-gray-600">
+                      <h3 className="text-sm font-medium text-gray-400 mb-1">
                         MLBB Game ID
                       </h3>
-                      <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                      <p className="text-lg font-semibold text-blue-400">
                         {player.mlbbId}
                       </p>
                     </div>
                   )}
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  <div className="bg-gray-700 rounded-lg p-4 border border-gray-600">
+                    <h3 className="text-sm font-medium text-gray-400 mb-1">
                       Highest Rank
                     </h3>
                     <div className="flex items-center gap-2">
-                      <p className="text-lg font-semibold text-purple-600 dark:text-green-400">
+                      <p className="text-lg font-semibold text-blue-400">
                         {player.rank}
                       </p>
                       {player.rank === "+Mythical Immortal" &&
@@ -365,11 +365,11 @@ export default function PlayerDetailPage({
                         )}
                     </div>
                   </div>
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  <div className="bg-gray-700 rounded-lg p-4 border border-gray-600">
+                    <h3 className="text-sm font-medium text-gray-400 mb-1">
                       Experience
                     </h3>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <p className="text-lg font-semibold text-white">
                       {player.experience}
                     </p>
                   </div>
@@ -377,7 +377,7 @@ export default function PlayerDetailPage({
 
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
                   {player.isLookingForTeam && (
-                    <div className="inline-block px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
+                    <div className="inline-block px-4 py-2 bg-blue-900/50 text-blue-200 border border-blue-700 rounded-full text-sm font-medium">
                       Баг Хайж Байна
                     </div>
                   )}
@@ -385,7 +385,7 @@ export default function PlayerDetailPage({
                   {user && user.id !== player.id && (
                     <motion.button
                       onClick={() => setIsChatOpen(true)}
-                      className="inline-flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 dark:bg-green-600 text-white rounded-full hover:bg-purple-700 dark:hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
+                      className="inline-flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -403,12 +403,12 @@ export default function PlayerDetailPage({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-8"
+            className="bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-8 border border-gray-700"
           >
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-2xl font-bold text-white mb-6">
               Bio
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">
+            <p className="text-gray-300 leading-relaxed text-lg">
               {player.bio}
             </p>
           </motion.div>
@@ -418,9 +418,9 @@ export default function PlayerDetailPage({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8"
+            className="bg-gray-800 rounded-2xl shadow-xl p-8 mb-8 border border-gray-700"
           >
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-2xl font-bold text-white mb-6">
               Social Links
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -437,14 +437,14 @@ export default function PlayerDetailPage({
                       }
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex flex-col items-center space-y-2 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 group"
+                      className="flex flex-col items-center space-y-2 p-4 bg-gray-700 rounded-lg border border-gray-600 hover:bg-gray-600 transition-colors duration-200 group"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <div className="text-gray-600 dark:text-gray-400 group-hover:text-purple-600 dark:group-hover:text-green-400 transition-colors duration-200">
+                      <div className="text-gray-400 group-hover:text-blue-400 transition-colors duration-200">
                         {getSocialIcon(platform)}
                       </div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
+                      <span className="text-sm font-medium text-gray-300 capitalize">
                         {platform}
                       </span>
                     </motion.a>
@@ -470,10 +470,10 @@ export default function PlayerDetailPage({
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-semibold text-white mb-2">
                     No Social Links
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
+                  <p className="text-gray-300">
                     This player hasn&apos;t added any social media links yet.
                   </p>
                 </div>
@@ -486,9 +486,9 @@ export default function PlayerDetailPage({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
+            className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700"
           >
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-2xl font-bold text-white mb-6">
               Highlight Video
             </h2>
 
@@ -510,14 +510,14 @@ export default function PlayerDetailPage({
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-400">
                     YouTube Highlight Video
                   </p>
                   <a
                     href={player.highlightVideo}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 text-purple-600 dark:text-green-400 hover:underline"
+                    className="inline-flex items-center space-x-2 text-blue-400 hover:underline"
                   >
                     <Youtube className="w-4 h-4" />
                     <span>Watch on YouTube</span>
@@ -527,17 +527,17 @@ export default function PlayerDetailPage({
             ) : (
               <div className="text-center py-8">
                 <Youtube className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg font-semibold text-white mb-2">
                   No Highlight Video
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                <p className="text-gray-300 mb-4">
                   This player hasn&apos;t uploaded a highlight video yet.
                 </p>
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <div className="bg-gray-700 rounded-lg p-4 border border-gray-600">
+                  <p className="text-sm text-gray-400 mb-2">
                     To add a highlight video, players can:
                   </p>
-                  <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                  <ul className="text-sm text-gray-400 space-y-1">
                     <li>• Upload their best gameplay moments to YouTube</li>
                     <li>• Share the YouTube video URL in their profile</li>
                     <li>• Showcase their skills and achievements</li>
