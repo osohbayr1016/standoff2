@@ -28,6 +28,8 @@ import {
   Lock,
   Unlock,
   UserCheck,
+  Copy,
+  Check,
 } from "lucide-react";
 import { FaCoins } from "react-icons/fa";
 import Image from "next/image";
@@ -175,8 +177,10 @@ export default function SquadDetailPage() {
   const [buyBountyForm, setBuyBountyForm] = useState({
     amount: 50,
     customAmount: "",
+    transactionReference: "",
   });
   const [buyBountySubmitting, setBuyBountySubmitting] = useState(false);
+  const [accountNumberCopied, setAccountNumberCopied] = useState(false);
 
   const squadId = params.id as string;
 
@@ -374,10 +378,24 @@ export default function SquadDetailPage() {
     }
   };
 
+  const copyAccountNumber = async () => {
+    try {
+      await navigator.clipboard.writeText("380032005005896566");
+      setAccountNumberCopied(true);
+      setTimeout(() => setAccountNumberCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy account number:", err);
+    }
+  };
+
   const handleBuyBountyCoins = async () => {
     if (!user?.id || !squad) return;
     if (!buyBountyForm.amount || buyBountyForm.amount <= 0) {
       setError("Please enter a valid amount");
+      return;
+    }
+    if (!buyBountyForm.transactionReference.trim()) {
+      setError("Please enter transaction reference");
       return;
     }
 
@@ -393,27 +411,28 @@ export default function SquadDetailPage() {
         body: JSON.stringify({
           squadId: squad._id,
           amount: buyBountyForm.amount,
+          transactionReference: buyBountyForm.transactionReference,
         }),
       });
 
       const data = await res.json();
       if (!res.ok || !data?.success) {
-        setError(data.message || "Failed to submit purchase request");
+        setError(data.message || "Failed to submit recharge request");
         return;
       }
 
       // Reset form and close modal
-      setBuyBountyForm({ amount: 50, customAmount: "" });
+      setBuyBountyForm({ amount: 50, customAmount: "", transactionReference: "" });
       setShowBuyBountyModal(false);
       setError(""); // Clear any previous errors
 
       // Show success message
       alert(
-        "Purchase request submitted successfully! Admin will review and process your request."
+        "Recharge request submitted successfully! Admin will review and process your request."
       );
     } catch (e) {
-      console.error("Error submitting purchase request:", e);
-      setError("Failed to submit purchase request");
+      console.error("Error submitting recharge request:", e);
+      setError("Failed to submit recharge request");
     } finally {
       setBuyBountySubmitting(false);
     }
@@ -2059,14 +2078,14 @@ export default function SquadDetailPage() {
                     stats?.squadDivision?.currentBountyCoins ??
                     0
                   }
-                  value={withdrawForm.amountCoins}
+                  value={withdrawForm.amountCoins === 0 ? "" : withdrawForm.amountCoins}
                   onChange={(e) =>
                     setWithdrawForm((p) => ({
                       ...p,
-                      amountCoins: parseInt(e.target.value || "0"),
+                      amountCoins: e.target.value === "" ? 0 : parseInt(e.target.value) || 0,
                     }))
                   }
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none"
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <p className="text-xs text-gray-400 mt-1">
                   ≈ {toMNT(withdrawForm.amountCoins || 0).toLocaleString()}₮
@@ -2210,7 +2229,7 @@ export default function SquadDetailPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4"
+            className="bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-white">
@@ -2224,81 +2243,146 @@ export default function SquadDetailPage() {
               </button>
             </div>
 
-            <div className="space-y-4">
-              <p className="text-gray-300">
-                Request bounty coins for your squad. Admin will review and
-                process your request.
-              </p>
+            <div className="space-y-6">
+              {/* Step 1: Select Amount */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-medium text-white">1. Select Amount</h4>
+                
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-300">
+                    Amount of Bounty Coins
+                  </label>
 
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-300">
-                  Amount of Bounty Coins
-                </label>
+                  {/* Quick amount buttons */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[50, 100, 200, 250, 500, 750].map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() =>
+                          setBuyBountyForm({
+                            ...buyBountyForm,
+                            amount,
+                            customAmount: "",
+                          })
+                        }
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          buyBountyForm.amount === amount &&
+                          buyBountyForm.customAmount === ""
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        }`}
+                      >
+                        {amount} BC
+                      </button>
+                    ))}
+                  </div>
 
-                {/* Quick amount buttons */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[50, 100, 200, 250, 500, 750].map((amount) => (
-                    <button
-                      key={amount}
-                      onClick={() =>
+                  {/* Custom amount input */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300">
+                      Or enter custom amount
+                    </label>
+                    <input
+                      type="number"
+                      value={buyBountyForm.customAmount}
+                      onChange={(e) => {
+                        const value = e.target.value;
                         setBuyBountyForm({
                           ...buyBountyForm,
-                          amount,
-                          customAmount: "",
-                        })
-                      }
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        buyBountyForm.amount === amount &&
-                        buyBountyForm.customAmount === ""
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      }`}
-                    >
-                      {amount} BC
-                    </button>
-                  ))}
-                </div>
-
-                {/* Custom amount input */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-300">
-                    Or enter custom amount
-                  </label>
-                  <input
-                    type="number"
-                    value={buyBountyForm.customAmount}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setBuyBountyForm({
-                        ...buyBountyForm,
-                        customAmount: value,
-                        amount: value ? parseInt(value) : 50,
-                      });
-                    }}
-                    min="1"
-                    max="10000"
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter custom amount..."
-                  />
-                </div>
-
-                {/* Estimated cost */}
-                {divisionInfo && (
-                  <div className="p-3 bg-gray-700 rounded-lg">
-                    <p className="text-sm text-gray-300">
-                      Estimated cost: ~
-                      {Math.round(
-                        (buyBountyForm.amount /
-                          divisionInfo[0]?.bountyCoinAmount || 50) *
-                          (divisionInfo[0]?.bountyCoinPrice || 5000)
-                      ).toLocaleString()}{" "}
-                      ₮
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Based on current division pricing
-                    </p>
+                          customAmount: value,
+                          amount: value ? parseInt(value) : 50,
+                        });
+                      }}
+                      min="1"
+                      max="10000"
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter custom amount..."
+                    />
                   </div>
-                )}
+
+                  {/* Estimated cost */}
+                  {divisionInfo && (
+                    <div className="p-3 bg-gray-700 rounded-lg">
+                      <p className="text-sm text-gray-300">
+                        Estimated cost: ~
+                        {Math.round(
+                          (buyBountyForm.amount /
+                            divisionInfo[0]?.bountyCoinAmount || 50) *
+                            (divisionInfo[0]?.bountyCoinPrice || 5000)
+                        ).toLocaleString()}{" "}
+                        ₮
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Based on current division pricing
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Step 2: Bank Transfer Information */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-medium text-white">2. Bank Transfer</h4>
+                
+                <div className="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-white font-medium">Хас банк</span>
+                    </div>
+                    <div className="pl-4 space-y-2">
+                      <div>
+                        <span className="text-gray-400 text-sm">Дансны дугаар:</span>
+                        <div className="flex items-center gap-2">
+                          <p className="text-white font-mono text-lg">380032005005896566</p>
+                          <button
+                            onClick={copyAccountNumber}
+                            className="p-1 hover:bg-gray-600 rounded transition-colors"
+                            title="Copy account number"
+                          >
+                            {accountNumberCopied ? (
+                              <Check className="w-4 h-4 text-green-400" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-gray-400 hover:text-white" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 text-sm">Эзэмшигч:</span>
+                        <p className="text-white">Өсөхбаяр</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 text-sm">Дүн:</span>
+                        <p className="text-green-400 font-semibold">
+                          {divisionInfo && Math.round(
+                            (buyBountyForm.amount /
+                              divisionInfo[0]?.bountyCoinAmount || 50) *
+                              (divisionInfo[0]?.bountyCoinPrice || 5000)
+                          ).toLocaleString()} ₮
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3: Transaction Reference */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-medium text-white">3. Transaction Reference</h4>
+                
+                <div className="space-y-3">
+                  <div className="p-3 bg-gray-700 rounded-lg">
+                    <p className="text-sm text-gray-300 mb-2">
+                      Гүйлгээний утга дээр дараах мэдээллийг бичнэ үү:
+                    </p>
+                    <div className="bg-gray-800 p-3 rounded border">
+                      <code className="text-green-400 font-mono text-sm">
+                        {squad?.name} [{squad?.tag}]
+                      </code>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="flex space-x-3 pt-4">
@@ -2310,18 +2394,18 @@ export default function SquadDetailPage() {
                 </button>
                 <button
                   onClick={handleBuyBountyCoins}
-                  disabled={buyBountySubmitting || buyBountyForm.amount <= 0}
+                  disabled={buyBountySubmitting || buyBountyForm.amount <= 0 || !buyBountyForm.transactionReference.trim()}
                   className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center"
                 >
                   {buyBountySubmitting ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Submitting...
+                      Recharging...
                     </>
                   ) : (
                     <>
                       <FaCoins className="w-4 h-4 mr-2" />
-                      Request Purchase
+                      Recharge
                     </>
                   )}
                 </button>

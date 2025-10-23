@@ -26,6 +26,8 @@ export default function DisputeModal({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    console.log(`📸 Image upload started: ${files.length} files`);
+
     if (images.length + files.length > 2) {
       setError("Дээд тал нь 2 зураг");
       return;
@@ -38,24 +40,41 @@ export default function DisputeModal({
       const uploadedUrls: string[] = [];
 
       for (const file of Array.from(files)) {
+        console.log(`📤 Uploading file: ${file.name}, size: ${file.size} bytes`);
+        
         const formData = new FormData();
         formData.append("image", file);
 
-        const response = await fetch(`${API_ENDPOINTS.UPLOAD}/image`, {
+        const token = getToken();
+        console.log(`🔑 Using token: ${token ? 'Yes' : 'No'}`);
+
+        const response = await fetch(`${API_ENDPOINTS.UPLOAD.IMAGE}`, {
           method: "POST",
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
           credentials: "include",
           body: formData,
         });
 
+        console.log(`📡 Upload response status: ${response.status}`);
         const data = await response.json();
+        console.log(`📊 Upload response data:`, data);
 
         if (data.success) {
-          uploadedUrls.push(data.data.url);
+          console.log(`✅ Image uploaded successfully: ${data.url}`);
+          uploadedUrls.push(data.url);
+        } else {
+          console.error(`❌ Upload failed: ${data.message}`);
+          setError(data.message || "Зураг upload хийхэд алдаа гарлаа");
+          return;
         }
       }
 
       setImages([...images, ...uploadedUrls].slice(0, 2));
+      console.log(`✅ All images uploaded successfully`);
     } catch (error) {
+      console.error(`❌ Upload error:`, error);
       setError("Зураг upload хийхэд алдаа гарлаа");
     } finally {
       setUploading(false);
@@ -65,6 +84,10 @@ export default function DisputeModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    console.log(`🚨 Submitting dispute for match: ${matchId}`);
+    console.log(`📊 Images:`, images);
+    console.log(`📊 Description:`, description);
 
     if (images.length === 0 && !description.trim()) {
       setError("Хамгийн багадаа зураг эсвэл тайлбар оруулна уу");
@@ -81,8 +104,15 @@ export default function DisputeModal({
 
     try {
       const token = getToken();
+      const requestBody = {
+        images,
+        description: description.trim() || undefined,
+      };
+      
+      console.log(`📤 Sending dispute request:`, requestBody);
+      
       const response = await fetch(
-        `${API_ENDPOINTS.BASE_URL}/api/matches/${matchId}/dispute`,
+        API_ENDPOINTS.MATCHES.DISPUTE(matchId),
         {
           method: "POST",
           headers: {
@@ -90,21 +120,23 @@ export default function DisputeModal({
             ...(token && { Authorization: `Bearer ${token}` }),
           },
           credentials: "include",
-          body: JSON.stringify({
-            images,
-            description: description.trim() || undefined,
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
+      console.log(`📡 Response status: ${response.status}`);
       const data = await response.json();
+      console.log(`📊 Response data:`, data);
 
       if (data.success) {
+        console.log(`✅ Dispute created successfully`);
         onSuccess();
       } else {
+        console.error(`❌ Dispute creation failed: ${data.message}`);
         setError(data.message || "Алдаа гарлаа");
       }
     } catch (error) {
+      console.error(`❌ Dispute creation error:`, error);
       setError("Алдаа гарлаа");
     } finally {
       setLoading(false);

@@ -40,12 +40,10 @@ export default function AboutPage() {
 
               <div className="text-center">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
-                  Бидний тухай
+                  Хөгжүүлэгчийн тухай
                 </h1>
                 <p className="text-lg sm:text-xl text-gray-300 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
-                  Монголын Mobile Legends тоглоомын чансааг дараагийн түвшинд
-                  хүргэж, шинээр гарч ирж буй тоглогчид болон багуудын шинэ
-                  тэмцээнээр тасрахгүй байх
+                  Энэхүү website-г хөгжүүлж байгаа хүүг Өсөхбаяр гэдэг бөгөөд сонирхлоороо Mobile Legends Bang Bang тоглоомыг дараагийн түвшинд хүргэх хүслээр энэхүү санаагаа хэрэгжүүлж эхэлсэн билээ
                 </p>
               </div>
             </motion.div>
@@ -66,15 +64,8 @@ export default function AboutPage() {
                     Бидний эрхэм зорилго
                   </h2>
                   <p className="text-base sm:text-lg text-gray-300 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
-                    Манай website нь Монголын Mobile Legends тоглоомын чансааг
-                    дараагийн түвшинд хүргэж, шинээр гарч ирж буй тоглогчид
-                    болон багуудын шинэ тэмцээнээр тасрахгүй байх, цаашлаад шинэ
-                    багт орох хүмүүсийн хараанд өртөх, coach болон caster-уудын
-                    түрээс үйлчилгээг нэвтрүүлэх. Mobile Legends тоглоомны шинэ
-                    update, шинэ баатар болон шинэ тэмцээн уралдаан мэдээнүүдийг
-                    нэг дороос нь бэлтгэж, бүгдийг чанартай тоглогчдод ээлтэй
-                    байдлаар шинэ мэдээллээс хоцруулахгүй байх үүднээс үйл
-                    ажиллагаа явуулж буй website юм.
+                    Cs2 тоглогчид faceit-ийн ачаар маш их ур чадвартай болон туршлага хуримтлуулах боломжтой болсон шиг Монголд Mobile Legends тоглоом маш том 
+                    байр суурийг эзлэх болсонтой холбогдуулан Mobile legends тоглочдыг дэмжхэд оршино.
                   </p>
                 </div>
 
@@ -128,10 +119,7 @@ export default function AboutPage() {
                     Бидний онцлог
                   </h2>
                   <p className="text-base sm:text-lg text-gray-300 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
-                    Монголд ганц байдаг MLBB тоглоомны цогц website гэдгээрээ
-                    онцлогтой. Манай website-г ашиглан шинэ тоглогчид олох,
-                    уралдаан тэмцээнд шууд website-аа ашиглан бүртгүүлэх гэж мэт
-                    маш олон шинэ шинэ боломжуудыг олгодгоороо онцлогтой.
+                    Тогтмол шинэчлэлт, хурдан ажиллагаа болон хөгжүүлэгчтэй шууд холбогдох боломжтой гэдгээрээ бусад website, серверүүдээс давуу талтай.
                   </p>
                 </div>
 
@@ -158,8 +146,8 @@ export default function AboutPage() {
                       Цаашлаад хөгжих
                     </h3>
                     <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
-                      Шинэ багт орох хүмүүсийн хараанд өртөх, coach болон
-                      caster-уудын түрээс үйлчилгээг нэвтрүүлэх.
+                      Хэрэглчидтэйгээ ойр байдаг давуу талаа ашиглан хэрэглэгчдэд ээлтэй хүссэн шинэчлэлтийг хурдтай оруулж, хэрэглчдийн хүсэлтийн дагуу 
+                      цааш хөгжих бүрэн боломжтоой.
                     </p>
                   </div>
 
@@ -171,9 +159,7 @@ export default function AboutPage() {
                       Чанартай үйлчилгээ
                     </h3>
                     <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
-                      Бүгдийг чанартай тоглогчдод ээлтэй байдлаар шинэ
-                      мэдээллээс хоцруулахгүй байх үүднээс үйл ажиллагаа явуулж
-                      буй website юм.
+                      Server-ийн алдаа, хэрэглчдээс үүссэн асуудлыг хурдтай шийдэж user friendly system хөгжүүлж байгаагаараа онцлогтой.
                     </p>
                   </div>
                 </div>
@@ -192,8 +178,7 @@ export default function AboutPage() {
                   Бидний санал болгож буй зүйлс
                 </h2>
                 <p className="text-base sm:text-lg text-gray-300 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
-                  Mobile Legends тоглоомны бүх хэсгийг дэмжих дэлгэрэнгүй
-                  хэрэгслүүд болон онцлогууд
+                  Тоглогчдоо сайжруулахын тулд биднээс санал болгож буй зүйлс.
                 </p>
               </div>
 
@@ -214,7 +199,7 @@ export default function AboutPage() {
                   </h3>
                   <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
                     Таны ур чадвар, амжилтууд, тоглоомын түүхийг харуулсан
-                    дэлгэрэнгүй профайл үүсгэх. Шинэ тоглогчид олох боломж.
+                    дэлгэрэнгүй профайл үүсгэх.
                   </p>
                 </motion.div>
 
@@ -234,7 +219,6 @@ export default function AboutPage() {
                   </h3>
                   <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
                     Уралдаан тэмцээнд шууд website-аа ашиглан бүртгүүлэх боломж.
-                    Шинэ тэмцээн уралдаан мэдээнүүд.
                   </p>
                 </motion.div>
 
@@ -270,11 +254,10 @@ export default function AboutPage() {
                     <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 sm:mb-3">
-                    Coach & Caster
+                    Monetization system
                   </h3>
                   <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
-                    Coach болон caster-уудын түрээс үйлчилгээг нэвтрүүлэх. Шинэ
-                    багт орох хүмүүсийн хараанд өртөх боломж.
+                    Тоглоом гэдэг цагаа үрэх зүйл биш, спорт, оролгоо дээшлүүлэх боломж юм. Үүнийг хэрэглэгчдэдээ нэвтрүүлэх.
                   </p>
                 </motion.div>
 
@@ -328,54 +311,7 @@ export default function AboutPage() {
               transition={{ duration: 0.8, delay: 0.8 }}
               className="mb-12 sm:mb-16"
             >
-              <div className="bg-gray-800 rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8 lg:p-12 border border-gray-700">
-                <div className="text-center mb-8 sm:mb-12">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">
-                    Бидний онцлог
-                  </h2>
-                  <p className="text-base sm:text-lg text-gray-300">
-                    Монголд ганц байдаг MLBB тоглоомны цогц website
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-                  <div className="text-center">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-purple-400 mb-2">
-                      MLBB
-                    </div>
-                    <div className="text-sm sm:text-base text-gray-300">
-                      Тоглоомын төв
-                    </div>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-400 mb-2">
-                      Шинэ
-                    </div>
-                    <div className="text-sm sm:text-base text-gray-300">
-                      Мэдээ & Update
-                    </div>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-400 mb-2">
-                      Тэмцээн
-                    </div>
-                    <div className="text-sm sm:text-base text-gray-300">
-                      Бүртгэл & Уралдаан
-                    </div>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-yellow-400 mb-2">
-                      Coach
-                    </div>
-                    <div className="text-sm sm:text-base text-gray-300">
-                      & Caster үйлчилгээ
-                    </div>
-                  </div>
-                </div>
-              </div>
+            
             </motion.section>
 
             {/* CTA Section */}
@@ -385,40 +321,7 @@ export default function AboutPage() {
               transition={{ duration: 0.8, delay: 1.0 }}
               className="text-center"
             >
-              <div className="bg-gray-800 rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8 lg:p-12 border border-gray-700">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-white">
-                  Манай хамт олонд нэгдээрэй
-                </h2>
-                <p className="text-base sm:text-lg text-gray-300 mb-6 sm:mb-8 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
-                  Монголын Mobile Legends тоглоомын чансааг дараагийн түвшинд
-                  хүргэж, шинээр гарч ирж буй тоглогчид болон багуудын шинэ
-                  тэмцээнээр тасрахгүй байх, цаашлаад шинэ багт орох хүмүүсийн
-                  хараанд өртөх, coach болон caster-уудын түрээс үйлчилгээг
-                  нэвтрүүлэх.
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                  <Link href="/players" className="w-full sm:w-auto">
-                    <motion.button
-                      className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-slate-700 text-white font-semibold rounded-lg hover:bg-slate-600 border border-gray-600 transition-colors duration-200 text-sm sm:text-base"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Тоглогчид харах
-                    </motion.button>
-                  </Link>
-
-                  <Link href="/auth/register" className="w-full sm:w-auto">
-                    <motion.button
-                      className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border border-gray-500 text-gray-200 font-semibold rounded-lg hover:bg-gray-700 transition-all duration-200 text-sm sm:text-base"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Эхлэх
-                    </motion.button>
-                  </Link>
-                </div>
-              </div>
+            
             </motion.section>
           </div>
         </main>

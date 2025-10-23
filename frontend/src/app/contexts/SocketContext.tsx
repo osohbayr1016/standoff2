@@ -1,27 +1,21 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useRef,
-} from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
-import { API_ENDPOINTS } from "@/config/api";
 import { useAuth } from "./AuthContext";
+import { API_ENDPOINTS } from "../../config/api";
 
 interface SocketContextType {
-  socket: Socket | null;
   isConnected: boolean;
+  socket: Socket | null;
   sendMessage: (
     receiverId: string,
     content: string,
     replyToId?: string
   ) => void;
-  sendTypingStart: (receiverId: string) => void;
-  sendTypingStop: (receiverId: string) => void;
-  markMessageAsRead: (senderId: string) => void;
+  joinMatchRoom: (matchId: string) => void;
+  leaveMatchRoom: (matchId: string) => void;
+  sendMatchMessage: (matchId: string, content: string) => void;
   updateStatus: (status: "online" | "away" | "busy") => void;
 }
 
@@ -33,145 +27,81 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated || !user) {
+    // Check backend health using HTTP instead of WebSocket
+    const checkBackendHealth = async () => {
+      try {
+        const response = await fetch(API_ENDPOINTS.HEALTH, {
+          method: 'GET',
+          signal: AbortSignal.timeout(5000),
+        });
+        setIsConnected(response.ok);
+        console.log("🔌 Backend health check:", response.ok ? "Connected" : "Disconnected");
+      } catch (error) {
+        console.error("🔌 Backend health check failed:", error);
+        setIsConnected(false);
+      }
+    };
+
+    // Initial health check
+    checkBackendHealth();
+
+    // Set up periodic health checks every 10 seconds
+    const healthCheckInterval = setInterval(checkBackendHealth, 10000);
+
+    // Try WebSocket connection for authenticated users only
+    if (isAuthenticated && user) {
+      const token = localStorage.getItem("token");
+      
+      if (token) {
+        // Create socket connection with better error handling
+        const socket = io(API_ENDPOINTS.HEALTH.replace("/health", ""), {
+          auth: { token: token },
+          transports: ["websocket", "polling"],
+          autoConnect: true,
+          reconnection: true,
+          reconnectionAttempts: 5,
+          reconnectionDelay: 1000,
+          reconnectionDelayMax: 5000,
+          timeout: 20000,
+        });
+
+        socketRef.current = socket;
+
+        // Connection events
+        socket.on("connect", () => {
+          setIsConnected(true);
+        });
+
+        socket.on("disconnect", (reason) => {
+          // Don't set disconnected if backend is still healthy
+          if (reason === "io server disconnect") {
+            socket.connect();
+          }
+        });
+
+        socket.on("connect_error", (error) => {
+          console.error("🔌 Socket connection error:", error);
+          // Don't set disconnected if backend is still healthy
+        });
+
+        socket.on("reconnect", (attemptNumber) => {
+          setIsConnected(true);
+        });
+
+        socket.on("reconnect_error", (error) => {
+          console.error("🔌 Reconnection error:", error);
+        });
+      }
+    }
+
+    return () => {
+      clearInterval(healthCheckInterval);
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
-        setIsConnected(false);
       }
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      return;
-    }
-
-    // Create socket connection with better error handling
-    const socket = io(API_ENDPOINTS.HEALTH.replace("/health", ""), {
-      auth: {
-        token: token,
-      },
-      transports: ["websocket", "polling"],
-      autoConnect: true,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-    });
-
-    socketRef.current = socket;
-
-    // Connection events
-    socket.on("connect", () => {
-      setIsConnected(true);
-    });
-
-    socket.on("disconnect", (reason) => {
-      setIsConnected(false);
-
-      // Attempt to reconnect if it wasn't a manual disconnect
-      if (reason === "io server disconnect") {
-        socket.connect();
-      }
-    });
-
-    socket.on("connect_error", (error) => {
-      console.error("🔌 Socket connection error:", error);
-      setIsConnected(false);
-
-      // Handle specific error types
-      if (error.message === "Authentication error") {
-        console.error("🔌 Authentication failed, clearing token");
-        localStorage.removeItem("token");
-        // You might want to redirect to login here
-      }
-    });
-
-    socket.on("reconnect", (attemptNumber) => {
-      setIsConnected(true);
-    });
-
-    socket.on("reconnect_error", (error) => {
-      console.error("🔌 Socket reconnection error:", error);
-      setIsConnected(false);
-    });
-
-    socket.on("reconnect_failed", () => {
-      console.error("🔌 Socket reconnection failed after all attempts");
-      setIsConnected(false);
-    });
-
-    // Message events
-    socket.on("new_message", (data) => {
-      // You can emit a custom event here to notify components
-      window.dispatchEvent(new CustomEvent("new_message", { detail: data }));
-    });
-
-    socket.on("message_delivered", (data) => {
-      window.dispatchEvent(
-        new CustomEvent("message_delivered", { detail: data })
-      );
-    });
-
-    socket.on("message_sent_offline", (data) => {
-      window.dispatchEvent(
-        new CustomEvent("message_sent_offline", { detail: data })
-      );
-    });
-
-    socket.on("message_error", (data) => {
-      console.error("❌ Message error:", data);
-      window.dispatchEvent(new CustomEvent("message_error", { detail: data }));
-    });
-
-    // Notification events
-    socket.on("new_notification", (data) => {
-      window.dispatchEvent(
-        new CustomEvent("new_notification", { detail: data })
-      );
-    });
-
-    socket.on("pending_notifications", (data) => {
-      window.dispatchEvent(
-        new CustomEvent("pending_notifications", { detail: data })
-      );
-    });
-
-    // Typing events
-    socket.on("user_typing", (data) => {
-      window.dispatchEvent(new CustomEvent("user_typing", { detail: data }));
-    });
-
-    socket.on("user_stopped_typing", (data) => {
-      window.dispatchEvent(
-        new CustomEvent("user_stopped_typing", { detail: data })
-      );
-    });
-
-    // Read receipt events
-    socket.on("message_read", (data) => {
-      window.dispatchEvent(new CustomEvent("message_read", { detail: data }));
-    });
-
-    // Status events
-    socket.on("user_status_changed", (data) => {
-      window.dispatchEvent(
-        new CustomEvent("user_status_changed", { detail: data })
-      );
-    });
-
-    socket.on("user_offline", (data) => {
-      window.dispatchEvent(new CustomEvent("user_offline", { detail: data }));
-    });
-
-    return () => {
-      socket.disconnect();
-      socketRef.current = null;
-      setIsConnected(false);
     };
-  }, [isAuthenticated, user]);
+  }, []); // Remove dependencies to always attempt connection
 
   const sendMessage = (
     receiverId: string,
@@ -182,26 +112,29 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       socketRef.current.emit("send_message", {
         receiverId,
         content,
-        ...(replyToId && { replyToId }),
+        replyToId,
       });
     }
   };
 
-  const sendTypingStart = (receiverId: string) => {
+  const joinMatchRoom = (matchId: string) => {
     if (socketRef.current && isConnected) {
-      socketRef.current.emit("typing_start", { receiverId });
+      socketRef.current.emit("join_match_room", { matchId });
     }
   };
 
-  const sendTypingStop = (receiverId: string) => {
+  const leaveMatchRoom = (matchId: string) => {
     if (socketRef.current && isConnected) {
-      socketRef.current.emit("typing_stop", { receiverId });
+      socketRef.current.emit("leave_match_room", { matchId });
     }
   };
 
-  const markMessageAsRead = (senderId: string) => {
+  const sendMatchMessage = (matchId: string, content: string) => {
     if (socketRef.current && isConnected) {
-      socketRef.current.emit("mark_read", { senderId });
+      socketRef.current.emit("send_match_message", {
+        matchId,
+        content,
+      });
     }
   };
 
@@ -211,18 +144,20 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const value = {
-    socket: socketRef.current,
-    isConnected,
-    sendMessage,
-    sendTypingStart,
-    sendTypingStop,
-    markMessageAsRead,
-    updateStatus,
-  };
-
   return (
-    <SocketContext.Provider value={value}>{children}</SocketContext.Provider>
+    <SocketContext.Provider
+      value={{
+        isConnected,
+        socket: socketRef.current,
+        sendMessage,
+        joinMatchRoom,
+        leaveMatchRoom,
+        sendMatchMessage,
+        updateStatus,
+      }}
+    >
+      {children}
+    </SocketContext.Provider>
   );
 }
 

@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginAsync } from "fastify";
 import Match, { MatchStatus, AdminResolution } from "../models/Match";
 import { MatchService3 } from "../services/matchService3";
 import User, { UserRole } from "../models/User";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 const adminMatchRoutes: FastifyPluginAsync = async (
   fastify: FastifyInstance
@@ -23,7 +24,7 @@ const adminMatchRoutes: FastifyPluginAsync = async (
   };
 
   // Бүх matches харах
-  fastify.get("/", { preHandler: checkAdmin }, async (request, reply) => {
+  fastify.get("/", { preHandler: checkAdmin }, async (request: AuthenticatedRequest, reply) => {
     try {
       const { status, limit = 50, page = 1 } = request.query as any;
 
@@ -63,7 +64,7 @@ const adminMatchRoutes: FastifyPluginAsync = async (
   fastify.get(
     "/disputes",
     { preHandler: checkAdmin },
-    async (request, reply) => {
+    async (request: AuthenticatedRequest, reply) => {
       try {
         const { limit = 50, page = 1 } = request.query as any;
 
@@ -101,7 +102,7 @@ const adminMatchRoutes: FastifyPluginAsync = async (
   fastify.post(
     "/:id/resolve",
     { preHandler: checkAdmin },
-    async (request, reply) => {
+    async (request: AuthenticatedRequest, reply) => {
       try {
         const { id } = request.params as any;
         const { resolution } = request.body as any;
@@ -131,7 +132,7 @@ const adminMatchRoutes: FastifyPluginAsync = async (
   );
 
   // Match statistics
-  fastify.get("/stats", { preHandler: checkAdmin }, async (request, reply) => {
+  fastify.get("/stats", { preHandler: checkAdmin }, async (request: AuthenticatedRequest, reply) => {
     try {
       const totalMatches = await Match.countDocuments();
       const activeMatches = await Match.countDocuments({

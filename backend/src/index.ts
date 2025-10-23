@@ -206,7 +206,7 @@ async function registerRoutes() {
     fastify.register(matchRoutes.default, { prefix: "/api/matches" });
     // Match action routes
     const matchActionRoutes = await import("./routes/matchActionRoutes");
-    fastify.register(matchActionRoutes.default, { prefix: "/api/matches" });
+    fastify.register(matchActionRoutes.default, { prefix: "/api/match-actions" });
     // Admin match routes
     const adminMatchRoutes = await import("./routes/adminMatchRoutes");
     fastify.register(adminMatchRoutes.default, {

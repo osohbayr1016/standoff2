@@ -56,6 +56,10 @@ export interface IMatch extends Document {
   challengerResult?: MatchResult;
   opponentResult?: MatchResult;
 
+  // Тоглолт эхлүүлэх батлал
+  challengerReady?: boolean;
+  opponentReady?: boolean;
+
   // Эцсийн үр дүн
   winnerId?: mongoose.Types.ObjectId;
 
@@ -124,6 +128,14 @@ const matchSchema = new Schema<IMatch>(
     opponentResult: {
       type: String,
       enum: Object.values(MatchResult),
+    },
+    challengerReady: {
+      type: Boolean,
+      default: false,
+    },
+    opponentReady: {
+      type: Boolean,
+      default: false,
     },
     winnerId: {
       type: Schema.Types.ObjectId,

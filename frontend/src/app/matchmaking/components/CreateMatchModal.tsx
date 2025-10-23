@@ -84,6 +84,13 @@ export default function CreateMatchModal({
 
     try {
       const token = getToken();
+      console.log(`🔍 Creating match with data:`, {
+        type,
+        bountyAmount,
+        deadline,
+        opponentSquadId: type === "PRIVATE" ? opponentSquadId : undefined,
+      });
+      
       const response = await fetch(`${API_ENDPOINTS.BASE_URL}/api/matches`, {
         method: "POST",
         headers: {
@@ -99,14 +106,19 @@ export default function CreateMatchModal({
         }),
       });
 
+      console.log(`📡 Create match response status: ${response.status}`);
       const data = await response.json();
+      console.log(`📊 Create match response data:`, data);
 
       if (data.success) {
+        console.log(`✅ Match created successfully`);
         onSuccess();
       } else {
+        console.error(`❌ Match creation failed: ${data.message}`);
         setError(data.message || "Алдаа гарлаа");
       }
     } catch (error) {
+      console.error(`❌ Match creation error:`, error);
       setError("Алдаа гарлаа");
     } finally {
       setLoading(false);

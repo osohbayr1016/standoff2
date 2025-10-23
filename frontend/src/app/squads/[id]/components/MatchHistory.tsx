@@ -22,19 +22,19 @@ export default function MatchHistory({ squadId }: MatchHistoryProps) {
 
   useEffect(() => {
     fetchMatchHistory();
+    fetchSquadStats();
   }, [squadId]);
 
   const fetchMatchHistory = async () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${API_ENDPOINTS.BASE_URL}/api/matches/history?squadId=${squadId}&limit=10`,
+        `${API_ENDPOINTS.BASE_URL}/api/matches/history/all?squadId=${squadId}&limit=10`,
         { credentials: "include" }
       );
       const data = await response.json();
       if (data.success) {
         setMatches(data.data);
-        calculateStats(data.data);
       }
     } catch (error) {
       console.error("Error fetching match history:", error);
@@ -43,36 +43,42 @@ export default function MatchHistory({ squadId }: MatchHistoryProps) {
     }
   };
 
-  const calculateStats = (matchData: any[]) => {
-    let wins = 0;
-    let losses = 0;
-    let draws = 0;
-    let totalEarned = 0;
+  const fetchSquadStats = async () => {
+    try {
+      const response = await fetch(
+        `${API_ENDPOINTS.BASE_URL}/api/squads/${squadId}`,
+        { credentials: "include" }
+      );
+      const data = await response.json();
+      if (data.success && data.squad) {
+        const squad = data.squad;
+        const matchStats = squad.matchStats || {
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          totalMatches: 0,
+          winRate: 0,
+          totalEarned: 0,
+        };
 
-    matchData.forEach((match) => {
-      if (match.status === "COMPLETED") {
-        if (match.winnerId === squadId) {
-          wins++;
-          totalEarned += match.bountyAmount;
-        } else if (match.winnerId) {
-          losses++;
-          totalEarned -= match.bountyAmount;
-        } else {
-          draws++;
-        }
+        setStats({
+          wins: matchStats.wins || 0,
+          losses: matchStats.losses || 0,
+          draws: matchStats.draws || 0,
+          total: matchStats.totalMatches || 0,
+          winRate: matchStats.winRate || 0,
+          totalEarned: matchStats.totalEarned || 0,
+        });
       }
-    });
-
-    const total = wins + losses + draws;
-    const winRate = total > 0 ? (wins / total) * 100 : 0;
-
-    setStats({ wins, losses, draws, total, winRate, totalEarned });
+    } catch (error) {
+      console.error("Error fetching squad stats:", error);
+    }
   };
 
   const getMatchResult = (match: any) => {
-    if (match.winnerId === squadId) {
+    if (match.isWinner) {
       return { text: "ЯЛАЛТ", color: "text-green-500", icon: Trophy };
-    } else if (match.winnerId) {
+    } else if (match.winnerId || match.winner) {
       return { text: "ХОЖИГДОЛ", color: "text-red-500", icon: XCircle };
     } else {
       return { text: "ТЭНЦСЭН", color: "text-gray-400", icon: Minus };
@@ -127,10 +133,7 @@ export default function MatchHistory({ squadId }: MatchHistoryProps) {
           {matches.map((match) => {
             const result = getMatchResult(match);
             const ResultIcon = result.icon;
-            const isChallenger = match.challengerSquadId._id === squadId;
-            const opponentSquad = isChallenger
-              ? match.opponentSquadId
-              : match.challengerSquadId;
+            const opponentSquad = match.opponentSquad;
 
             return (
               <motion.div
@@ -151,6 +154,11 @@ export default function MatchHistory({ squadId }: MatchHistoryProps) {
                         <p className="text-white font-semibold">
                           {opponentSquad?.name || "N/A"}
                         </p>
+                        {match.matchType === 'tournament' && match.tournament && (
+                          <span className="text-xs text-blue-400 ml-2">
+                            [{match.tournament.name}]
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
                         <span className="flex items-center gap-1">
@@ -163,6 +171,11 @@ export default function MatchHistory({ squadId }: MatchHistoryProps) {
                             "mn-MN"
                           )}
                         </span>
+                        {match.matchType === 'tournament' && (
+                          <span className="text-xs text-purple-400">
+                            Tournament
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -6,12 +6,14 @@ import { useAuth } from "../../contexts/AuthContext";
 
 interface ResultSubmitModalProps {
   matchId: string;
+  match?: any;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 export default function ResultSubmitModal({
   matchId,
+  match,
   onClose,
   onSuccess,
 }: ResultSubmitModalProps) {
@@ -40,7 +42,7 @@ export default function ResultSubmitModal({
     try {
       const token = getToken();
       const response = await fetch(
-        `${API_ENDPOINTS.BASE_URL}/api/matches/${matchId}/result`,
+        API_ENDPOINTS.MATCHES.RESULT(matchId),
         {
           method: "POST",
           headers: {
@@ -84,6 +86,41 @@ export default function ResultSubmitModal({
           Тоглолтын үр дүнгээ сонгоно уу. Хоёр баг санал нийлвэл автоматаар
           батлагдана.
         </p>
+
+        {/* Current Match Status */}
+        {match && (match.challengerResult || match.opponentResult) && (
+          <div className="bg-gray-700 p-4 rounded-lg mb-6">
+            <h3 className="text-white font-semibold mb-3">Одоогийн үр дүн</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between text-gray-300">
+                <span>{match.challengerSquadId?.name}:</span>
+                <span className={`font-semibold ${
+                  match.challengerResult === "WIN" ? "text-green-400" : 
+                  match.challengerResult === "LOSS" ? "text-red-400" : 
+                  "text-gray-400"
+                }`}>
+                  {match.challengerResult ? 
+                    (match.challengerResult === "WIN" ? "Хожлоо" : "Хожигдлоо") : 
+                    "Үр дүн оруулаагүй"
+                  }
+                </span>
+              </div>
+              <div className="flex justify-between text-gray-300">
+                <span>{match.opponentSquadId?.name || "Хүлээж байна"}:</span>
+                <span className={`font-semibold ${
+                  match.opponentResult === "WIN" ? "text-green-400" : 
+                  match.opponentResult === "LOSS" ? "text-red-400" : 
+                  "text-gray-400"
+                }`}>
+                  {match.opponentResult ? 
+                    (match.opponentResult === "WIN" ? "Хожлоо" : "Хожигдлоо") : 
+                    "Үр дүн оруулаагүй"
+                  }
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-3 mb-6">
           <button

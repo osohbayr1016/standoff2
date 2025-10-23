@@ -9,7 +9,6 @@ import HeroesMarquee from "./components/HeroesMarquee";
 import StatsRow from "./components/StatsRow";
 import OngoingTournaments from "./components/OngoingTournaments";
 import LatestNews from "./components/LatestNews";
-import MatchLeaderboard from "./components/MatchLeaderboard";
 import { useAuth } from "./contexts/AuthContext";
 
 export default function Home() {
@@ -99,8 +98,6 @@ export default function Home() {
                   {/* Ongoing Tournaments */}
                   <OngoingTournaments />
 
-                  {/* Match Leaderboard */}
-                  <MatchLeaderboard />
                 </div>
 
                 {/* Right side empty to show hero art background, reserved for future illustration */}

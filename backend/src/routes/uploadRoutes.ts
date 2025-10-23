@@ -46,8 +46,17 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     },
     async (request: any, reply) => {
       try {
+        console.log(`📸 Image upload request received`);
+        console.log(`🔑 User authenticated: ${request.user ? 'Yes' : 'No'}`);
+        
         // Check if Cloudinary is configured
         if (!isCloudinaryConfigured()) {
+          console.log(`❌ Cloudinary not configured`);
+          console.log(`📊 Environment variables:`, {
+            CLOUDINARY_CLOUD_NAME: !!process.env.CLOUDINARY_CLOUD_NAME,
+            CLOUDINARY_API_KEY: !!process.env.CLOUDINARY_API_KEY,
+            CLOUDINARY_API_SECRET: !!process.env.CLOUDINARY_API_SECRET,
+          });
           return reply.status(503).send({
             success: false,
             message:
@@ -55,16 +64,22 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           });
         }
 
+        console.log(`✅ Cloudinary is configured`);
+
         const data = await request.file();
         if (!data) {
+          console.log(`❌ No file data received`);
           return reply.status(400).send({
             success: false,
             message: "No image file provided",
           });
         }
 
+        console.log(`📊 File info: ${data.filename}, ${data.mimetype}, ${data.file.bytesRead} bytes`);
+
         // Validate file type
         if (!data.mimetype.startsWith("image/")) {
+          console.log(`❌ Invalid file type: ${data.mimetype}`);
           return reply.status(400).send({
             success: false,
             message: "File must be an image",
@@ -74,11 +89,14 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
         // Validate file size (5MB limit)
         const maxSize = 5 * 1024 * 1024; // 5MB
         if (data.file.bytesRead > maxSize) {
+          console.log(`❌ File too large: ${data.file.bytesRead} bytes`);
           return reply.status(400).send({
             success: false,
             message: "Image size must be less than 5MB",
           });
         }
+
+        console.log(`📤 Converting to base64 and uploading to Cloudinary...`);
 
         // Convert buffer to base64 for Cloudinary
         const buffer = await data.toBuffer();
@@ -87,13 +105,15 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 
         // Upload to Cloudinary
         const uploadResult = await cloudinary.uploader.upload(dataURI, {
-          folder: "e-sport-profiles",
+          folder: "e-sport-disputes",
           resource_type: "image",
           transformation: [
-            { width: 400, height: 400, crop: "fill", gravity: "face" },
+            { width: 800, height: 600, crop: "fill" },
             { quality: "auto" },
           ],
         });
+
+        console.log(`✅ Image uploaded to Cloudinary: ${uploadResult.secure_url}`);
 
         return reply.send({
           success: true,

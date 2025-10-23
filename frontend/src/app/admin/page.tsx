@@ -13,6 +13,7 @@ import {
   Calendar,
   Award,
   Gamepad2,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -306,6 +307,14 @@ export default function AdminDashboard() {
       icon: <BarChart3 className="w-8 h-8" />,
       href: "/admin/analytics",
       color: "from-indigo-500 to-purple-500",
+    },
+    {
+      id: "match-disputes",
+      title: "Match Disputes",
+      description: "Review and resolve match disputes between squads",
+      icon: <AlertTriangle className="w-8 h-8" />,
+      href: "/admin/match-disputes",
+      color: "from-red-500 to-orange-500",
     },
     {
       id: "settings",

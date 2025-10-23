@@ -7,6 +7,14 @@ import Squad from "../models/Squad";
 import Notification from "../models/Notification";
 import mongoose from "mongoose";
 
+// Utility function to safely calculate win rate
+function calculateWinRate(wins: number, totalMatches: number): number {
+  if (totalMatches === 0 || isNaN(wins) || isNaN(totalMatches)) {
+    return 0;
+  }
+  return Math.round((wins / totalMatches) * 100);
+}
+
 export class MatchService3 {
   // Dispute үүсгэх (evidence + text)
   static async createDispute(
@@ -14,6 +22,9 @@ export class MatchService3 {
     userId: string,
     evidence: IMatchEvidence
   ) {
+    console.log(`🚨 Creating dispute: matchId=${matchId}, userId=${userId}`);
+    console.log(`📊 Evidence:`, evidence);
+    
     const match = await Match.findById(matchId)
       .populate("challengerSquadId")
       .populate("opponentSquadId");
@@ -22,10 +33,42 @@ export class MatchService3 {
       throw new Error("Match олдсонгүй");
     }
 
-    if (
-      match.status !== MatchStatus.RESULT_SUBMITTED &&
-      match.status !== MatchStatus.PLAYING
-    ) {
+    console.log(`📊 Match status: ${match.status}`);
+    console.log(`📊 Match challengerResult: ${match.challengerResult}`);
+    console.log(`📊 Match opponentResult: ${match.opponentResult}`);
+    console.log(`📊 Evidence received:`, evidence);
+
+    // Validate evidence - must have either images or description
+    const hasImages = evidence.images && evidence.images.length > 0;
+    const hasDescription = evidence.description && evidence.description.trim() !== '';
+    
+    console.log(`📊 Evidence validation: hasImages=${hasImages}, hasDescription=${hasDescription}`);
+    
+    if (!hasImages && !hasDescription) {
+      console.log(`❌ Cannot create dispute - no evidence provided`);
+      throw new Error("Хамгийн багадаа зураг эсвэл тайлбар оруулна уу");
+    }
+
+    // Check if dispute already exists
+    if (match.status === MatchStatus.DISPUTED) {
+      console.log(`❌ Cannot create dispute - match already has a dispute`);
+      throw new Error("Энэ тоглолтод аль хэдийн dispute байна");
+    }
+
+    // Allow disputes for matches that are playing or have results submitted
+    // Also allow for matches that are completed but not yet resolved
+    const allowedStatuses = [
+      MatchStatus.PLAYING,
+      MatchStatus.RESULT_SUBMITTED,
+      MatchStatus.COMPLETED
+    ];
+    
+    console.log(`📊 Status check: current=${match.status}, allowed=${allowedStatuses.join(', ')}`);
+    console.log(`📊 Status in allowed list: ${allowedStatuses.includes(match.status)}`);
+    
+    if (!allowedStatuses.includes(match.status)) {
+      console.log(`❌ Cannot create dispute - invalid status: ${match.status}`);
+      console.log(`📊 Allowed statuses: ${allowedStatuses.join(', ')}`);
       throw new Error("Dispute үүсгэх боломжгүй");
     }
 
@@ -33,22 +76,31 @@ export class MatchService3 {
     const challengerSquad: any = match.challengerSquadId;
     const opponentSquad: any = match.opponentSquadId;
 
+    console.log(`📊 Squad validation: challengerLeader=${challengerSquad.leader}, opponentLeader=${opponentSquad.leader}, userId=${userId}`);
+
     const isChallenger = challengerSquad.leader.toString() === userId;
     const isOpponent = opponentSquad.leader.toString() === userId;
 
+    console.log(`📊 User role: isChallenger=${isChallenger}, isOpponent=${isOpponent}`);
+
     if (!isChallenger && !isOpponent) {
+      console.log(`❌ User is not a leader of either squad`);
       throw new Error("Зөвхөн leader dispute үүсгэх эрхтэй");
     }
 
     // Evidence хадгалах
     if (isChallenger) {
+      console.log(`📊 Storing evidence for challenger`);
       match.challengerEvidence = evidence;
     } else {
+      console.log(`📊 Storing evidence for opponent`);
       match.opponentEvidence = evidence;
     }
 
+    console.log(`📊 Updating match status to DISPUTED`);
     match.status = MatchStatus.DISPUTED;
     await match.save();
+    console.log(`✅ Match saved with DISPUTED status`);
 
     // Admin-д notification илгээх
     const admins = await import("../models/User").then((m) =>
@@ -121,6 +173,9 @@ export class MatchService3 {
                 "matchStats.totalMatches": 1,
                 "matchStats.totalEarned": match.bountyAmount,
               },
+              $setOnInsert: {
+                "matchStats.winRate": 0,
+              },
             },
             { session }
           );
@@ -132,6 +187,9 @@ export class MatchService3 {
                 "matchStats.losses": 1,
                 "matchStats.totalMatches": 1,
                 "matchStats.totalEarned": -match.bountyAmount,
+              },
+              $setOnInsert: {
+                "matchStats.winRate": 0,
               },
             },
             { session }
@@ -151,6 +209,9 @@ export class MatchService3 {
                 "matchStats.totalMatches": 1,
                 "matchStats.totalEarned": match.bountyAmount,
               },
+              $setOnInsert: {
+                "matchStats.winRate": 0,
+              },
             },
             { session }
           );
@@ -162,6 +223,9 @@ export class MatchService3 {
                 "matchStats.losses": 1,
                 "matchStats.totalMatches": 1,
                 "matchStats.totalEarned": -match.bountyAmount,
+              },
+              $setOnInsert: {
+                "matchStats.winRate": 0,
               },
             },
             { session }
@@ -194,6 +258,9 @@ export class MatchService3 {
               challengerSquad._id,
               {
                 $inc: { "matchStats.draws": 1, "matchStats.totalMatches": 1 },
+                $setOnInsert: {
+                  "matchStats.winRate": 0,
+                },
               },
               { session }
             );
@@ -202,6 +269,9 @@ export class MatchService3 {
               opponentSquad._id,
               {
                 $inc: { "matchStats.draws": 1, "matchStats.totalMatches": 1 },
+                $setOnInsert: {
+                  "matchStats.winRate": 0,
+                },
               },
               { session }
             );
@@ -246,9 +316,12 @@ export class MatchService3 {
   ) {
     for (const squadId of [squad1Id, squad2Id]) {
       const squad = await Squad.findById(squadId);
-      if (squad && squad.matchStats.totalMatches > 0) {
-        squad.matchStats.winRate =
-          (squad.matchStats.wins / squad.matchStats.totalMatches) * 100;
+      if (squad) {
+        // Safely calculate win rate
+        squad.matchStats.winRate = calculateWinRate(
+          squad.matchStats.wins,
+          squad.matchStats.totalMatches
+        );
         await squad.save({ session });
       }
     }

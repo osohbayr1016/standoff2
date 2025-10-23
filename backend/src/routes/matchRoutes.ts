@@ -5,7 +5,7 @@ import { MatchService2 } from "../services/matchService2";
 import { MatchService3 } from "../services/matchService3";
 import { MatchService4 } from "../services/matchService4";
 import Squad from "../models/Squad";
-import { authenticateToken } from "../middleware/auth";
+import { authenticateToken, AuthenticatedRequest } from "../middleware/auth";
 
 const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   // Бүх идэвхтэй matches
@@ -15,18 +15,22 @@ const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 
       const query: any = {};
 
+      // Build type filter
       if (type) {
         query.type = type;
       } else {
+        // Show all PUBLIC matches and PRIVATE matches that are not pending
         query.$or = [
           { type: MatchType.PUBLIC },
           { type: MatchType.PRIVATE, status: { $ne: MatchStatus.PENDING } },
         ];
       }
 
+      // Build status filter
       if (status) {
         query.status = status;
       } else {
+        // Only show active matches (not completed, cancelled, or disputed)
         query.status = {
           $in: [MatchStatus.PENDING, MatchStatus.ACCEPTED, MatchStatus.PLAYING],
         };
@@ -59,12 +63,13 @@ const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   });
 
   // Миний squad-ийн matches
-  fastify.get("/my-squad", { preHandler: authenticateToken }, async (request, reply) => {
+  fastify.get("/my-squad", { preHandler: authenticateToken }, async (request: AuthenticatedRequest, reply) => {
     try {
       const { status, limit = 20, page = 1 } = request.query as any;
-      const squad = await Squad.findOne({ members: request.user.id });
+      // Look for squads where user is a member (not just leader)
+      const squads = await Squad.find({ members: request.user.id });
 
-      if (!squad) {
+      if (!squads || squads.length === 0) {
         return reply.send({
           success: true,
           data: [],
@@ -72,8 +77,13 @@ const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
         });
       }
 
+      const squadIds = squads.map(squad => squad._id);
+
       const query: any = {
-        $or: [{ challengerSquadId: squad._id }, { opponentSquadId: squad._id }],
+        $or: [
+          { challengerSquadId: { $in: squadIds } }, 
+          { opponentSquadId: { $in: squadIds } }
+        ],
       };
 
       if (status) query.status = status;
@@ -145,6 +155,93 @@ const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     }
   });
 
+  // Comprehensive match history (regular + tournament matches)
+  fastify.get("/history/all", async (request, reply) => {
+    try {
+      const { limit = 20, page = 1, squadId } = request.query as any;
+
+      if (!squadId) {
+        return reply.status(400).send({ 
+          success: false, 
+          message: "Squad ID is required" 
+        });
+      }
+
+      const skip = (page - 1) * limit;
+
+      // Fetch regular matches
+      const regularMatches = await Match.find({
+        $or: [
+          { challengerSquadId: squadId },
+          { opponentSquadId: squadId },
+        ],
+        status: { $in: [MatchStatus.COMPLETED, MatchStatus.CANCELLED] },
+      })
+        .populate("challengerSquadId", "name tag logo")
+        .populate("opponentSquadId", "name tag logo")
+        .populate("winnerId", "name tag logo")
+        .sort({ completedAt: -1 })
+        .lean();
+
+      // Fetch tournament matches
+      const TournamentMatch = (await import("../models/TournamentMatch")).default;
+      const tournamentMatches = await TournamentMatch.find({
+        $or: [
+          { squad1: squadId },
+          { squad2: squadId },
+        ],
+        status: "completed",
+      })
+        .populate("squad1", "name tag logo")
+        .populate("squad2", "name tag logo")
+        .populate("winner", "name tag logo")
+        .populate("tournament", "name")
+        .sort({ endTime: -1 })
+        .lean();
+
+      // Combine and format matches
+      const allMatches = [
+        ...regularMatches.map(match => ({
+          ...match,
+          matchType: 'regular',
+          opponentSquad: match.challengerSquadId._id.toString() === squadId 
+            ? match.opponentSquadId 
+            : match.challengerSquadId,
+          isWinner: match.winnerId && match.winnerId._id.toString() === squadId,
+          bountyAmount: match.bountyAmount || 0,
+          completedAt: match.completedAt,
+        })),
+        ...tournamentMatches.map(match => ({
+          ...match,
+          matchType: 'tournament',
+          opponentSquad: match.squad1._id.toString() === squadId 
+            ? match.squad2 
+            : match.squad1,
+          isWinner: match.winner && match.winner._id.toString() === squadId,
+          bountyAmount: match.bountyCoinAmount || 0,
+          completedAt: match.endTime,
+        }))
+      ].sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+
+      // Apply pagination
+      const paginatedMatches = allMatches.slice(skip, skip + limit);
+      const total = allMatches.length;
+
+      return reply.send({
+        success: true,
+        data: paginatedMatches,
+        pagination: {
+          total,
+          page: Number(page),
+          limit: Number(limit),
+          pages: Math.ceil(total / limit),
+        },
+      });
+    } catch (error: any) {
+      return reply.status(500).send({ success: false, message: error.message });
+    }
+  });
+
   // Дэлгэрэнгүй
   fastify.get("/:id", async (request, reply) => {
     try {
@@ -169,7 +266,7 @@ const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   });
 
   // Match үүсгэх
-  fastify.post("/", { preHandler: authenticateToken }, async (request, reply) => {
+  fastify.post("/", { preHandler: authenticateToken }, async (request: AuthenticatedRequest, reply) => {
     try {
       const { type, opponentSquadId, bountyAmount, deadline } =
         request.body as any;

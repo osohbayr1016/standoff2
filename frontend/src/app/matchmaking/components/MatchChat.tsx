@@ -10,10 +10,12 @@ interface MatchChatProps {
 }
 
 export default function MatchChat({ matchId, onClose }: MatchChatProps) {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [error, setError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,19 +29,47 @@ export default function MatchChat({ matchId, onClose }: MatchChatProps) {
   }, [messages]);
 
   const fetchMessages = async () => {
+    if (fetching) return; // Prevent multiple simultaneous requests
+    
+    setFetching(true);
+    setError("");
+    
     try {
+      console.log("Fetching messages for match:", matchId);
+      const token = getToken();
+      
+      if (!token) {
+        setError("Authentication required. Please log in again.");
+        return;
+      }
+      
+      console.log("Using token:", token.substring(0, 20) + "...");
+      
       const response = await fetch(
-        `${API_ENDPOINTS.BASE_URL}/api/matches/${matchId}/chat`,
+        API_ENDPOINTS.MATCHES.CHAT(matchId),
         {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           credentials: "include",
         }
       );
+      
+      console.log("Response status:", response.status);
       const data = await response.json();
+      console.log("Response data:", data);
+      
       if (data.success) {
         setMessages(data.data);
+      } else {
+        console.error("Failed to fetch messages:", data.message);
+        setError(data.message);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
+      setError("Failed to fetch messages");
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -48,28 +78,46 @@ export default function MatchChat({ matchId, onClose }: MatchChatProps) {
     if (!newMessage.trim()) return;
 
     setLoading(true);
+    setError("");
 
     try {
+      console.log("Sending message:", newMessage.trim());
+      const token = getToken();
+      
+      if (!token) {
+        setError("Authentication required. Please log in again.");
+        return;
+      }
+      
+      console.log("Using token for send:", token.substring(0, 20) + "...");
+      
       const response = await fetch(
-        `${API_ENDPOINTS.BASE_URL}/api/matches/${matchId}/chat`,
+        API_ENDPOINTS.MATCHES.CHAT(matchId),
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           credentials: "include",
           body: JSON.stringify({ message: newMessage.trim() }),
         }
       );
 
+      console.log("Send response status:", response.status);
       const data = await response.json();
+      console.log("Send response data:", data);
 
       if (data.success) {
         setNewMessage("");
         fetchMessages();
+      } else {
+        console.error("Failed to send message:", data.message);
+        setError(data.message);
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      setError("Error sending message. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -102,9 +150,21 @@ export default function MatchChat({ matchId, onClose }: MatchChatProps) {
           </p>
         </div>
 
+        {error && (
+          <div className="bg-red-900 bg-opacity-30 border border-red-500 rounded-lg p-3 mb-4">
+            <p className="text-red-300 text-sm">
+              ❌ {error}
+            </p>
+          </div>
+        )}
+
         {/* Messages */}
         <div className="flex-1 overflow-y-auto mb-4 space-y-3">
-          {messages.length === 0 ? (
+          {fetching && messages.length === 0 ? (
+            <p className="text-gray-400 text-center mt-8">
+              Мессеж уншиж байна...
+            </p>
+          ) : messages.length === 0 ? (
             <p className="text-gray-400 text-center mt-8">
               Мессеж байхгүй байна
             </p>

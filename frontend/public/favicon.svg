@@ -1,0 +1,24 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gaming Controller Icon -->
+  <g>
+    <!-- Controller Body -->
+    <rect x="6" y="12" width="20" height="8" rx="4" fill="#1e40af"/>
+    
+    <!-- D-pad (left side) -->
+    <rect x="8" y="14" width="2" height="2" fill="#1e40af"/>
+    <rect x="9" y="13" width="2" height="2" fill="#1e40af"/>
+    <rect x="9" y="15" width="2" height="2" fill="#1e40af"/>
+    <rect x="7" y="15" width="2" height="2" fill="#1e40af"/>
+    <rect x="11" y="15" width="2" height="2" fill="#1e40af"/>
+    
+    <!-- Action buttons (right side) -->
+    <circle cx="20" cy="15" r="1.5" fill="#1e40af"/>
+    <circle cx="22" cy="13" r="1.5" fill="#1e40af"/>
+    <circle cx="22" cy="17" r="1.5" fill="#1e40af"/>
+    <circle cx="24" cy="15" r="1.5" fill="#1e40af"/>
+    
+    <!-- Curved lines around controller -->
+    <path d="M4 8 Q16 4 28 8" stroke="#1e40af" stroke-width="2" fill="none"/>
+    <path d="M4 24 Q16 28 28 24" stroke="#1e40af" stroke-width="2" fill="none"/>
+  </g>
+</svg>

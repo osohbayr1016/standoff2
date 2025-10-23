@@ -22,6 +22,14 @@ export const metadata: Metadata = {
   title: "E-Sport Connection - Level Up Your Game",
   description:
     "Connect with top coaches, track your progress, and dominate the competitive gaming scene. Your journey to becoming a pro starts here.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.png", type: "image/png" }
+    ],
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

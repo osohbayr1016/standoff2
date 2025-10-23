@@ -90,19 +90,29 @@ export default function MatchmakingPage() {
         endpoint = `${API_ENDPOINTS.BASE_URL}/api/matches/history`;
       }
 
+      console.log(`🔍 Fetching matches from: ${endpoint}`);
       const token = getToken();
+      console.log(`🔑 Token available: ${!!token}`);
+      
       const response = await fetch(endpoint, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
         credentials: "include",
       });
+      
+      console.log(`📡 Response status: ${response.status}`);
       const data = await response.json();
+      console.log(`📊 Response data:`, data);
+      
       if (data.success) {
+        console.log(`✅ Found ${data.data.length} matches`);
         setMatches(data.data);
+      } else {
+        console.error(`❌ API error: ${data.message}`);
       }
     } catch (error) {
-      console.error("Error fetching matches:", error);
+      console.error("❌ Error fetching matches:", error);
     } finally {
       setLoading(false);
     }
@@ -134,9 +144,10 @@ export default function MatchmakingPage() {
             <button
               key={tab.id}
               onClick={() => {
-                setActiveTab(tab.id);
                 if (tab.id === "create") {
                   setShowCreateModal(true);
+                } else {
+                  setActiveTab(tab.id);
                 }
               }}
               className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
@@ -191,6 +202,7 @@ export default function MatchmakingPage() {
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
+            setActiveTab("active");
             fetchMatches();
           }}
           userSquad={userSquad}

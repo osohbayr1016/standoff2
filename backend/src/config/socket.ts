@@ -24,7 +24,10 @@ export class SocketManager {
       try {
         const token = socket.handshake.auth.token;
         if (!token) {
-          return next(new Error("Authentication error"));
+          // Allow connection without authentication for connection status
+          socket.data.userId = null;
+          socket.data.userEmail = null;
+          return next();
         }
 
         const decoded = jwt.verify(
@@ -35,58 +38,66 @@ export class SocketManager {
         socket.data.userEmail = decoded.email;
         next();
       } catch (error) {
-        next(new Error("Authentication error"));
+        // Allow connection even if token is invalid for connection status
+        socket.data.userId = null;
+        socket.data.userEmail = null;
+        next();
       }
     });
 
     this.io.on("connection", async (socket) => {
-      this.connectedUsers.set(socket.data.userId, socket.id);
+      // Only handle authenticated users
+      if (socket.data.userId) {
+        this.connectedUsers.set(socket.data.userId, socket.id);
 
-      // Update user online status in database
-      await User.findByIdAndUpdate(socket.data.userId, {
-        isOnline: true,
-        lastSeen: new Date(),
-      });
+        // Update user online status in database
+        await User.findByIdAndUpdate(socket.data.userId, {
+          isOnline: true,
+          lastSeen: new Date(),
+        });
 
-      // Update user online status
-      this.broadcastUserStatus(socket.data.userId, "online");
+        // Update user online status
+        this.broadcastUserStatus(socket.data.userId, "online");
+      }
 
-      // Send pending notifications when user comes online
-      try {
-        const pendingNotifications = await Notification.find({
-          userId: socket.data.userId,
-          status: "PENDING",
-        })
-          .populate("senderId", "name avatar")
-          .sort({ createdAt: -1 })
-          .limit(10)
-          .lean();
+      // Send pending notifications when user comes online (only for authenticated users)
+      if (socket.data.userId) {
+        try {
+          const pendingNotifications = await Notification.find({
+            userId: socket.data.userId,
+            status: "PENDING",
+          })
+            .populate("senderId", "name avatar")
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .lean();
 
-        if (pendingNotifications.length > 0) {
-          const formattedNotifications = pendingNotifications.map(
-            (notif: any) => ({
-              _id: notif._id.toString(),
-              title: notif.title,
-              content: notif.content,
-              type: notif.type,
-              senderId: notif.senderId
-                ? {
-                    _id: notif.senderId._id.toString(),
-                    name: notif.senderId.name || "Unknown",
-                    avatar: notif.senderId.avatar,
-                  }
-                : undefined,
-              createdAt: notif.createdAt,
-            })
-          );
+          if (pendingNotifications.length > 0) {
+            const formattedNotifications = pendingNotifications.map(
+              (notif: any) => ({
+                _id: notif._id.toString(),
+                title: notif.title,
+                content: notif.content,
+                type: notif.type,
+                senderId: notif.senderId
+                  ? {
+                      _id: notif.senderId._id.toString(),
+                      name: notif.senderId.name || "Unknown",
+                      avatar: notif.senderId.avatar,
+                    }
+                  : undefined,
+                createdAt: notif.createdAt,
+              })
+            );
 
-          socket.emit("pending_notifications", {
-            notifications: formattedNotifications,
-            count: formattedNotifications.length,
-          });
+            socket.emit("pending_notifications", {
+              notifications: formattedNotifications,
+              count: formattedNotifications.length,
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching pending notifications:", error);
         }
-      } catch (error) {
-        console.error("Error fetching pending notifications:", error);
       }
 
       // Handle message sending
