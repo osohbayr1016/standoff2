@@ -3,16 +3,14 @@ services:
     name: e-sport-connection-backend
     env: node
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/index.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        sync: false
-        # Set in Render Dashboard to: mongodb+srv://osohbayar:5Fcy02ZLLpG7GYRO@mentormeet.xfipt6t.mongodb.net/e-sport-connection?retryWrites=true&w=majority
+        value: mongodb+srv://osohbayar:U4c8befcf18ca@mentormeet.xfipt6t.mongodb.net/e-sport-connection
       - key: JWT_SECRET
         generateValue: true
       - key: SESSION_SECRET
@@ -36,4 +34,6 @@ services:
       - key: EMAIL_USER
         sync: false
       - key: EMAIL_PASS
+        sync: false
+      - key: FACEIT_API_KEY
         sync: false

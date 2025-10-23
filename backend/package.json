@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "build": "npm install && if exist dist rmdir /s /q dist && npx tsc --project tsconfig.json",
+    "build": "rm -rf dist && npx tsc --project tsconfig.json",
     "render-build": "npm install && npm run build",
     "render-start": "node dist/index.js",
     "prod": "node prod-start.js",
