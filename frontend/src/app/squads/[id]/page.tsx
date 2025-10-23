@@ -177,7 +177,6 @@ export default function SquadDetailPage() {
   const [buyBountyForm, setBuyBountyForm] = useState({
     amount: 50,
     customAmount: "",
-    transactionReference: "",
   });
   const [buyBountySubmitting, setBuyBountySubmitting] = useState(false);
   const [accountNumberCopied, setAccountNumberCopied] = useState(false);
@@ -394,10 +393,6 @@ export default function SquadDetailPage() {
       setError("Please enter a valid amount");
       return;
     }
-    if (!buyBountyForm.transactionReference.trim()) {
-      setError("Please enter transaction reference");
-      return;
-    }
 
     try {
       setBuyBountySubmitting(true);
@@ -411,7 +406,6 @@ export default function SquadDetailPage() {
         body: JSON.stringify({
           squadId: squad._id,
           amount: buyBountyForm.amount,
-          transactionReference: buyBountyForm.transactionReference,
         }),
       });
 
@@ -422,7 +416,7 @@ export default function SquadDetailPage() {
       }
 
       // Reset form and close modal
-      setBuyBountyForm({ amount: 50, customAmount: "", transactionReference: "" });
+      setBuyBountyForm({ amount: 50, customAmount: "" });
       setShowBuyBountyModal(false);
       setError(""); // Clear any previous errors
 
@@ -2260,7 +2254,6 @@ export default function SquadDetailPage() {
                         key={amount}
                         onClick={() =>
                           setBuyBountyForm({
-                            ...buyBountyForm,
                             amount,
                             customAmount: "",
                           })
@@ -2288,7 +2281,6 @@ export default function SquadDetailPage() {
                       onChange={(e) => {
                         const value = e.target.value;
                         setBuyBountyForm({
-                          ...buyBountyForm,
                           customAmount: value,
                           amount: value ? parseInt(value) : 50,
                         });
@@ -2394,7 +2386,7 @@ export default function SquadDetailPage() {
                 </button>
                 <button
                   onClick={handleBuyBountyCoins}
-                  disabled={buyBountySubmitting || buyBountyForm.amount <= 0 || !buyBountyForm.transactionReference.trim()}
+                  disabled={buyBountySubmitting || buyBountyForm.amount <= 0}
                   className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center"
                 >
                   {buyBountySubmitting ? (
