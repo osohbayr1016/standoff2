@@ -35,12 +35,42 @@ export default function MatchHistory({ squadId }: MatchHistoryProps) {
       const data = await response.json();
       if (data.success) {
         setMatches(data.data);
+        // Calculate winrate from actual match history
+        calculateWinrateFromMatches(data.data);
       }
     } catch (error) {
       console.error("Error fetching match history:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateWinrateFromMatches = (matches: any[]) => {
+    let wins = 0;
+    let losses = 0;
+    let draws = 0;
+
+    matches.forEach((match) => {
+      if (match.isWinner) {
+        wins++;
+      } else if (match.winnerId || match.winner) {
+        losses++;
+      } else {
+        draws++;
+      }
+    });
+
+    const totalMatches = wins + losses + draws;
+    const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
+
+    setStats(prevStats => ({
+      ...prevStats,
+      wins,
+      losses,
+      draws,
+      total: totalMatches,
+      winRate,
+    }));
   };
 
   const fetchSquadStats = async () => {
@@ -61,12 +91,16 @@ export default function MatchHistory({ squadId }: MatchHistoryProps) {
           totalEarned: 0,
         };
 
+        // Calculate winrate dynamically
+        const totalMatches = matchStats.wins + matchStats.losses + matchStats.draws;
+        const calculatedWinRate = totalMatches > 0 ? Math.round((matchStats.wins / totalMatches) * 100) : 0;
+
         setStats({
           wins: matchStats.wins || 0,
           losses: matchStats.losses || 0,
           draws: matchStats.draws || 0,
-          total: matchStats.totalMatches || 0,
-          winRate: matchStats.winRate || 0,
+          total: totalMatches,
+          winRate: calculatedWinRate,
           totalEarned: matchStats.totalEarned || 0,
         });
       }

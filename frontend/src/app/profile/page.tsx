@@ -276,7 +276,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <ProtectedRoute requireAuth requirePlayer requireProfile>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
           <Navigation />
           <main className="pt-20 pb-16">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -297,17 +297,17 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <ProtectedRoute requireAuth requirePlayer>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
           <Navigation />
           <main className="pt-20 pb-16">
             <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center"
+                className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-8 text-center"
               >
                 <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                <h1 className="text-2xl font-bold text-white mb-4">
                   Profile Not Found
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
@@ -331,7 +331,7 @@ export default function ProfilePage() {
 
   return (
     <ProtectedRoute requireAuth requirePlayer requireProfile>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
         <Navigation />
 
         <main className="pt-20 pb-16">
@@ -344,7 +344,7 @@ export default function ProfilePage() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h1 className="text-3xl font-bold text-white mb-2">
                     My Profile
                   </h1>
                   <p className="text-gray-600 dark:text-gray-300">
@@ -363,7 +363,7 @@ export default function ProfilePage() {
                   <div className="flex space-x-3">
                     <button
                       onClick={handleCancel}
-                      className="inline-flex items-center space-x-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                      className="inline-flex items-center space-x-2 px-6 py-3 border border-blue-500/30 text-gray-300 rounded-lg hover:bg-gray-600/50 transition-colors duration-200"
                     >
                       <X className="w-5 h-5" />
                       <span>Cancel</span>
@@ -410,7 +410,7 @@ export default function ProfilePage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8"
+              className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-8 mb-8"
             >
               <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
                 {/* Player Image */}
@@ -435,7 +435,7 @@ export default function ProfilePage() {
 
                 {/* Player Info */}
                 <div className="flex-1 text-center lg:text-left">
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
                     {profile.inGameName}
                   </h1>
 
@@ -461,7 +461,7 @@ export default function ProfilePage() {
                       profile.preferredRoles.length > 0 && (
                         <>
                           <span className="text-gray-300">•</span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                          <span className="text-sm text-gray-300">
                             Also: {profile.preferredRoles.join(", ")}
                           </span>
                         </>
@@ -469,8 +469,8 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    <div className="bg-gray-700/50 border border-gray-600 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-300 mb-1">
                         In-Game Name
                       </h3>
                       {isEditing ? (
@@ -480,16 +480,16 @@ export default function ProfilePage() {
                           onChange={(e) =>
                             handleInputChange("inGameName", e.target.value)
                           }
-                          className="text-lg font-semibold text-gray-900 dark:text-white bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-green-500 outline-none w-full"
+                          className="text-lg font-semibold text-white bg-transparent border-b border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none w-full"
                         />
                       ) : (
-                        <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <p className="text-lg font-semibold text-white">
                           {profile.inGameName}
                         </p>
                       )}
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    <div className="bg-gray-700/50 border border-gray-600 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-300 mb-1">
                         MLBB Game ID
                       </h3>
                       {isEditing ? (
@@ -499,18 +499,18 @@ export default function ProfilePage() {
                           onChange={(e) =>
                             handleInputChange("mlbbId", e.target.value)
                           }
-                          className="text-lg font-semibold text-gray-900 dark:text-white bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-green-500 outline-none w-full"
+                          className="text-lg font-semibold text-white bg-transparent border-b border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none w-full"
                           placeholder="Optional"
                           maxLength={20}
                         />
                       ) : (
-                        <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <p className="text-lg font-semibold text-white">
                           {profile.mlbbId || "Not provided"}
                         </p>
                       )}
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    <div className="bg-gray-700/50 border border-gray-600 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-300 mb-1">
                         Highest Rank
                       </h3>
                       {isEditing ? (
@@ -521,7 +521,7 @@ export default function ProfilePage() {
                             onChange={(e) =>
                               handleInputChange("rank", e.target.value)
                             }
-                            className="text-lg font-semibold text-purple-600 dark:text-green-400 bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-green-500 outline-none w-full"
+                            className="text-lg font-semibold text-purple-600 dark:text-green-400 bg-transparent border-b border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none w-full"
                           />
                           {editData.rank === "+Mythical Immortal" && (
                             <input
@@ -534,7 +534,7 @@ export default function ProfilePage() {
                                   parseInt(e.target.value) || undefined
                                 )
                               }
-                              className="text-sm text-yellow-600 dark:text-yellow-400 bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-yellow-500 outline-none w-full"
+                              className="text-sm text-yellow-600 dark:text-yellow-400 bg-transparent border-b border-blue-500/30 focus:border-yellow-500 outline-none w-full"
                               placeholder="Stars (100+)"
                             />
                           )}
@@ -553,8 +553,8 @@ export default function ProfilePage() {
                         </div>
                       )}
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    <div className="bg-gray-700/50 border border-gray-600 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-300 mb-1">
                         Experience
                       </h3>
                       {isEditing ? (
@@ -564,10 +564,10 @@ export default function ProfilePage() {
                           onChange={(e) =>
                             handleInputChange("experience", e.target.value)
                           }
-                          className="text-lg font-semibold text-gray-900 dark:text-white bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-green-500 outline-none w-full"
+                          className="text-lg font-semibold text-white bg-transparent border-b border-blue-500/30 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none w-full"
                         />
                       ) : (
-                        <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <p className="text-lg font-semibold text-white">
                           {profile.experience}
                         </p>
                       )}
@@ -577,7 +577,7 @@ export default function ProfilePage() {
                   {/* Preferred Roles Section - Only show in edit mode */}
                   {isEditing && (
                     <div className="mt-6">
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+                      <h3 className="text-sm font-medium text-gray-300 mb-3">
                         Preferred Roles (Select up to 2)
                       </h3>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -619,7 +619,7 @@ export default function ProfilePage() {
                           </button>
                         ))}
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      <p className="text-xs text-gray-300 mt-2">
                         Selected: {editData.preferredRoles?.length || 0}/2
                       </p>
                     </div>
@@ -641,9 +641,9 @@ export default function ProfilePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8"
+              className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-8 mb-8"
             >
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-2xl font-bold text-white mb-6">
                 Bio
               </h2>
               {isEditing ? (
@@ -651,7 +651,7 @@ export default function ProfilePage() {
                   value={editData.bio || ""}
                   onChange={(e) => handleInputChange("bio", e.target.value)}
                   rows={4}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                  className="w-full p-3 border border-blue-500/30 rounded-lg bg-gray-800/50 border border-blue-500/30 text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
                   placeholder="Tell us about your gaming experience..."
                 />
               ) : (
@@ -666,9 +666,9 @@ export default function ProfilePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8"
+              className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-8 mb-8"
             >
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-2xl font-bold text-white mb-6">
                 Social Links
               </h2>
               {isEditing ? (
@@ -701,7 +701,7 @@ export default function ProfilePage() {
                             e.target.value
                           )
                         }
-                        className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                        className="flex-1 p-3 border border-blue-500/30 rounded-lg bg-gray-800/50 border border-blue-500/30 text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
                       />
                       {(editData.socialLinks?.[
                         platform as keyof typeof editData.socialLinks
@@ -747,14 +747,14 @@ export default function ProfilePage() {
                             }
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex flex-col items-center space-y-2 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 group"
+                            className="flex flex-col items-center space-y-2 p-4 bg-gray-700/50 border border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 group"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
                             <div className="text-gray-600 dark:text-gray-400 group-hover:text-purple-600 dark:group-hover:text-green-400 transition-colors">
                               {getSocialIcon(platform)}
                             </div>
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
+                            <span className="text-sm font-medium text-gray-300 capitalize">
                               {platform}
                             </span>
                           </motion.a>
@@ -780,9 +780,9 @@ export default function ProfilePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
+              className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-8"
             >
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-2xl font-bold text-white mb-6">
                 Highlight Video
               </h2>
               {isEditing ? (
@@ -828,7 +828,7 @@ export default function ProfilePage() {
                   ) : (
                     <div className="text-center py-8">
                       <Youtube className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      <h3 className="text-lg font-semibold text-white mb-2">
                         No Highlight Video
                       </h3>
                       <p className="text-gray-600 dark:text-gray-300">

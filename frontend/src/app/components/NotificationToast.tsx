@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, MessageCircle } from "lucide-react";
 import { useSocket } from "../contexts/SocketContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotificationNavigation } from "../../utils/notificationNavigation";
 
 interface NotificationToastProps {
   onMessageNotificationClick?: (
@@ -19,6 +20,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
 }) => {
   const { socket } = useSocket();
   const { user } = useAuth();
+  const { navigateToNotification } = useNotificationNavigation();
   const [toasts, setToasts] = useState<
     Array<{
       id: string;
@@ -28,6 +30,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       senderName: string;
       senderAvatar?: string;
       timestamp: string;
+      type?: string;
     }>
   >([]);
 
@@ -155,6 +158,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
           senderName: data.senderId?.name || "System",
           senderAvatar: data.senderId?.avatar,
           timestamp: data.createdAt,
+          type: data.type,
         };
 
         setToasts((prev) => [...prev, toast]);
@@ -198,14 +202,31 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
     senderName: string;
     senderAvatar?: string;
     timestamp: string;
+    type?: string;
   }) => {
-    // If there's a senderId, it's a message notification - open chat
-    if (toast.senderId && onMessageNotificationClick) {
+    // If it's a message notification and there's a senderId, open chat
+    if (toast.type === "MESSAGE" && toast.senderId && onMessageNotificationClick) {
       onMessageNotificationClick(
         toast.senderId,
         toast.senderName,
         toast.senderAvatar
       );
+    } else {
+      // For all other notification types, use the navigation utility
+      const notificationData = {
+        _id: toast.id,
+        type: (toast.type as 'MESSAGE' | 'SYSTEM' | 'INVITATION') || 'SYSTEM',
+        title: toast.title,
+        content: toast.content,
+        senderId: toast.senderId ? {
+          _id: toast.senderId,
+          name: toast.senderName,
+          avatar: toast.senderAvatar
+        } : undefined,
+        status: 'PENDING',
+        createdAt: toast.timestamp,
+      };
+      navigateToNotification(notificationData);
     }
     removeToast(toast.id);
   };

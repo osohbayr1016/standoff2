@@ -8,8 +8,9 @@ import Notification from "../models/Notification";
 import mongoose from "mongoose";
 
 // Utility function to safely calculate win rate
-function calculateWinRate(wins: number, totalMatches: number): number {
-  if (totalMatches === 0 || isNaN(wins) || isNaN(totalMatches)) {
+function calculateWinRate(wins: number, losses: number, draws: number = 0): number {
+  const totalMatches = wins + losses + draws;
+  if (totalMatches === 0 || isNaN(wins) || isNaN(losses) || isNaN(draws)) {
     return 0;
   }
   return Math.round((wins / totalMatches) * 100);
@@ -49,10 +50,10 @@ export class MatchService3 {
       throw new Error("Хамгийн багадаа зураг эсвэл тайлбар оруулна уу");
     }
 
-    // Check if dispute already exists
+    // Check if dispute already exists - allow both teams to submit evidence
     if (match.status === MatchStatus.DISPUTED) {
-      console.log(`❌ Cannot create dispute - match already has a dispute`);
-      throw new Error("Энэ тоглолтод аль хэдийн dispute байна");
+      console.log(`📊 Match already disputed, allowing additional evidence submission`);
+      // Allow both teams to submit evidence even if dispute already exists
     }
 
     // Allow disputes for matches that are playing or have results submitted
@@ -97,8 +98,12 @@ export class MatchService3 {
       match.opponentEvidence = evidence;
     }
 
-    console.log(`📊 Updating match status to DISPUTED`);
-    match.status = MatchStatus.DISPUTED;
+    // Update status to DISPUTED only if not already disputed
+    if (match.status !== MatchStatus.DISPUTED) {
+      console.log(`📊 Updating match status to DISPUTED`);
+      match.status = MatchStatus.DISPUTED;
+    }
+    
     await match.save();
     console.log(`✅ Match saved with DISPUTED status`);
 
@@ -320,7 +325,8 @@ export class MatchService3 {
         // Safely calculate win rate
         squad.matchStats.winRate = calculateWinRate(
           squad.matchStats.wins,
-          squad.matchStats.totalMatches
+          squad.matchStats.losses,
+          squad.matchStats.draws
         );
         await squad.save({ session });
       }

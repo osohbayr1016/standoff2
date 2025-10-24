@@ -348,7 +348,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black pt-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <motion.div
@@ -356,10 +356,10 @@ export default function SettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-green-400 dark:to-blue-400 bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Тохиргоо
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300">
+          <p className="text-xl text-gray-300">
             Өөрийн профайл болон багийн тохиргоог удирдана уу
           </p>
         </motion.div>
@@ -369,7 +369,7 @@ export default function SettingsPage() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+            className="lg:w-64 bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-6"
           >
             <nav className="space-y-2">
               {tabs.map((tab) => {
@@ -380,8 +380,8 @@ export default function SettingsPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
                       activeTab === tab.id
-                        ? "bg-purple-100 dark:bg-gray-700 text-purple-600 dark:text-green-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                        : "text-gray-300 hover:bg-gray-700/50"
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -400,38 +400,38 @@ export default function SettingsPage() {
           >
             {/* Profile Tab */}
             {activeTab === "profile" && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <div className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-white mb-6">
                   Профайлын тохиргоо
                 </h2>
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Нэр
                     </label>
                     <input
                       type="text"
                       defaultValue={user.name || ""}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-400 focus:border-transparent"
+                      className="w-full px-3 py-2 bg-gray-800/50 border border-blue-500/30 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       И-мэйл
                     </label>
                     <input
                       type="email"
                       defaultValue={user.email}
                       disabled
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white"
+                      className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-gray-400"
                     />
                   </div>
 
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 dark:from-green-500 dark:to-blue-500 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 dark:hover:from-green-600 dark:hover:to-blue-600 transition-all duration-300"
+                    className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-6 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"
                   >
                     Хадгалах
                   </motion.button>
@@ -441,18 +441,18 @@ export default function SettingsPage() {
 
             {/* Notifications Tab */}
             {activeTab === "notifications" && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <div className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-white mb-6">
                   Мэдэгдлийн тохиргоо
                 </h2>
                 <div className="space-y-6">
                   {/* Team Invites */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-white">
                         Багийн урилга
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-400">
                         Багт орох урилга ирэхэд мэдэгдэх
                       </p>
                     </div>
@@ -468,17 +468,17 @@ export default function SettingsPage() {
                           })
                         }
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600 dark:peer-checked:bg-green-500"></div>
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
 
                   {/* Direct Messages */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-white">
                         Шууд зурвас
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-400">
                         Шууд зурвас ирэхэд мэдэгдэх
                       </p>
                     </div>
@@ -494,17 +494,17 @@ export default function SettingsPage() {
                           })
                         }
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600 dark:peer-checked:bg-green-500"></div>
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
 
                   {/* Team Messages */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-white">
                         Багийн зурвас
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-400">
                         Багийн чатад зурвас ирэхэд мэдэгдэх
                       </p>
                     </div>
@@ -520,17 +520,17 @@ export default function SettingsPage() {
                           })
                         }
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600 dark:peer-checked:bg-green-500"></div>
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
 
                   {/* Tournaments */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-white">
                         Тэмцээн
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-400">
                         Тэмцээний мэдээлэл ирэхэд мэдэгдэх
                       </p>
                     </div>
@@ -546,17 +546,17 @@ export default function SettingsPage() {
                           })
                         }
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600 dark:peer-checked:bg-green-500"></div>
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
 
                   {/* System Updates */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-white">
                         Системийн шинэчлэл
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-400">
                         Системийн шинэчлэл болон мэдээллийн талаар мэдэгдэх
                       </p>
                     </div>
@@ -572,17 +572,17 @@ export default function SettingsPage() {
                           })
                         }
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600 dark:peer-checked:bg-green-500"></div>
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
 
                   {/* Email Notifications */}
-                  <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <div className="flex items-center justify-between border-t border-gray-700 pt-4">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-white">
                         И-мэйл мэдэгдэл
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-400">
                         Чухал мэдэгдлүүдийг и-мэйлээр хүлээн авах
                       </p>
                     </div>
@@ -598,7 +598,7 @@ export default function SettingsPage() {
                           })
                         }
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600 dark:peer-checked:bg-green-500"></div>
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
                 </div>
@@ -607,8 +607,8 @@ export default function SettingsPage() {
 
             {/* Privacy Tab */}
             {activeTab === "privacy" && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <div className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-white mb-6">
                   Нууцлалын тохиргоо
                 </h2>
                 <div className="space-y-6">
@@ -642,8 +642,8 @@ export default function SettingsPage() {
                           key={option.value}
                           className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                             privacySettings.profileVisibility === option.value
-                              ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                              ? "border-blue-500 bg-blue-500/20"
+                              : "border-gray-600 hover:border-gray-500"
                           }`}
                         >
                           <input
@@ -662,13 +662,13 @@ export default function SettingsPage() {
                                   | "private",
                               })
                             }
-                            className="mt-1 w-4 h-4 text-purple-600 dark:text-green-500"
+                            className="mt-1 w-4 h-4 text-blue-500"
                           />
                           <div>
-                            <div className="font-medium text-gray-900 dark:text-white">
+                            <div className="font-medium text-white">
                               {option.label}
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className="text-sm text-gray-400">
                               {option.desc}
                             </div>
                           </div>
@@ -680,10 +680,10 @@ export default function SettingsPage() {
                   {/* Show Email */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-white">
                         И-мэйл хаягийг харуулах
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-400">
                         Профайлд и-мэйл хаягийг харуулах эсэх
                       </p>
                     </div>
@@ -699,17 +699,17 @@ export default function SettingsPage() {
                           })
                         }
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600 dark:peer-checked:bg-green-500"></div>
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
 
                   {/* Show Online Status */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-white">
                         Онлайн байдлыг харуулах
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-400">
                         Бусад хүмүүст таны онлайн байгаа эсэхийг мэдэгдэх
                       </p>
                     </div>
@@ -725,7 +725,7 @@ export default function SettingsPage() {
                           })
                         }
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600 dark:peer-checked:bg-green-500"></div>
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
 
@@ -759,8 +759,8 @@ export default function SettingsPage() {
                           key={option.value}
                           className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                             privacySettings.allowDirectMessages === option.value
-                              ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                              ? "border-blue-500 bg-blue-500/20"
+                              : "border-gray-600 hover:border-gray-500"
                           }`}
                         >
                           <input
@@ -780,13 +780,13 @@ export default function SettingsPage() {
                                   | "none",
                               })
                             }
-                            className="mt-1 w-4 h-4 text-purple-600 dark:text-green-500"
+                            className="mt-1 w-4 h-4 text-blue-500"
                           />
                           <div>
-                            <div className="font-medium text-gray-900 dark:text-white">
+                            <div className="font-medium text-white">
                               {option.label}
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className="text-sm text-gray-400">
                               {option.desc}
                             </div>
                           </div>
@@ -796,12 +796,12 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Search Visibility */}
-                  <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <div className="flex items-center justify-between border-t border-gray-700 pt-4">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-white">
                         Хайлтад харагдах
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-400">
                         Бусад хүмүүс таны профайлыг хайж олж чадах эсэх
                       </p>
                     </div>
@@ -817,7 +817,7 @@ export default function SettingsPage() {
                           })
                         }
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600 dark:peer-checked:bg-green-500"></div>
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
                 </div>
@@ -826,8 +826,8 @@ export default function SettingsPage() {
 
             {/* Appearance Tab */}
             {activeTab === "appearance" && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <div className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-white mb-6">
                   Харагдах байдлын тохиргоо
                 </h2>
                 <div className="space-y-6">
@@ -867,8 +867,8 @@ export default function SettingsPage() {
                             key={theme.value}
                             className={`flex flex-col items-center p-4 rounded-lg border-2 cursor-pointer transition-colors ${
                               appearanceSettings.theme === theme.value
-                                ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
-                                : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                                ? "border-blue-500 bg-blue-500/20"
+                                : "border-gray-600 hover:border-gray-500"
                             }`}
                           >
                             <input
@@ -937,8 +937,8 @@ export default function SettingsPage() {
                           key={color.value}
                           className={`flex flex-col items-center p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                             appearanceSettings.accentColor === color.value
-                              ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                              ? "border-blue-500 bg-blue-500/20"
+                              : "border-gray-600 hover:border-gray-500"
                           }`}
                         >
                           <input
@@ -979,12 +979,12 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Compact Mode */}
-                  <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <div className="flex items-center justify-between border-t border-gray-700 pt-4">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-white">
                         Компакт горим
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-gray-400">
                         Дэлгэц дээрх элементүүдийг жижгээр харуулах
                       </p>
                     </div>
@@ -1000,7 +1000,7 @@ export default function SettingsPage() {
                           })
                         }
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600 dark:peer-checked:bg-green-500"></div>
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
 
@@ -1009,23 +1009,23 @@ export default function SettingsPage() {
                     <h3 className="font-medium text-gray-900 dark:text-white mb-3">
                       Одоогийн тохиргоо
                     </h3>
-                    <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                    <div className="p-4 rounded-lg border border-gray-600 bg-gray-700/50">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                        <span className="text-sm text-gray-300">
                           Горим:
                         </span>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        <span className="text-sm font-medium text-white">
                           {appearanceSettings.theme === "light" && "Цагаан"}
                           {appearanceSettings.theme === "dark" && "Хар"}
                           {appearanceSettings.theme === "system" && "Системийн"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                        <span className="text-sm text-gray-300">
                           Өнгө:
                         </span>
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          <span className="text-sm font-medium text-white">
                             {appearanceSettings.accentColor === "purple" &&
                               "Ягаан"}
                             {appearanceSettings.accentColor === "green" &&
@@ -1053,10 +1053,10 @@ export default function SettingsPage() {
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                        <span className="text-sm text-gray-300">
                           Компакт:
                         </span>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        <span className="text-sm font-medium text-white">
                           {appearanceSettings.compactMode
                             ? "Идэвхжүүлсэн"
                             : "Унтраасан"}
@@ -1066,10 +1066,10 @@ export default function SettingsPage() {
 
                     {/* Live Preview Demo */}
                     <div className="mt-4">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      <h4 className="text-sm font-medium text-white mb-2">
                         Жишээ харах:
                       </h4>
-                      <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800">
+                      <div className="p-3 rounded-lg border border-gray-600 bg-gray-800/50">
                         <div className="flex items-center space-x-3 mb-3">
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -1101,7 +1101,7 @@ export default function SettingsPage() {
                                 : "bg-orange-500"
                             }`}
                           ></div>
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-gray-400">
                             {appearanceSettings.compactMode
                               ? "Жижиг"
                               : "Энгийн"}{" "}
@@ -1109,7 +1109,7 @@ export default function SettingsPage() {
                           </span>
                         </div>
                         <div
-                          className={`text-sm text-gray-500 dark:text-gray-400 ${
+                          className={`text-sm text-gray-400 ${
                             appearanceSettings.compactMode
                               ? "leading-tight"
                               : "leading-normal"
@@ -1127,8 +1127,8 @@ export default function SettingsPage() {
 
             {/* Language Tab */}
             {activeTab === "language" && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <div className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-white mb-6">
                   Хэлний тохиргоо
                 </h2>
                 <div className="space-y-6">
@@ -1159,8 +1159,8 @@ export default function SettingsPage() {
                           key={language.value}
                           className={`flex items-start space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
                             languageSettings.language === language.value
-                              ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                              ? "border-blue-500 bg-blue-500/20"
+                              : "border-gray-600 hover:border-gray-500"
                           }`}
                         >
                           <input
@@ -1176,14 +1176,14 @@ export default function SettingsPage() {
                                 language: e.target.value as "mn" | "en",
                               })
                             }
-                            className="mt-1 w-4 h-4 text-purple-600 dark:text-green-500"
+                            className="mt-1 w-4 h-4 text-blue-500"
                           />
                           <div className="text-2xl">{language.flag}</div>
                           <div>
-                            <div className="font-medium text-gray-900 dark:text-white">
+                            <div className="font-medium text-white">
                               {language.label}
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className="text-sm text-gray-400">
                               {language.desc}
                             </div>
                           </div>
@@ -1222,8 +1222,8 @@ export default function SettingsPage() {
                           key={format.value}
                           className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                             languageSettings.dateFormat === format.value
-                              ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                              ? "border-blue-500 bg-blue-500/20"
+                              : "border-gray-600 hover:border-gray-500"
                           }`}
                         >
                           <div className="flex items-center space-x-3">
@@ -1246,10 +1246,10 @@ export default function SettingsPage() {
                               className="w-4 h-4 text-purple-600 dark:text-green-500"
                             />
                             <div>
-                              <div className="font-medium text-gray-900 dark:text-white">
+                              <div className="font-medium text-white">
                                 {format.label}
                               </div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                              <div className="text-sm text-gray-400">
                                 {format.desc}
                               </div>
                             </div>
@@ -1284,8 +1284,8 @@ export default function SettingsPage() {
                           key={format.value}
                           className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                             languageSettings.timeFormat === format.value
-                              ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                              ? "border-blue-500 bg-blue-500/20"
+                              : "border-gray-600 hover:border-gray-500"
                           }`}
                         >
                           <div className="flex items-center space-x-3">
@@ -1305,10 +1305,10 @@ export default function SettingsPage() {
                               className="w-4 h-4 text-purple-600 dark:text-green-500"
                             />
                             <div>
-                              <div className="font-medium text-gray-900 dark:text-white">
+                              <div className="font-medium text-white">
                                 {format.label}
                               </div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                              <div className="text-sm text-gray-400">
                                 {format.desc}
                               </div>
                             </div>
@@ -1323,23 +1323,23 @@ export default function SettingsPage() {
                     <h3 className="font-medium text-gray-900 dark:text-white mb-3">
                       Одоогийн тохиргоо
                     </h3>
-                    <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                    <div className="p-4 rounded-lg border border-gray-600 bg-gray-700/50">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 dark:text-gray-300">
+                          <span className="text-sm text-gray-300">
                             Хэл:
                           </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          <span className="text-sm font-medium text-white">
                             {languageSettings.language === "mn"
                               ? "🇲🇳 Монгол"
                               : "🇺🇸 English"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 dark:text-gray-300">
+                          <span className="text-sm text-gray-300">
                             Огноо:
                           </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          <span className="text-sm font-medium text-white">
                             {new Date()
                               .toLocaleDateString("en-GB", {
                                 day: "2-digit",
@@ -1355,10 +1355,10 @@ export default function SettingsPage() {
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 dark:text-gray-300">
+                          <span className="text-sm text-gray-300">
                             Цаг:
                           </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          <span className="text-sm font-medium text-white">
                             {new Date().toLocaleTimeString("en-US", {
                               hour12: languageSettings.timeFormat === "12h",
                               hour: "2-digit",
@@ -1372,14 +1372,14 @@ export default function SettingsPage() {
 
                   {/* Language Change Notice */}
                   {languageSettings.language === "en" && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
                       <div className="flex items-start space-x-2">
                         <Globe className="w-5 h-5 text-blue-500 mt-0.5" />
                         <div>
-                          <h4 className="font-medium text-blue-800 dark:text-blue-200">
+                          <h4 className="font-medium text-blue-400">
                             Language Change Notice
                           </h4>
-                          <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                          <p className="text-sm text-blue-300 mt-1">
                             The interface language will change to English when
                             this feature is fully implemented. Currently, the
                             interface remains in Mongolian.

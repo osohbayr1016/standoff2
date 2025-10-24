@@ -6,21 +6,32 @@ import { useAuth } from "../../contexts/AuthContext";
 
 interface DisputeModalProps {
   matchId: string;
+  match?: any;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 export default function DisputeModal({
   matchId,
+  match,
   onClose,
   onSuccess,
 }: DisputeModalProps) {
-  const { getToken } = useAuth();
+  const { getToken, user } = useAuth();
   const [images, setImages] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Determine which team the current user belongs to
+  const isChallenger = match && user && match.challengerSquadId?.leader?._id === user.id;
+  const isOpponent = match && user && match.opponentSquadId?.leader?._id === user.id;
+  const currentUserTeam = isChallenger ? 'challenger' : 'opponent';
+  
+  // Get current team's evidence
+  const currentEvidence = isChallenger ? match?.challengerEvidence : match?.opponentEvidence;
+  const otherTeamEvidence = isChallenger ? match?.opponentEvidence : match?.challengerEvidence;
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -165,6 +176,35 @@ export default function DisputeModal({
             ⚠️ Ялалтын дэлгэцийн зургаа хамт тайлбараа бичээд явуулна уу
           </p>
         </div>
+
+        {/* Evidence Status */}
+        {match && (
+          <div className="bg-gray-700 rounded-lg p-4 mb-4">
+            <h3 className="text-white font-semibold mb-3">Баримт илгээсэн төлөв</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className={`p-2 rounded-lg ${currentEvidence ? 'bg-green-600' : 'bg-gray-600'}`}>
+                  <p className="text-white font-semibold">
+                    {isChallenger ? match.challengerSquadId?.name : match.opponentSquadId?.name}
+                  </p>
+                  <p className="text-sm">
+                    {currentEvidence ? '✅ Баримт илгээсэн' : '❌ Баримт илгээгээгүй'}
+                  </p>
+                </div>
+              </div>
+              <div className="text-center">
+                <div className={`p-2 rounded-lg ${otherTeamEvidence ? 'bg-green-600' : 'bg-gray-600'}`}>
+                  <p className="text-white font-semibold">
+                    {isChallenger ? match.opponentSquadId?.name : match.challengerSquadId?.name}
+                  </p>
+                  <p className="text-sm">
+                    {otherTeamEvidence ? '✅ Баримт илгээсэн' : '❌ Баримт илгээгээгүй'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Image Upload */}

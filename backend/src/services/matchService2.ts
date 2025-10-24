@@ -9,8 +9,9 @@ import MatchChat from "../models/MatchChat";
 import mongoose from "mongoose";
 
 // Utility function to safely calculate win rate
-function calculateWinRate(wins: number, totalMatches: number): number {
-  if (totalMatches === 0 || isNaN(wins) || isNaN(totalMatches)) {
+function calculateWinRate(wins: number, losses: number, draws: number = 0): number {
+  const totalMatches = wins + losses + draws;
+  if (totalMatches === 0 || isNaN(wins) || isNaN(losses) || isNaN(draws)) {
     return 0;
   }
   return Math.round((wins / totalMatches) * 100);
@@ -269,7 +270,8 @@ export class MatchService2 {
         // Safely calculate win rate
         winnerSquad.matchStats.winRate = calculateWinRate(
           winnerSquad.matchStats.wins,
-          winnerSquad.matchStats.totalMatches
+          winnerSquad.matchStats.losses,
+          winnerSquad.matchStats.draws
         );
         await winnerSquad.save({ session });
       }
@@ -278,7 +280,8 @@ export class MatchService2 {
         // Safely calculate win rate
         loserSquad.matchStats.winRate = calculateWinRate(
           loserSquad.matchStats.wins,
-          loserSquad.matchStats.totalMatches
+          loserSquad.matchStats.losses,
+          loserSquad.matchStats.draws
         );
         await loserSquad.save({ session });
       }

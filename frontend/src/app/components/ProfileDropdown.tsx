@@ -142,10 +142,10 @@ export default function ProfileDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+            className="absolute right-0 top-full mt-2 w-48 bg-gray-900 rounded-xl shadow-2xl border border-gray-700 overflow-hidden z-50"
           >
             {/* User Info Header */}
-            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+            <div className="px-4 py-3 border-b border-gray-700 bg-gray-800">
               <div className="flex items-center space-x-3">
                 {user.avatar ? (
                   <Image
@@ -161,10 +161,10 @@ export default function ProfileDropdown({
                   </div>
                 )}
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-white text-sm">
+                  <div className="font-medium text-white text-sm">
                     {user.name || "Хэрэглэгч"}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-gray-400">
                     {user.email}
                   </div>
                 </div>
@@ -178,7 +178,7 @@ export default function ProfileDropdown({
                 <motion.button
                   onClick={() => handleItemClick()}
                   whileHover={{ backgroundColor: "rgba(37, 99, 235, 0.1)" }}
-                  className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors duration-200"
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-300 hover:text-blue-400 transition-colors duration-200"
                 >
                   <User className="w-4 h-4" />
                   <span className="text-sm font-medium">
@@ -192,7 +192,7 @@ export default function ProfileDropdown({
                 <motion.button
                   onClick={() => handleItemClick()}
                   whileHover={{ backgroundColor: "rgba(37, 99, 235, 0.1)" }}
-                  className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors duration-200"
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-300 hover:text-blue-400 transition-colors duration-200"
                 >
                   <Settings className="w-4 h-4" />
                   <span className="text-sm font-medium">Тохиргоо</span>
@@ -201,7 +201,7 @@ export default function ProfileDropdown({
 
               {/* My Squad */}
               {isLoadingSquad ? (
-                <motion.div className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-500 dark:text-gray-400">
+                <motion.div className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-400">
                   <Users className="w-4 h-4 animate-pulse" />
                   <span className="text-sm font-medium">Loading squad...</span>
                 </motion.div>
@@ -209,7 +209,7 @@ export default function ProfileDropdown({
                 <motion.button
                   onClick={() => handleItemClick(handleMySquadClick)}
                   whileHover={{ backgroundColor: "rgba(37, 99, 235, 0.1)" }}
-                  className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors duration-200"
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-300 hover:text-blue-400 transition-colors duration-200"
                 >
                   <Users className="w-4 h-4" />
                   <span className="text-sm font-medium">
@@ -221,7 +221,7 @@ export default function ProfileDropdown({
                   <motion.button
                     onClick={() => handleItemClick()}
                     whileHover={{ backgroundColor: "rgba(37, 99, 235, 0.1)" }}
-                    className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors duration-200"
+                    className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-300 hover:text-blue-400 transition-colors duration-200"
                   >
                     <Users className="w-4 h-4" />
                     <span className="text-sm font-medium">Join Squad</span>
@@ -233,7 +233,7 @@ export default function ProfileDropdown({
               <motion.button
                 onClick={() => handleItemClick(onInviteFriend)}
                 whileHover={{ backgroundColor: "rgba(37, 99, 235, 0.1)" }}
-                className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors duration-200"
+                className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-300 hover:text-blue-400 transition-colors duration-200"
               >
                 <UserPlus className="w-4 h-4" />
                 <span className="text-sm font-medium">Найзаа урих</span>

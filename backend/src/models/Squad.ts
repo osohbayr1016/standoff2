@@ -226,8 +226,9 @@ squadSchema.pre("save", function (next) {
 
   // Ensure winRate is not NaN
   if (this.matchStats && (isNaN(this.matchStats.winRate) || this.matchStats.winRate === null || this.matchStats.winRate === undefined)) {
-    if (this.matchStats.totalMatches > 0) {
-      this.matchStats.winRate = Math.round((this.matchStats.wins / this.matchStats.totalMatches) * 100);
+    const totalMatches = this.matchStats.wins + this.matchStats.losses + this.matchStats.draws;
+    if (totalMatches > 0) {
+      this.matchStats.winRate = Math.round((this.matchStats.wins / totalMatches) * 100);
     } else {
       this.matchStats.winRate = 0;
     }

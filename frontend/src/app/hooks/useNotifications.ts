@@ -25,11 +25,16 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [processingNotifications, setProcessingNotifications] = useState<Set<string>>(new Set());
+  const [markingAllAsSeen, setMarkingAllAsSeen] = useState(false);
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+      console.warn("No token available for fetching notifications");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -38,6 +43,7 @@ export const useNotifications = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
@@ -50,9 +56,22 @@ export const useNotifications = () => {
             (n: Notification) => n.status === "PENDING"
           ).length || 0
         );
+      } else {
+        console.error("Failed to fetch notifications:", response.status, response.statusText);
+        // Try to get error details
+        try {
+          const errorData = await response.json();
+          console.error("Error details:", errorData);
+        } catch (e) {
+          console.error("Could not parse error response");
+        }
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
+      // Check if it's a network error
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error("Network error - check API endpoint and connectivity");
+      }
     } finally {
       setLoading(false);
     }
@@ -61,7 +80,10 @@ export const useNotifications = () => {
   // Fetch unread count
   const fetchUnreadCount = useCallback(async () => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+      console.warn("No token available for fetching unread count");
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -69,6 +91,7 @@ export const useNotifications = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
@@ -76,65 +99,152 @@ export const useNotifications = () => {
       if (response.ok) {
         const data = await response.json();
         setUnreadCount(data.unreadCount || 0);
+      } else {
+        console.error("Failed to fetch unread count:", response.status, response.statusText);
       }
     } catch (error) {
       console.error("Error fetching unread count:", error);
+      // Check if it's a network error
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error("Network error - check API endpoint and connectivity");
+      }
     }
   }, [getToken]);
 
   // Mark notification as seen
   const markAsSeen = async (notificationId: string) => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+      console.warn("No token available for marking notification as seen");
+      return;
+    }
+
+    // Prevent duplicate processing
+    if (processingNotifications.has(notificationId)) {
+      console.warn("Notification already being processed:", notificationId);
+      return;
+    }
 
     try {
-      const response = await fetch(
-        `${API_ENDPOINTS.NOTIFICATIONS.MARK_READ(notificationId)}`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      setProcessingNotifications(prev => new Set(prev).add(notificationId));
 
-      if (response.ok) {
+      // Optimistically update the UI first
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n._id === notificationId ? { ...n, status: "SEEN" as const } : n
+        )
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+
+      const url = `${API_ENDPOINTS.NOTIFICATIONS.MARK_READ(notificationId)}`;
+      console.log("Marking notification as seen:", { notificationId, url });
+      
+      const response = await fetch(url, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        console.error("Failed to mark notification as seen:", response.status, response.statusText);
+        // Revert optimistic update on failure
         setNotifications((prev) =>
           prev.map((n) =>
-            n._id === notificationId ? { ...n, status: "SEEN" as const } : n
+            n._id === notificationId ? { ...n, status: "PENDING" as const } : n
           )
         );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
+        setUnreadCount((prev) => prev + 1);
       }
     } catch (error) {
       console.error("Error marking notification as seen:", error);
+      
+      // Check if it's a network error and provide helpful message
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error("Network error - API might be unavailable. Check if backend is running.");
+        // Don't revert optimistic update for network errors - keep the UI updated
+        // as the user has already seen the notification
+      } else {
+        // Revert optimistic update on other types of errors
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n._id === notificationId ? { ...n, status: "PENDING" as const } : n
+          )
+        );
+        setUnreadCount((prev) => prev + 1);
+      }
+    } finally {
+      setProcessingNotifications(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(notificationId);
+        return newSet;
+      });
     }
   };
 
   // Mark all notifications as seen
   const markAllAsSeen = async () => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+      console.warn("No token available for marking all notifications as seen");
+      return;
+    }
+
+    if (markingAllAsSeen) {
+      console.warn("Already marking all notifications as seen");
+      return;
+    }
+
+    // Store current state for potential rollback
+    const currentNotifications = notifications;
+    const currentUnreadCount = unreadCount;
 
     try {
+      setMarkingAllAsSeen(true);
+      
+      // Optimistically update the UI first
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, status: "SEEN" as const }))
+      );
+      setUnreadCount(0);
+
+      console.log("Marking all notifications as seen:", { url: API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ });
+
       const response = await fetch(
         `${API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ}`,
         {
           method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
-      if (response.ok) {
-        setNotifications((prev) =>
-          prev.map((n) => ({ ...n, status: "SEEN" as const }))
-        );
-        setUnreadCount(0);
+      if (!response.ok) {
+        console.error("Failed to mark all notifications as seen:", response.status, response.statusText);
+        // Revert optimistic update on failure
+        setNotifications(currentNotifications);
+        setUnreadCount(currentUnreadCount);
+      } else {
+        console.log("Successfully marked all notifications as seen");
       }
     } catch (error) {
       console.error("Error marking all notifications as seen:", error);
+      
+      // Check if it's a network error
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error("Network error - API might be unavailable. Check if backend is running.");
+        // Don't revert optimistic update for network errors - keep the UI updated
+        // as the user has already seen the notifications
+      } else {
+        // Revert optimistic update on other types of errors
+        setNotifications(currentNotifications);
+        setUnreadCount(currentUnreadCount);
+      }
+    } finally {
+      setMarkingAllAsSeen(false);
     }
   };
 
@@ -235,6 +345,7 @@ export const useNotifications = () => {
     notifications,
     unreadCount,
     loading,
+    markingAllAsSeen,
     fetchNotifications,
     fetchUnreadCount,
     markAsSeen,

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useNotifications } from "../hooks/useNotifications";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotificationNavigation } from "../../utils/notificationNavigation";
 import Image from "next/image";
 import Link from "next/link";
 import { API_ENDPOINTS } from "../../config/api";
@@ -29,10 +30,12 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   onMessageNotificationClick,
 }) => {
   const { getToken } = useAuth();
+  const { navigateToNotification } = useNotificationNavigation();
   const {
     notifications,
     unreadCount,
     loading,
+    markingAllAsSeen,
     fetchNotifications,
     markAsSeen,
     markAllAsSeen,
@@ -51,19 +54,31 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     }
   }, [isOpen, getToken, fetchNotifications]);
 
+  // Note: Auto-marking notifications as seen when dropdown opens is removed
+  // to prevent infinite loops. Notifications will only be marked as seen when clicked.
+
   const handleNotificationClick = async (notification: {
     _id: string;
     status: string;
     type: string;
+    title: string;
+    content: string;
     senderId?: {
       _id: string;
       name: string;
       avatar?: string;
     };
+    relatedMessageId?: string;
+    relatedClanId?: string;
+    createdAt: string;
   }) => {
+    // Always mark as seen when clicked, regardless of current status
     if (notification.status === "PENDING") {
       await markAsSeen(notification._id);
     }
+
+    // Close the notification center
+    setIsOpen(false);
 
     // If it's a message notification, open the chat
     if (
@@ -71,12 +86,14 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       notification.senderId &&
       onMessageNotificationClick
     ) {
-      setIsOpen(false);
       onMessageNotificationClick(
         notification.senderId._id,
         notification.senderId.name,
         notification.senderId.avatar
       );
+    } else {
+      // For all other notification types, use the navigation utility
+      navigateToNotification(notification);
     }
   };
 
@@ -133,9 +150,14 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllAsSeen}
-                    className="text-xs text-blue-400 hover:underline"
+                    disabled={markingAllAsSeen}
+                    className={`text-xs hover:underline ${
+                      markingAllAsSeen 
+                        ? 'text-gray-500 cursor-not-allowed' 
+                        : 'text-blue-400 hover:text-blue-300'
+                    }`}
                   >
-                    Бүгдийг уншсан гэж тэмдэглэх
+                    {markingAllAsSeen ? 'Тэмдэглэж байна...' : 'Бүгдийг уншсан гэж тэмдэглэх'}
                   </button>
                 )}
                 <button

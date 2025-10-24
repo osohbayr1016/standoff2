@@ -73,7 +73,21 @@ export default function LeaderboardPage() {
       const data = await response.json();
       
       if (data.success) {
-        setLeaderboardData(data.data);
+        // Calculate dynamic winrate for each squad
+        const leaderboardWithCalculatedWinrate = data.data.map((squad: LeaderboardSquad) => {
+          const totalMatches = squad.matchStats.wins + squad.matchStats.losses + squad.matchStats.draws;
+          const calculatedWinRate = totalMatches > 0 ? Math.round((squad.matchStats.wins / totalMatches) * 100) : 0;
+          
+          return {
+            ...squad,
+            matchStats: {
+              ...squad.matchStats,
+              winRate: calculatedWinRate
+            }
+          };
+        });
+        
+        setLeaderboardData(leaderboardWithCalculatedWinrate);
       } else {
         setError("Failed to fetch leaderboard data");
       }

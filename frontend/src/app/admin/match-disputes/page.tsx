@@ -23,6 +23,7 @@ export default function AdminMatchDisputesPage() {
   const [selectedDispute, setSelectedDispute] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [resolving, setResolving] = useState(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     if (!user || user.role !== "ADMIN") {
@@ -35,18 +36,27 @@ export default function AdminMatchDisputesPage() {
   const fetchDisputes = async () => {
     setLoading(true);
     try {
+      console.log('🔍 Fetching disputes from:', `${API_ENDPOINTS.BASE_URL}/api/admin/matches/disputes`);
       const response = await fetch(
         `${API_ENDPOINTS.BASE_URL}/api/admin/matches/disputes`,
         {
           credentials: "include",
         }
       );
+      console.log('📡 Disputes fetch response status:', response.status);
       const data = await response.json();
+      console.log('📊 Disputes data:', data);
+      console.log('📊 Number of disputes:', data.data?.length || 0);
       if (data.success) {
         setDisputes(data.data);
+        setError("");
+      } else {
+        console.error('❌ Failed to fetch disputes:', data.message);
+        setError(data.message || "Алдаа гарлаа");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching disputes:", error);
+      setError(error.message || "Холболт амжилтгүй");
     } finally {
       setLoading(false);
     }
@@ -92,14 +102,29 @@ export default function AdminMatchDisputesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-6 pt-24">
       <div className="max-w-7xl mx-auto">
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-4xl font-bold text-white mb-8 flex items-center gap-3"
-        >
-          <AlertTriangle className="w-10 h-10 text-orange-500" />
-          Match Disputes
-        </motion.h1>
+        <div className="flex justify-between items-center mb-8">
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl font-bold text-white flex items-center gap-3"
+          >
+            <AlertTriangle className="w-10 h-10 text-orange-500" />
+            Match Disputes
+          </motion.h1>
+          <button
+            onClick={fetchDisputes}
+            disabled={loading}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold disabled:opacity-50"
+          >
+            {loading ? "Уншиж байна..." : "🔄 Шинэчлэх"}
+          </button>
+        </div>
+
+        {error && (
+          <div className="bg-red-900 bg-opacity-30 border border-red-500 rounded-lg p-4 mb-6">
+            <p className="text-red-300">{error}</p>
+          </div>
+        )}
 
         {loading ? (
           <p className="text-white text-center">Уншиж байна...</p>

@@ -426,6 +426,7 @@ export default function MatchDetailsModal({
       {showDisputeModal && (
         <DisputeModal
           matchId={match._id}
+          match={match}
           onClose={() => setShowDisputeModal(false)}
           onSuccess={() => {
             setShowDisputeModal(false);

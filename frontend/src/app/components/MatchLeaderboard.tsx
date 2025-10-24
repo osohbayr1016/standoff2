@@ -21,9 +21,21 @@ export default function MatchLeaderboard() {
       const data = await response.json();
 
       if (data.success) {
-        // Sort by match stats (wins desc)
+        // Calculate dynamic winrate and sort by match stats (wins desc)
         const sorted = data.data
           .filter((s: any) => s.matchStats && s.matchStats.totalMatches > 0)
+          .map((squad: any) => {
+            const totalMatches = squad.matchStats.wins + squad.matchStats.losses + squad.matchStats.draws;
+            const calculatedWinRate = totalMatches > 0 ? Math.round((squad.matchStats.wins / totalMatches) * 100) : 0;
+            
+            return {
+              ...squad,
+              matchStats: {
+                ...squad.matchStats,
+                winRate: calculatedWinRate
+              }
+            };
+          })
           .sort((a: any, b: any) => {
             // Sort by wins first, then win rate
             if (b.matchStats.wins !== a.matchStats.wins) {
