@@ -212,6 +212,20 @@ async function registerRoutes() {
     fastify.register(adminMatchRoutes.default, {
       prefix: "/api/admin/matches",
     });
+    // Stream routes
+    const streamRoutes = await import("./routes/streamRoutes");
+    fastify.register(streamRoutes.default, { prefix: "/api" });
+    // Achievement routes
+    const achievementRoutes = await import("./routes/achievementRoutes");
+    fastify.register(achievementRoutes.default, {
+      prefix: "/api",
+    });
+    
+    // Admin Achievement routes
+    const adminAchievementRoutes = await import("./routes/adminAchievementRoutes");
+    fastify.register(adminAchievementRoutes.default, {
+      prefix: "/api",
+    });
   } catch (error) {
     console.error("❌ Error registering routes:", error);
     // Continue without routes for basic health check

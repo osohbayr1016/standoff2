@@ -50,6 +50,7 @@ export default function PlayerCard({
       case "Duelist":
       case "Assault":
       case "Fighter":
+      case "Exp Laner":
         return <Sword className="w-4 h-4" />;
       case "Support":
       case "Hard Support":
@@ -58,7 +59,15 @@ export default function PlayerCard({
       case "Mid":
       case "Mage":
       case "Initiator":
+      case "Mid Laner":
         return <Zap className="w-4 h-4" />;
+      case "Core":
+      case "Gold Laner":
+        return <Sword className="w-4 h-4" />;
+      case "Roamer":
+        return <Shield className="w-4 h-4" />;
+      case "Fill":
+        return <Gamepad2 className="w-4 h-4" />;
       default:
         return <Gamepad2 className="w-4 h-4" />;
     }

@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-export type NotificationType = "MESSAGE" | "SYSTEM" | "INVITATION";
+export type NotificationType = "MESSAGE" | "SYSTEM" | "INVITATION" | "STREAM_STARTED" | "STREAM_ENDING" | "STREAM_INVITE";
 export type NotificationStatus = "PENDING" | "SEEN" | "DELETED";
 
 export interface INotification extends Document {
@@ -12,6 +12,7 @@ export interface INotification extends Document {
   status: NotificationStatus;
   relatedMessageId?: Schema.Types.ObjectId;
   relatedClanId?: Schema.Types.ObjectId;
+  relatedStreamId?: Schema.Types.ObjectId; // For stream-related notifications
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,7 +44,7 @@ const notificationSchema = new Schema<INotification>(
     },
     type: {
       type: String,
-      enum: ["MESSAGE", "SYSTEM", "INVITATION"],
+      enum: ["MESSAGE", "SYSTEM", "INVITATION", "STREAM_STARTED", "STREAM_ENDING", "STREAM_INVITE"],
       default: "SYSTEM",
       index: true,
     },
@@ -60,6 +61,10 @@ const notificationSchema = new Schema<INotification>(
     relatedClanId: {
       type: Schema.Types.ObjectId,
       ref: "Squad",
+    },
+    relatedStreamId: {
+      type: Schema.Types.ObjectId,
+      ref: "StreamSession",
     },
   },
   {

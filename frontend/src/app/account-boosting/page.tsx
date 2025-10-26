@@ -50,7 +50,7 @@ export default function AccountBoostingPage() {
 
   useEffect(() => {
     fetchProPlayers();
-  }, [selectedGame, currentPage, fetchProPlayers]);
+  }, [selectedGame, currentPage]);
 
   const loadMore = () => {
     setCurrentPage((prev) => prev + 1);

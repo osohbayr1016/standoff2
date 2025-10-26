@@ -87,6 +87,24 @@ const playerProfileRoutes: FastifyPluginAsync = async (
 
       await newProfile.save();
 
+      // Trigger achievement check for profile creation
+      try {
+        const { AchievementService } = await import("../services/achievementService");
+        
+        await AchievementService.processAchievementTrigger({
+          userId: decoded.id,
+          type: "profile_update",
+          data: {
+            game: profileData.game,
+            rank: profileData.rank,
+            category: profileData.category,
+          },
+        });
+      } catch (achievementError) {
+        console.error("Error processing achievement triggers:", achievementError);
+        // Don't fail the profile creation if achievement processing fails
+      }
+
       return reply.status(201).send({
         success: true,
         message: "Profile created successfully",

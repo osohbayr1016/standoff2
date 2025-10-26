@@ -4,7 +4,12 @@
   "main": "backend/dist/index.js",
   "scripts": {
     "start": "cd backend && npm start",
-    "dev": "cd backend && npm run dev"
+    "dev": "cd backend && npm run dev",
+    "build": "cd backend && npm run build:clean",
+    "build:clean": "cd backend && npm run build:clean",
+    "deploy:build": "cd backend && npm run deploy:build",
+    "deploy:start": "cd backend && npm run deploy:start",
+    "init:achievements": "cd backend && npm run init:achievements"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",

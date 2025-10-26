@@ -29,6 +29,7 @@ import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import ImageUploader from "../components/ImageUploader";
 import YouTubeVideoInput from "../components/YouTubeVideoInput";
+import StreamModal from "@/components/StreamModal";
 
 import ProtectedRoute from "../components/ProtectedRoute";
 import { useAuth } from "../contexts/AuthContext";
@@ -70,6 +71,8 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editData, setEditData] = useState<Partial<PlayerProfile>>({});
+  const [isStreamModalOpen, setIsStreamModalOpen] = useState(false);
+  const [hasActiveStream, setHasActiveStream] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -231,6 +234,7 @@ export default function ProfilePage() {
       case "Fighter":
       case "ADC":
       case "DPS":
+      case "Exp Laner":
         return <Sword className="w-6 h-6" />;
       case "Support":
       case "Hard Support":
@@ -240,7 +244,15 @@ export default function ProfilePage() {
       case "Mage":
       case "Initiator":
       case "Controller":
+      case "Mid Laner":
         return <Zap className="w-6 h-6" />;
+      case "Core":
+      case "Gold Laner":
+        return <Sword className="w-6 h-6" />;
+      case "Roamer":
+        return <Shield className="w-6 h-6" />;
+      case "Fill":
+        return <Gamepad2 className="w-6 h-6" />;
       default:
         return <Gamepad2 className="w-6 h-6" />;
     }
@@ -582,12 +594,13 @@ export default function ProfilePage() {
                       </h3>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                         {[
-                          "Tank",
-                          "Fighter",
-                          "Assassin",
-                          "Mage",
-                          "Marksman",
+                          "Roamer",
+                          "Exp Laner",
+                          "Core",
+                          "Mid Laner",
+                          "Gold Laner",
                           "Support",
+                          "Fill",
                         ].map((role) => (
                           <button
                             key={role}
@@ -633,6 +646,46 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </div>
+              </div>
+            </motion.div>
+
+            {/* Stream Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 rounded-lg shadow-lg p-8 mb-8"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    📺 Live Streaming
+                  </h2>
+                  <p className="text-gray-400">
+                    {hasActiveStream
+                      ? "Your stream is live!"
+                      : "Promote your streaming content"}
+                  </p>
+                </div>
+                {hasActiveStream ? (
+                  <div className="flex items-center space-x-3">
+                    <Link
+                      href="/live-streams"
+                      className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors flex items-center space-x-2"
+                    >
+                      <Twitch className="w-5 h-5" />
+                      <span>View Stream</span>
+                    </Link>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsStreamModalOpen(true)}
+                    className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors flex items-center space-x-2"
+                  >
+                    <Twitch className="w-5 h-5" />
+                    <span>Start Streaming</span>
+                  </button>
+                )}
               </div>
             </motion.div>
 
@@ -841,6 +894,18 @@ export default function ProfilePage() {
             </motion.div>
           </div>
         </main>
+
+        {/* Stream Modal */}
+        <StreamModal
+          isOpen={isStreamModalOpen}
+          onClose={() => setIsStreamModalOpen(false)}
+          onStreamStarted={() => {
+            setIsStreamModalOpen(false);
+            setHasActiveStream(true);
+            // Optionally refresh the page or show success message
+            alert("Stream started successfully! It will appear on the live streams page.");
+          }}
+        />
       </div>
     </ProtectedRoute>
   );

@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
+import mongoose from "mongoose";
 import Tournament from "../models/Tournament";
 import TournamentRegistration from "../models/TournamentRegistration";
 
@@ -421,6 +422,30 @@ const tournamentRoutes: FastifyPluginAsync = async (
       await Tournament.findByIdAndUpdate(id, {
         $inc: { currentSquads: 1 },
       });
+
+      // Trigger achievement check for tournament participation
+      try {
+        const { AchievementService } = await import("../services/achievementService");
+        
+        // Get squad members
+        const squad = await Squad.findById(squadId);
+        if (squad && squad.members) {
+          // Trigger achievement for each squad member
+          for (const member of squad.members) {
+            await AchievementService.processAchievementTrigger({
+              userId: member,
+              type: "tournament_participation",
+              data: {
+                game: tournament.game,
+                tournamentId: tournament._id as mongoose.Types.ObjectId,
+              },
+            });
+          }
+        }
+      } catch (achievementError) {
+        console.error("Error processing achievement triggers:", achievementError);
+        // Don't fail the registration if achievement processing fails
+      }
 
       return reply.status(200).send({
         success: true,

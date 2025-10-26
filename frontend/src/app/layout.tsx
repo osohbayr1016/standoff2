@@ -6,6 +6,7 @@ import "./globals.css";
 import { DarkModeProvider } from "./contexts/DarkModeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SocketProvider } from "./contexts/SocketContext";
+import { CartProvider } from "./contexts/CartContext";
 import LayoutWrapper from "./components/LayoutWrapper";
 
 const geistSans = Geist({
@@ -53,7 +54,9 @@ export default function RootLayout({
         <DarkModeProvider>
           <AuthProvider>
             <SocketProvider>
-              <LayoutWrapper>{children}</LayoutWrapper>
+              <CartProvider>
+                <LayoutWrapper>{children}</LayoutWrapper>
+              </CartProvider>
             </SocketProvider>
           </AuthProvider>
         </DarkModeProvider>

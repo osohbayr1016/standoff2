@@ -109,6 +109,8 @@ export default function Navigation() {
     { name: "Тоглогчид", href: "/players" },
     { name: "Мэдээ", href: "/news" },
     { name: "Тэмцээнүүд", href: "/tournaments" },
+    { name: "Live Streams", href: "/live-streams" },
+    { name: "Shopping", href: "/shopping" },
     { name: "Leaderboard", href: "/leaderboard" },
     { name: "Бидний", href: "/about" },
   ];
@@ -118,6 +120,7 @@ export default function Navigation() {
     { name: "Squads", href: "/squads" },
     { name: "Matchmaking", href: "/matchmaking" },
     { name: "Divisions", href: "/divisions" },
+    { name: "Achievements", href: "/achievements" },
     {
       name: "Bounty Coins",
       href: "/bounty-coins",

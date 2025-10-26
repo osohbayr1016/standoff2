@@ -14,6 +14,7 @@ import {
   Award,
   Gamepad2,
   AlertTriangle,
+  Store,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -324,6 +325,22 @@ export default function AdminDashboard() {
       href: "/admin/settings",
       color: "from-gray-500 to-gray-700",
     },
+    {
+      id: "vendor-approval",
+      title: "Vendor Approval",
+      description: "Review and approve vendor store registration applications",
+      icon: <Store className="w-8 h-8" />,
+      href: "/admin/vendor-approval",
+      color: "from-emerald-500 to-teal-500",
+    },
+    {
+      id: "achievements",
+      title: "Achievement Management",
+      description: "Create, edit, and manage achievements, badges, and user progress",
+      icon: <Award className="w-8 h-8" />,
+      href: "/admin/achievements",
+      color: "from-purple-500 to-indigo-500",
+    },
   ];
 
   if (loading) {
@@ -476,7 +493,7 @@ export default function AdminDashboard() {
             <h2 className="text-2xl font-bold text-white mb-6">
               Quick Actions
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Link href="/admin/news">
                 <button className="w-full p-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 flex items-center justify-center space-x-2">
                   <Plus className="w-5 h-5" />
@@ -493,6 +510,12 @@ export default function AdminDashboard() {
                 <button className="w-full p-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-600 transition-all duration-200 flex items-center justify-center space-x-2">
                   <Users className="w-5 h-5" />
                   <span>Manage Users</span>
+                </button>
+              </Link>
+              <Link href="/admin/vendor-approval">
+                <button className="w-full p-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 flex items-center justify-center space-x-2">
+                  <Store className="w-5 h-5" />
+                  <span>Review Vendors</span>
                 </button>
               </Link>
             </div>

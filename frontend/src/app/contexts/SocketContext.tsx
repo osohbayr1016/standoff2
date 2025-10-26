@@ -17,6 +17,11 @@ interface SocketContextType {
   leaveMatchRoom: (matchId: string) => void;
   sendMatchMessage: (matchId: string, content: string) => void;
   updateStatus: (status: "online" | "away" | "busy") => void;
+  // Streaming methods
+  joinStream: (streamId: string) => void;
+  leaveStream: (streamId: string) => void;
+  sendStreamMessage: (streamId: string, message: string, replyToId?: string) => void;
+  sendStreamReaction: (streamId: string, emoji: string) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -144,6 +149,38 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Streaming methods
+  const joinStream = (streamId: string) => {
+    if (socketRef.current && isConnected) {
+      socketRef.current.emit("join_stream", { streamId });
+    }
+  };
+
+  const leaveStream = (streamId: string) => {
+    if (socketRef.current && isConnected) {
+      socketRef.current.emit("leave_stream", { streamId });
+    }
+  };
+
+  const sendStreamMessage = (streamId: string, message: string, replyToId?: string) => {
+    if (socketRef.current && isConnected) {
+      socketRef.current.emit("stream_chat_message", {
+        streamId,
+        message,
+        replyToId,
+      });
+    }
+  };
+
+  const sendStreamReaction = (streamId: string, emoji: string) => {
+    if (socketRef.current && isConnected) {
+      socketRef.current.emit("stream_reaction", {
+        streamId,
+        emoji,
+      });
+    }
+  };
+
   return (
     <SocketContext.Provider
       value={{
@@ -154,6 +191,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         leaveMatchRoom,
         sendMatchMessage,
         updateStatus,
+        joinStream,
+        leaveStream,
+        sendStreamMessage,
+        sendStreamReaction,
       }}
     >
       {children}

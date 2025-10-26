@@ -333,7 +333,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       const token = getStoredToken();
       if (token) {
@@ -352,7 +352,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setHasProfile(false);
     }
-  };
+  }, []);
 
   const updateUser = (userData: Partial<User>) => {
     if (user) {
@@ -362,7 +362,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const refreshToken = async () => {
+  const refreshToken = useCallback(async () => {
     try {
       const token = getStoredToken();
       if (!token) {
@@ -387,11 +387,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(data.user);
     } catch (error) {
       console.error("Token refresh error:", error);
-      // If refresh fails, logout the user
-      await logout();
+      // If refresh fails, clear user data
+      removeStoredToken();
+      setUser(null);
+      setHasProfile(false);
       throw error;
     }
-  };
+  }, []);
 
   const getToken = (): string | null => {
     const token = getStoredToken();

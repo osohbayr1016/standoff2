@@ -37,13 +37,13 @@ const gameOptions: GameOption[] = [
     name: "Mobile Legends",
     category: "Mobile",
     roles: [
-      "Tank",
-      "Fighter",
-      "Assassin",
-      "Mage",
-      "Marksman",
+      "Roamer",
+      "Exp Laner",
+      "Core",
+      "Mid Laner",
+      "Gold Laner",
       "Support",
-      "FILL",
+      "Fill",
     ],
     ranks: [
       "Warrior",
@@ -302,6 +302,7 @@ export default function CreateProfilePage() {
       case "Fighter":
       case "ADC":
       case "DPS":
+      case "Exp Laner":
         return <Sword className="w-5 h-5" />;
       case "Support":
       case "Hard Support":
@@ -311,8 +312,14 @@ export default function CreateProfilePage() {
       case "Mage":
       case "Initiator":
       case "Controller":
+      case "Mid Laner":
         return <Zap className="w-5 h-5" />;
-      case "FILL":
+      case "Core":
+      case "Gold Laner":
+        return <Sword className="w-5 h-5" />;
+      case "Roamer":
+        return <Shield className="w-5 h-5" />;
+      case "Fill":
         return <Gamepad2 className="w-5 h-5" />;
       default:
         return <Gamepad2 className="w-5 h-5" />;

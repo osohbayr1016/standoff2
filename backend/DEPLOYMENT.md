@@ -30,6 +30,13 @@ FACEBOOK_APP_SECRET=your-facebook-app-secret
 
 # Bcrypt Configuration
 BCRYPT_ROUNDS=12
+
+# Streaming Configuration
+TWITCH_CLIENT_ID=your-twitch-client-id
+TWITCH_CLIENT_SECRET=your-twitch-client-secret
+YOUTUBE_API_KEY=your-youtube-api-key
+RTMP_SERVER_URL=rtmp://your-rtmp-server:1935/live
+FRONTEND_DOMAIN=your-frontend-domain.com
 ```
 
 ## MongoDB Setup Options

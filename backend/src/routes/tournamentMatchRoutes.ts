@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
+import mongoose from "mongoose";
 import TournamentMatch from "../models/TournamentMatch";
 import Tournament from "../models/Tournament";
 import TournamentRegistration from "../models/TournamentRegistration";
@@ -203,6 +204,51 @@ const tournamentMatchRoutes: FastifyPluginAsync = async (
 
       // Process bounty coins and division changes
       await DivisionService.processMatchResult(matchId);
+
+      // Trigger achievement checks for match completion
+      try {
+        const { AchievementService } = await import("../services/achievementService");
+        
+        // Get squad members for winner and loser
+        const winnerSquad = await Squad.findById(match.winner);
+        const loserSquad = await Squad.findById(match.loser);
+        
+        if (winnerSquad && winnerSquad.members) {
+          // Trigger achievement for each winner squad member
+          for (const member of winnerSquad.members) {
+            await AchievementService.processAchievementTrigger({
+              userId: member,
+              type: "match_win",
+              data: {
+                game: "Mobile Legends: Bang Bang",
+                tournamentId: match.tournament as mongoose.Types.ObjectId,
+                matchId: match._id as mongoose.Types.ObjectId,
+                matchWon: true,
+                tournamentWon: false, // This will be set to true when tournament is completed
+              },
+            });
+          }
+        }
+        
+        if (loserSquad && loserSquad.members) {
+          // Trigger achievement for each loser squad member
+          for (const member of loserSquad.members) {
+            await AchievementService.processAchievementTrigger({
+              userId: member,
+              type: "match_loss",
+              data: {
+                game: "Mobile Legends: Bang Bang",
+                tournamentId: match.tournament as mongoose.Types.ObjectId,
+                matchId: match._id as mongoose.Types.ObjectId,
+                matchWon: false,
+              },
+            });
+          }
+        }
+      } catch (achievementError) {
+        console.error("Error processing achievement triggers:", achievementError);
+        // Don't fail the match completion if achievement processing fails
+      }
 
       // If the whole round is completed, auto-generate next round (Single Elimination)
       try {

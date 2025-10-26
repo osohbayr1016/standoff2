@@ -5,6 +5,10 @@ import { JWTPayload } from "../middleware/auth";
 import Message from "../models/Message";
 import User from "../models/User";
 import Notification from "../models/Notification";
+import StreamSession from "../models/StreamSession";
+import StreamChat from "../models/StreamChat";
+import StreamViewer from "../models/StreamViewer";
+import { StreamService } from "../services/streamService";
 
 export class SocketManager {
   private io: SocketIOServer | null = null;
@@ -309,6 +313,169 @@ export class SocketManager {
         }
       });
 
+      // Handle stream chat messages
+      socket.on("stream_chat_message", async (data) => {
+        try {
+          const { streamId, message, replyToId } = data;
+          const senderId = socket.data.userId;
+
+          if (!senderId) {
+            socket.emit("stream_chat_error", {
+              error: "Authentication required",
+            });
+            return;
+          }
+
+          if (!streamId || !message || !message.trim()) {
+            socket.emit("stream_chat_error", {
+              error: "Stream ID and message are required",
+            });
+            return;
+          }
+
+          // Send message using StreamService
+          const chatMessage = await StreamService.sendChatMessage(
+            streamId,
+            senderId,
+            message.trim(),
+            replyToId
+          );
+
+          // Populate the message with user data
+          const populatedMessage = await StreamChat.findById(chatMessage._id)
+            .populate("userId", "name avatar")
+            .populate("replyToId", "message userId");
+
+          // Broadcast to all viewers of the stream
+          this.io!.to(`stream_${streamId}`).emit("stream_chat_message", {
+            streamId,
+            message: populatedMessage,
+          });
+
+          // Send confirmation to sender
+          socket.emit("stream_chat_sent", {
+            messageId: chatMessage._id,
+            streamId,
+          });
+        } catch (error: any) {
+          console.error("Error sending stream chat message:", error);
+          socket.emit("stream_chat_error", {
+            error: error.message || "Failed to send message",
+          });
+        }
+      });
+
+      // Handle joining a stream
+      socket.on("join_stream", async (data) => {
+        try {
+          const { streamId } = data;
+          const userId = socket.data.userId;
+
+          if (!streamId) {
+            socket.emit("stream_error", {
+              error: "Stream ID is required",
+            });
+            return;
+          }
+
+          // Add viewer to stream
+          const sessionId = `socket_${socket.id}`;
+          const viewer = await StreamService.addViewer(
+            streamId,
+            userId,
+            sessionId
+          );
+
+          // Join socket room for the stream
+          socket.join(`stream_${streamId}`);
+
+          // Send confirmation
+          socket.emit("stream_joined", {
+            streamId,
+            viewerId: viewer._id,
+          });
+
+          // Broadcast viewer count update
+          this.io!.to(`stream_${streamId}`).emit("stream_viewer_count", {
+            streamId,
+            viewerCount: await StreamViewer.countDocuments({
+              streamSessionId: streamId,
+              isActive: true,
+            }),
+          });
+        } catch (error: any) {
+          console.error("Error joining stream:", error);
+          socket.emit("stream_error", {
+            error: error.message || "Failed to join stream",
+          });
+        }
+      });
+
+      // Handle leaving a stream
+      socket.on("leave_stream", async (data) => {
+        try {
+          const { streamId } = data;
+          const userId = socket.data.userId;
+
+          if (!streamId) {
+            return;
+          }
+
+          // Remove viewer from stream
+          const sessionId = `socket_${socket.id}`;
+          await StreamService.removeViewer(streamId, userId, sessionId);
+
+          // Leave socket room
+          socket.leave(`stream_${streamId}`);
+
+          // Broadcast viewer count update
+          this.io!.to(`stream_${streamId}`).emit("stream_viewer_count", {
+            streamId,
+            viewerCount: await StreamViewer.countDocuments({
+              streamSessionId: streamId,
+              isActive: true,
+            }),
+          });
+        } catch (error: any) {
+          console.error("Error leaving stream:", error);
+        }
+      });
+
+      // Handle stream reactions
+      socket.on("stream_reaction", async (data) => {
+        try {
+          const { streamId, emoji } = data;
+          const userId = socket.data.userId;
+
+          if (!userId) {
+            socket.emit("stream_error", {
+              error: "Authentication required",
+            });
+            return;
+          }
+
+          if (!streamId || !emoji) {
+            socket.emit("stream_error", {
+              error: "Stream ID and emoji are required",
+            });
+            return;
+          }
+
+          // Broadcast reaction to all stream viewers
+          this.io!.to(`stream_${streamId}`).emit("stream_reaction", {
+            streamId,
+            emoji,
+            userId,
+            timestamp: new Date().toISOString(),
+          });
+        } catch (error: any) {
+          console.error("Error handling stream reaction:", error);
+          socket.emit("stream_error", {
+            error: "Failed to send reaction",
+          });
+        }
+      });
+
       // Handle status updates
       socket.on("update_status", (data) => {
         const { status } = data;
@@ -362,6 +529,46 @@ export class SocketManager {
     const socketId = this.connectedUsers.get(userId);
     if (socketId && this.io) {
       this.io.to(socketId).emit(event, data);
+    }
+  }
+
+  // Stream-specific methods
+  public broadcastStreamEvent(streamId: string, event: string, data: any): void {
+    if (this.io) {
+      this.io.to(`stream_${streamId}`).emit(event, data);
+    }
+  }
+
+  public broadcastStreamStarted(streamSession: any): void {
+    if (this.io) {
+      this.io.emit("stream_started", {
+        streamId: streamSession._id,
+        title: streamSession.title,
+        organizer: streamSession.organizerId,
+        platforms: streamSession.platforms,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  public broadcastStreamEnded(streamSession: any): void {
+    if (this.io) {
+      this.io.emit("stream_ended", {
+        streamId: streamSession._id,
+        title: streamSession.title,
+        duration: streamSession.duration,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  public updateStreamViewerCount(streamId: string, count: number): void {
+    if (this.io) {
+      this.io.to(`stream_${streamId}`).emit("stream_viewer_count", {
+        streamId,
+        viewerCount: count,
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 }

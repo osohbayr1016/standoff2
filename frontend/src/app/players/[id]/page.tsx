@@ -142,6 +142,7 @@ export default function PlayerDetailPage({
       case "Duelist":
       case "Assault":
       case "Fighter":
+      case "Exp Laner":
         return <Sword className="w-6 h-6" />;
       case "Support":
       case "Hard Support":
@@ -150,7 +151,15 @@ export default function PlayerDetailPage({
       case "Mid":
       case "Mage":
       case "Initiator":
+      case "Mid Laner":
         return <Zap className="w-6 h-6" />;
+      case "Core":
+      case "Gold Laner":
+        return <Sword className="w-6 h-6" />;
+      case "Roamer":
+        return <Shield className="w-6 h-6" />;
+      case "Fill":
+        return <Gamepad2 className="w-6 h-6" />;
       default:
         return <Gamepad2 className="w-6 h-6" />;
     }

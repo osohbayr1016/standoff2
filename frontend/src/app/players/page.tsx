@@ -100,7 +100,7 @@ const gameInfo = {
   name: "Mobile Legends",
   category: "Mobile" as const,
   description: "Mobile MOBA game",
-  roles: ["Tank", "Fighter", "Assassin", "Mage", "Marksman", "Support"],
+  roles: ["Roamer", "Exp Laner", "Core", "Mid Laner", "Gold Laner", "Support", "Fill"],
   ranks: [
     "Warrior",
     "Elite",
