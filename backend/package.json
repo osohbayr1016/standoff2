@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node prod-start.js",
     "dev": "nodemon src/index.ts",
-    "build": "npx tsc --project tsconfig.json",
+    "build": "node prod-build.js",
     "build:clean": "npm run clean:dist && npm run build",
     "clean:dist": "powershell -Command \"if (Test-Path dist) { Remove-Item -Recurse -Force dist }\"",
     "render-build": "npm install && npm run build:clean",
