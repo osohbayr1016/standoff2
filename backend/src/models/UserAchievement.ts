@@ -112,3 +112,4 @@ userAchievementSchema.index({ completedAt: 1 });
 userAchievementSchema.index({ "progress.percentage": 1 });
 
 export default mongoose.model<IUserAchievement>("UserAchievement", userAchievementSchema);
+

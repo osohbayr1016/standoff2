@@ -96,3 +96,4 @@ streamViewerSchema.index({ sessionId: 1, streamSessionId: 1 });
 streamViewerSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
 
 export default mongoose.model<IStreamViewer>("StreamViewer", streamViewerSchema);
+

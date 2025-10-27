@@ -51,6 +51,11 @@ export default function MatchHistory({ squadId }: MatchHistoryProps) {
     let draws = 0;
 
     matches.forEach((match) => {
+      // Skip cancelled matches - they don't count in statistics
+      if (match.status === 'cancelled') {
+        return;
+      }
+
       if (match.isWinner) {
         wins++;
       } else if (match.winnerId || match.winner) {
@@ -110,6 +115,11 @@ export default function MatchHistory({ squadId }: MatchHistoryProps) {
   };
 
   const getMatchResult = (match: any) => {
+    // Handle cancelled matches
+    if (match.status === 'cancelled') {
+      return { text: "ЦУЦЛАГДСАН", color: "text-gray-500", icon: XCircle };
+    }
+    
     if (match.isWinner) {
       return { text: "ЯЛАЛТ", color: "text-green-500", icon: Trophy };
     } else if (match.winnerId || match.winner) {

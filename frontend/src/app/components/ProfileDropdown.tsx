@@ -187,18 +187,6 @@ export default function ProfileDropdown({
                 </motion.button>
               </Link>
 
-              {/* Settings */}
-              <Link href="/settings">
-                <motion.button
-                  onClick={() => handleItemClick()}
-                  whileHover={{ backgroundColor: "rgba(37, 99, 235, 0.1)" }}
-                  className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-300 hover:text-blue-400 transition-colors duration-200"
-                >
-                  <Settings className="w-4 h-4" />
-                  <span className="text-sm font-medium">Тохиргоо</span>
-                </motion.button>
-              </Link>
-
               {/* My Squad */}
               {isLoadingSquad ? (
                 <motion.div className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-400">
@@ -228,6 +216,18 @@ export default function ProfileDropdown({
                   </motion.button>
                 </Link>
               )}
+
+              {/* Settings */}
+              <Link href="/settings">
+                <motion.button
+                  onClick={() => handleItemClick()}
+                  whileHover={{ backgroundColor: "rgba(37, 99, 235, 0.1)" }}
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-left text-gray-300 hover:text-blue-400 transition-colors duration-200"
+                >
+                  <Settings className="w-4 h-4" />
+                  <span className="text-sm font-medium">Тохиргоо</span>
+                </motion.button>
+              </Link>
 
               {/* Invite Friend */}
               <motion.button

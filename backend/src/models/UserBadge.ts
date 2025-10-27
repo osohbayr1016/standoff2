@@ -59,3 +59,4 @@ userBadgeSchema.index({ badgeId: 1 });
 userBadgeSchema.index({ earnedAt: 1 });
 
 export default mongoose.model<IUserBadge>("UserBadge", userBadgeSchema);
+

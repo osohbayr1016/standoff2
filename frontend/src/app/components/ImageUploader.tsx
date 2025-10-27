@@ -32,15 +32,40 @@ export default function ImageUploader({
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Clear previous errors
+    setError("");
+
+    // Comprehensive file validation
+    console.log(`📁 File selected: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
+
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      setError("Please select an image file");
+      setError("Please select an image file (JPG, PNG, GIF, WebP)");
+      return;
+    }
+
+    // Validate specific image formats
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      setError("Unsupported image format. Please use JPG, PNG, GIF, or WebP.");
       return;
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError("Image size must be less than 5MB");
+      setError("Image size must be less than 5MB. Please compress the image.");
+      return;
+    }
+
+    // Validate minimum file size (prevent empty files)
+    if (file.size < 1024) { // Less than 1KB
+      setError("File appears to be too small or corrupted. Please try a different image.");
+      return;
+    }
+
+    // Validate filename
+    if (!file.name || file.name.trim() === '') {
+      setError("Invalid filename. Please rename the file and try again.");
       return;
     }
 
@@ -67,8 +92,8 @@ export default function ImageUploader({
           Authorization: `Bearer ${token}`,
         },
         body: formData,
-        retries: 1,
-        timeoutMs: 12000,
+        retries: 2, // Increased retries
+        timeoutMs: 30000, // Increased timeout to 30 seconds
       } as any);
 
       const data = (await parseJsonSafe(response)) || {};

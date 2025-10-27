@@ -22,6 +22,7 @@ export default function CreateMatchModal({
   const [opponentSquadId, setOpponentSquadId] = useState<string>("");
   const [squads, setSquads] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingSquads, setLoadingSquads] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -31,17 +32,35 @@ export default function CreateMatchModal({
   }, [type]);
 
   const fetchSquads = async () => {
+    setLoadingSquads(true);
     try {
-      const response = await fetch(`${API_ENDPOINTS.SQUADS}?limit=100`, {
+      const token = getToken();
+      const response = await fetch(`${API_ENDPOINTS.SQUADS.ALL}?limit=100&isActive=true`, {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         credentials: "include",
       });
       const data = await response.json();
+      console.log("Fetched squads data:", data);
       if (data.success) {
-        // Өөрийн squad-ыг хасах
-        setSquads(data.data.filter((s: any) => s._id !== userSquad?._id));
+        // Өөрийн squad-ыг хасах, зөвхөн идэвхтэй болон хангалттай гишүүнтэй squad-уудыг харуулах
+        const filteredSquads = data.squads.filter((s: any) => 
+          s._id !== userSquad?._id && 
+          s.isActive === true && 
+          s.members && s.members.length >= 5
+        );
+        console.log("Filtered squads:", filteredSquads);
+        setSquads(filteredSquads);
+      } else {
+        console.error("Failed to fetch squads:", data.message);
+        setError("Squad-ууд татахад алдаа гарлаа");
       }
     } catch (error) {
       console.error("Error fetching squads:", error);
+      setError("Squad-ууд татахад алдаа гарлаа");
+    } finally {
+      setLoadingSquads(false);
     }
   };
 
@@ -180,14 +199,25 @@ export default function CreateMatchModal({
                 onChange={(e) => setOpponentSquadId(e.target.value)}
                 className="w-full bg-gray-700 text-white p-3 rounded-lg"
                 required
+                disabled={loadingSquads}
               >
-                <option value="">Сонгох...</option>
+                <option value="">
+                  {loadingSquads ? "Squad-ууд татаж байна..." : "Сонгох..."}
+                </option>
                 {squads.map((squad) => (
                   <option key={squad._id} value={squad._id}>
-                    {squad.name} [{squad.tag}]
+                    {squad.name} [{squad.tag}] ({squad.members.length}/5)
                   </option>
                 ))}
               </select>
+              {squads.length === 0 && !loadingSquads && (
+                <div className="text-yellow-500 text-sm mt-1">
+                  <p>Өөр squad байхгүй байна</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    (Зөвхөн идэвхтэй болон 5+ гишүүнтэй squad-уудыг харуулна)
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

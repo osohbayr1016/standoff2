@@ -169,3 +169,4 @@ achievementSchema.index({ isActive: 1 });
 achievementSchema.index({ isSeasonal: 1 });
 
 export default mongoose.model<IAchievement>("Achievement", achievementSchema);
+

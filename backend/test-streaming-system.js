@@ -99,3 +99,4 @@ async function testStreamingSystem() {
 
 // Run the test
 testStreamingSystem().catch(console.error);
+

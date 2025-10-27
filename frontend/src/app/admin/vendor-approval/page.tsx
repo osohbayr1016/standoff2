@@ -216,7 +216,7 @@ export default function VendorApprovalPage() {
     }
   };
 
-  if (!user || user.role !== 'admin') {
+  if (!user || user.role !== 'ADMIN') {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <Navigation />

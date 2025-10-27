@@ -336,3 +336,4 @@ The system automatically triggers achievement checks for:
 ## License
 
 This project is licensed under the ISC License - see the LICENSE file for details.
+

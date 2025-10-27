@@ -77,7 +77,7 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 
         console.log(`📊 File info: ${data.filename}, ${data.mimetype}, ${data.file.bytesRead} bytes`);
 
-        // Validate file type
+        // Validate file type and specific formats
         if (!data.mimetype.startsWith("image/")) {
           console.log(`❌ Invalid file type: ${data.mimetype}`);
           return reply.status(400).send({
@@ -86,46 +86,132 @@ const uploadRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           });
         }
 
-        // Validate file size (5MB limit)
+        // Validate specific image formats
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(data.mimetype.toLowerCase())) {
+          console.log(`❌ Unsupported image format: ${data.mimetype}`);
+          return reply.status(400).send({
+            success: false,
+            message: "Unsupported image format. Please use JPG, PNG, GIF, or WebP.",
+          });
+        }
+
+        // Convert to buffer first to get accurate size
+        console.log(`📤 Converting to buffer for validation...`);
+        const buffer = await data.toBuffer();
+        const actualFileSize = buffer.length;
+        
+        console.log(`📊 Actual file size: ${actualFileSize} bytes (reported: ${data.file.bytesRead} bytes)`);
+
+        // Validate file size (5MB limit) using actual buffer size
         const maxSize = 5 * 1024 * 1024; // 5MB
-        if (data.file.bytesRead > maxSize) {
-          console.log(`❌ File too large: ${data.file.bytesRead} bytes`);
+        if (actualFileSize > maxSize) {
+          console.log(`❌ File too large: ${actualFileSize} bytes`);
           return reply.status(400).send({
             success: false,
             message: "Image size must be less than 5MB",
           });
         }
 
+        // Validate buffer is not empty
+        if (actualFileSize === 0) {
+          console.log(`❌ Empty file buffer`);
+          return reply.status(400).send({
+            success: false,
+            message: "File appears to be empty or corrupted",
+          });
+        }
+
         console.log(`📤 Converting to base64 and uploading to Cloudinary...`);
 
         // Convert buffer to base64 for Cloudinary
-        const buffer = await data.toBuffer();
         const base64Image = buffer.toString("base64");
         const dataURI = `data:${data.mimetype};base64,${base64Image}`;
 
-        // Upload to Cloudinary
-        const uploadResult = await cloudinary.uploader.upload(dataURI, {
-          folder: "e-sport-disputes",
-          resource_type: "image",
-          transformation: [
-            { width: 800, height: 600, crop: "fill" },
-            { quality: "auto" },
-          ],
-        });
+        // Upload to Cloudinary with better error handling
+        console.log(`📤 Uploading to Cloudinary (${actualFileSize} bytes)...`);
+        
+        try {
+          // Determine optimal transformation based on file size
+          const isLargeFile = actualFileSize > 2 * 1024 * 1024; // > 2MB
+          
+          const uploadOptions: any = {
+            folder: "e-sport-disputes",
+            resource_type: "image",
+            timeout: 60000, // 60 seconds timeout
+            chunk_size: 6000000, // 6MB chunks for large files
+            eager_async: true, // Process transformations asynchronously for large files
+          };
 
-        console.log(`✅ Image uploaded to Cloudinary: ${uploadResult.secure_url}`);
+          // Add transformations only for smaller files to avoid processing issues
+          if (!isLargeFile) {
+            uploadOptions.transformation = [
+              { width: 800, height: 600, crop: "fill", gravity: "auto" },
+              { quality: "auto", fetch_format: "auto" },
+            ];
+          } else {
+            // For large files, use simpler transformations
+            uploadOptions.transformation = [
+              { quality: "auto", fetch_format: "auto" },
+            ];
+          }
 
-        return reply.send({
-          success: true,
-          url: uploadResult.secure_url,
-          publicId: uploadResult.public_id,
-          message: "Image uploaded successfully",
-        });
+          console.log(`📤 Upload options: ${JSON.stringify(uploadOptions)}`);
+          const uploadResult = await cloudinary.uploader.upload(dataURI, uploadOptions);
+
+          console.log(`✅ Image uploaded to Cloudinary: ${uploadResult.secure_url}`);
+          console.log(`📊 Upload details: ${uploadResult.width}x${uploadResult.height}, format: ${uploadResult.format}`);
+
+          return reply.send({
+            success: true,
+            url: uploadResult.secure_url,
+            publicId: uploadResult.public_id,
+            message: "Image uploaded successfully",
+          });
+        } catch (cloudinaryError) {
+          console.error("❌ Cloudinary upload error:", cloudinaryError);
+          
+          // Try fallback upload without transformations
+          console.log(`🔄 Attempting fallback upload without transformations...`);
+          try {
+            const fallbackResult = await cloudinary.uploader.upload(dataURI, {
+              folder: "e-sport-disputes",
+              resource_type: "image",
+              timeout: 60000,
+            });
+            
+            console.log(`✅ Fallback upload successful: ${fallbackResult.secure_url}`);
+            return reply.send({
+              success: true,
+              url: fallbackResult.secure_url,
+              publicId: fallbackResult.public_id,
+              message: "Image uploaded successfully (fallback)",
+            });
+          } catch (fallbackError) {
+            console.error("❌ Fallback upload also failed:", fallbackError);
+            throw cloudinaryError; // Throw original error
+          }
+        }
       } catch (error) {
         console.error("❌ Image upload error:", error);
+        
+        // Provide more specific error messages
+        let errorMessage = "Failed to upload image";
+        if (error instanceof Error) {
+          if (error.message.includes("timeout")) {
+            errorMessage = "Upload timed out. Please try with a smaller image.";
+          } else if (error.message.includes("Invalid image")) {
+            errorMessage = "Invalid image format. Please try a different image.";
+          } else if (error.message.includes("File too large")) {
+            errorMessage = "Image is too large. Please compress the image.";
+          } else if (error.message.includes("Network")) {
+            errorMessage = "Network error. Please check your connection and try again.";
+          }
+        }
+        
         return reply.status(500).send({
           success: false,
-          message: "Failed to upload image",
+          message: errorMessage,
           error: error instanceof Error ? error.message : "Unknown error",
         });
       }

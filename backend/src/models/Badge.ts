@@ -140,3 +140,4 @@ badgeSchema.index({ isSeasonal: 1 });
 badgeSchema.index({ displayOrder: 1 });
 
 export default mongoose.model<IBadge>("Badge", badgeSchema);
+

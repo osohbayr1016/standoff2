@@ -105,3 +105,4 @@ streamChatSchema.index({ streamSessionId: 1, isDeleted: 1, timestamp: -1 });
 streamChatSchema.index({ userId: 1, timestamp: -1 });
 
 export default mongoose.model<IStreamChat>("StreamChat", streamChatSchema);
+

@@ -16,3 +16,4 @@ initializeAchievements()
     console.error("❌ Achievement system initialization failed:", error);
     process.exit(1);
   });
+

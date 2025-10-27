@@ -169,13 +169,27 @@ const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 
       const skip = (page - 1) * limit;
 
-      // Fetch regular matches
+      // Fetch completed regular matches (for statistics)
       const regularMatches = await Match.find({
         $or: [
           { challengerSquadId: squadId },
           { opponentSquadId: squadId },
         ],
-        status: { $in: [MatchStatus.COMPLETED, MatchStatus.CANCELLED] },
+        status: MatchStatus.COMPLETED,
+      })
+        .populate("challengerSquadId", "name tag logo")
+        .populate("opponentSquadId", "name tag logo")
+        .populate("winnerId", "name tag logo")
+        .sort({ completedAt: -1 })
+        .lean();
+
+      // Fetch cancelled regular matches (for display only, not statistics)
+      const cancelledMatches = await Match.find({
+        $or: [
+          { challengerSquadId: squadId },
+          { opponentSquadId: squadId },
+        ],
+        status: MatchStatus.CANCELLED,
       })
         .populate("challengerSquadId", "name tag logo")
         .populate("opponentSquadId", "name tag logo")
@@ -201,6 +215,7 @@ const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 
       // Combine and format matches
       const allMatches = [
+        // Completed regular matches (count in statistics)
         ...regularMatches.map(match => ({
           ...match,
           matchType: 'regular',
@@ -210,7 +225,21 @@ const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           isWinner: match.winnerId && match.winnerId._id.toString() === squadId,
           bountyAmount: match.bountyAmount || 0,
           completedAt: match.completedAt,
+          status: 'completed',
         })),
+        // Cancelled regular matches (display only, don't count in statistics)
+        ...cancelledMatches.map(match => ({
+          ...match,
+          matchType: 'regular',
+          opponentSquad: match.challengerSquadId._id.toString() === squadId 
+            ? match.opponentSquadId 
+            : match.challengerSquadId,
+          isWinner: false, // Cancelled matches don't have winners
+          bountyAmount: match.bountyAmount || 0,
+          completedAt: match.completedAt,
+          status: 'cancelled',
+        })),
+        // Tournament matches (count in statistics)
         ...tournamentMatches.map(match => ({
           ...match,
           matchType: 'tournament',
@@ -220,6 +249,7 @@ const matchRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           isWinner: match.winner && match.winner._id.toString() === squadId,
           bountyAmount: match.bountyCoinAmount || 0,
           completedAt: match.endTime,
+          status: 'completed',
         }))
       ].sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
 

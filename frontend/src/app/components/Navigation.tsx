@@ -244,32 +244,6 @@ export default function Navigation() {
                 </span>
               </div>
 
-              <AnimatePresence mode="wait">
-                {isLoaded && (
-                  <motion.button
-                    key={isDarkMode ? "dark" : "light"}
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.8, opacity: 0 }}
-                    onClick={toggleDarkMode}
-                    whileHover={{ scale: 1.05, rotate: 180 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 transition-all duration-300 border border-gray-700 hover:border-blue-400"
-                    title={
-                      isDarkMode
-                        ? "Switch to Light Mode"
-                        : "Switch to Dark Mode"
-                    }
-                  >
-                    {isDarkMode ? (
-                      <Sun className="w-5 h-5 text-yellow-500" />
-                    ) : (
-                      <Moon className="w-5 h-5 text-gray-600" />
-                    )}
-                  </motion.button>
-                )}
-              </AnimatePresence>
-
               {user ? (
                 <div className="flex items-center space-x-2">
                   <ProfileDropdown onInviteFriend={handleInviteFriend} />
@@ -366,26 +340,6 @@ export default function Navigation() {
                     >
                       <Bell className="w-5 h-5" />
                     </motion.button>
-
-                    <AnimatePresence mode="wait">
-                      {isLoaded && (
-                        <motion.button
-                          key={isDarkMode ? "dark-mobile" : "light-mobile"}
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0.8, opacity: 0 }}
-                          onClick={toggleDarkMode}
-                          whileTap={{ scale: 0.95 }}
-                          className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 transition-colors duration-200"
-                        >
-                          {isDarkMode ? (
-                            <Sun className="w-5 h-5 text-yellow-500" />
-                          ) : (
-                            <Moon className="w-5 h-5 text-gray-600" />
-                          )}
-                        </motion.button>
-                      )}
-                    </AnimatePresence>
                   </div>
 
                   {/* Mobile User Actions */}

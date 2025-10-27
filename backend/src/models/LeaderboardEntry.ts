@@ -81,3 +81,4 @@ leaderboardEntrySchema.index({ userId: 1, leaderboardType: 1, period: 1 }, { uni
 leaderboardEntrySchema.index({ score: -1 }); // For sorting by score
 
 export default mongoose.model<ILeaderboardEntry>("LeaderboardEntry", leaderboardEntrySchema);
+

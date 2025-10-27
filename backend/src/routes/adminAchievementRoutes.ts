@@ -552,3 +552,4 @@ const adminAchievementRoutes: FastifyPluginAsync = async (fastify: FastifyInstan
 };
 
 export default adminAchievementRoutes;
+
