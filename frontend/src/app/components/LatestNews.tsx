@@ -71,36 +71,7 @@ export default function LatestNews() {
       }
     } catch (error) {
       console.error("Error fetching latest news:", error);
-      // Fallback to mock data
-      setNews([
-        {
-          id: "1",
-          type: "update",
-          title: "Mobile Legends New Update 1.8.0",
-          description:
-            "Major balance changes, new hero releases, and improved matchmaking system. Experience enhanced gameplay with updated graphics and performance optimizations.",
-          image:
-            "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=300&fit=crop",
-          date: new Date().toISOString(),
-          author: "MLBB Team",
-          featured: true,
-          category: "Game Updates",
-          readTime: "5 min read",
-        },
-        {
-          id: "2",
-          type: "tournament",
-          title: "Mythic Championship 2024",
-          description:
-            "The biggest Mobile Legends tournament of the year is here! Top teams from around the world compete for the ultimate prize pool of $500,000.",
-          image:
-            "https://images.unsplash.com/photo-1511882150382-421056c89033?w=400&h=300&fit=crop",
-          date: new Date().toISOString(),
-          author: "Tournament Admin",
-          category: "E-Sport",
-          readTime: "3 min read",
-        },
-      ]);
+      setNews([]);
     } finally {
       setIsLoading(false);
     }

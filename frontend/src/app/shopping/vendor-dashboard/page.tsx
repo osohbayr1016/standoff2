@@ -68,72 +68,20 @@ const categories = [
   "Бусад",
 ];
 
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    name: "Gaming Keyboard RGB",
-    price: 150000,
-    originalPrice: 200000,
-    image: "/images/keyboard.jpg",
-    category: "Гейминг хэрэгсэл",
-    description: "RGB backlit mechanical gaming keyboard",
-    stock: 25,
-    status: "active",
-    rating: 4.9,
-    reviews: 156,
-    sold: 89,
-    createdAt: "2024-01-15",
-    updatedAt: "2024-01-20",
-  },
-  {
-    id: "2",
-    name: "Gaming Mouse Wireless",
-    price: 85000,
-    image: "/images/mouse.jpg",
-    category: "Гейминг хэрэгсэл",
-    description: "High precision wireless gaming mouse",
-    stock: 0,
-    status: "inactive",
-    rating: 4.7,
-    reviews: 98,
-    sold: 67,
-    createdAt: "2024-01-10",
-    updatedAt: "2024-01-18",
-  },
-  {
-    id: "3",
-    name: "Gaming Headset",
-    price: 120000,
-    originalPrice: 150000,
-    image: "/images/headset.jpg",
-    category: "Гейминг хэрэгсэл",
-    description: "Professional gaming headset with 7.1 surround sound",
-    stock: 15,
-    status: "active",
-    rating: 4.8,
-    reviews: 203,
-    sold: 134,
-    createdAt: "2024-01-05",
-    updatedAt: "2024-01-22",
-  },
-];
-
-const mockStats: VendorStats = {
-  totalProducts: 12,
-  activeProducts: 8,
-  totalSales: 456,
-  totalRevenue: 45600000,
-  averageRating: 4.7,
-  totalReviews: 1250,
-  monthlySales: 89,
-  monthlyRevenue: 8900000,
-};
-
 export default function VendorDashboardPage() {
   const { user } = useAuth();
   const [vendorStatus, setVendorStatus] = useState<'pending' | 'approved' | 'rejected' | 'loading'>('loading');
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [stats, setStats] = useState<VendorStats>(mockStats);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [stats, setStats] = useState<VendorStats>({
+    totalProducts: 0,
+    activeProducts: 0,
+    totalSales: 0,
+    totalRevenue: 0,
+    averageRating: 0,
+    totalReviews: 0,
+    monthlySales: 0,
+    monthlyRevenue: 0,
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Бүгд");
   const [selectedStatus, setSelectedStatus] = useState("Бүгд");

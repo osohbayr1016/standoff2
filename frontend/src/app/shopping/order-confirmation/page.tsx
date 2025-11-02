@@ -60,57 +60,6 @@ interface Order {
   trackingNumber?: string;
 }
 
-// Mock order data - in real app this would come from API
-const mockOrder: Order = {
-  id: "ORD-2024-001",
-  orderNumber: "ES-2024-001234",
-  items: [
-    {
-      id: "1",
-      name: "Gaming Keyboard RGB",
-      price: 150000,
-      quantity: 1,
-      image: "/images/keyboard.jpg",
-      vendor: {
-        id: "1",
-        name: "Gaming Pro Store",
-        logo: "/images/gaming-store.png",
-      },
-    },
-    {
-      id: "2",
-      name: "Gaming Mouse Wireless",
-      price: 85000,
-      quantity: 2,
-      image: "/images/mouse.jpg",
-      vendor: {
-        id: "1",
-        name: "Gaming Pro Store",
-        logo: "/images/gaming-store.png",
-      },
-    },
-  ],
-  subtotal: 320000,
-  shipping: 5000,
-  total: 325000,
-  status: "confirmed",
-  paymentStatus: "paid",
-  paymentMethod: "Банкны карт",
-  shippingAddress: {
-    firstName: "Батбаяр",
-    lastName: "Мөнхбат",
-    phone: "99112233",
-    address: "Сүхбаатар дүүрэг, 1-р хороо, 15-р байр",
-    city: "Улаанбаатар",
-    district: "Сүхбаатар дүүрэг",
-    postalCode: "14200",
-    notes: "Оффисын орцны хажууд хүргэх",
-  },
-  createdAt: "2024-01-25T10:30:00Z",
-  estimatedDelivery: "2024-01-28T18:00:00Z",
-  trackingNumber: "TRK-001234567",
-};
-
 const statusSteps = [
   { key: "pending", label: "Захиалга өгөгдсөн", icon: Package },
   { key: "confirmed", label: "Баталгаажсан", icon: CheckCircle },
@@ -124,13 +73,15 @@ export default function OrderConfirmationPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call to fetch order details
     const fetchOrder = async () => {
       try {
         setLoading(true);
-        // In real app, you would fetch from API using order ID from URL params
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setOrder(mockOrder);
+        // TODO: Implement API call to fetch order by ID from URL params
+        // const response = await fetch(`/api/orders/${orderId}`);
+        // const data = await response.json();
+        // setOrder(data.order);
+        
+        setOrder(null);
       } catch (error) {
         console.error("Error fetching order:", error);
       } finally {

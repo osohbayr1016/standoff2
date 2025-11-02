@@ -68,88 +68,24 @@ export default function VendorApprovalPage() {
   const [showModal, setShowModal] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
-  // Mock data - replace with real API call
   useEffect(() => {
-    const mockApplications: VendorApplication[] = [
-      {
-        id: "vendor_1",
-        userId: "user_1",
-        storeName: "Gaming Pro Store",
-        description: "Гейминг хэрэгсэл, компьютер болон тоглоомын аксессуарууд зарах дэлгүүр",
-        category: "Гейминг хэрэгсэл",
-        address: "Улаанбаатар хот, Сүхбаатар дүүрэг, Чингис хааны талбай 1",
-        phone: "99112233",
-        email: "info@gamingpro.mn",
-        website: "https://gamingpro.mn",
-        bankAccount: "1234567890",
-        taxId: "TAX123456",
-        contactPerson: "Батбаяр",
-        contactPhone: "99112233",
-        contactEmail: "batbayar@gamingpro.mn",
-        socialMedia: {
-          facebook: "https://facebook.com/gamingpro",
-          instagram: "https://instagram.com/gamingpro",
-          twitter: "",
-        },
-        businessHours: {
-          monday: "09:00-18:00",
-          tuesday: "09:00-18:00",
-          wednesday: "09:00-18:00",
-          thursday: "09:00-18:00",
-          friday: "09:00-18:00",
-          saturday: "10:00-16:00",
-          sunday: "Амрах",
-        },
-        deliveryAreas: ["Улаанбаатар", "Дархан"],
-        paymentMethods: ["Банкны карт", "QPay", "SocialPay"],
-        status: "pending",
-        createdAt: "2024-01-15T10:30:00Z",
-        updatedAt: "2024-01-15T10:30:00Z",
-        logo: "/uploads/vendors/vendor_1/logo.png",
-        banner: "/uploads/vendors/vendor_1/banner.png",
-        businessLicense: "/uploads/vendors/vendor_1/license.pdf",
-      },
-      {
-        id: "vendor_2",
-        userId: "user_2",
-        storeName: "Tech Solutions",
-        description: "Компьютер, ноутбук болон цахилгаан бараа зарах дэлгүүр",
-        category: "Компьютер",
-        address: "Улаанбаатар хот, Баянгол дүүрэг, Төв гудамж 15",
-        phone: "99223344",
-        email: "info@techsolutions.mn",
-        bankAccount: "0987654321",
-        contactPerson: "Сараа",
-        contactPhone: "99223344",
-        contactEmail: "saraa@techsolutions.mn",
-        socialMedia: {
-          facebook: "",
-          instagram: "https://instagram.com/techsolutions",
-          twitter: "",
-        },
-        businessHours: {
-          monday: "09:00-19:00",
-          tuesday: "09:00-19:00",
-          wednesday: "09:00-19:00",
-          thursday: "09:00-19:00",
-          friday: "09:00-19:00",
-          saturday: "10:00-17:00",
-          sunday: "Амрах",
-        },
-        deliveryAreas: ["Улаанбаатар"],
-        paymentMethods: ["Банкны карт", "QPay"],
-        status: "approved",
-        createdAt: "2024-01-10T14:20:00Z",
-        updatedAt: "2024-01-12T09:15:00Z",
-        logo: "/uploads/vendors/vendor_2/logo.png",
-        businessLicense: "/uploads/vendors/vendor_2/license.pdf",
-      },
-    ];
+    const fetchApplications = async () => {
+      try {
+        setLoading(true);
+        // TODO: Implement API call to fetch vendor applications
+        // const response = await fetch('/api/vendors/applications');
+        // const data = await response.json();
+        // setApplications(data.applications);
+        
+        setApplications([]);
+      } catch (error) {
+        console.error("Error fetching vendor applications:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setTimeout(() => {
-      setApplications(mockApplications);
-      setLoading(false);
-    }, 1000);
+    fetchApplications();
   }, []);
 
   const filteredApplications = applications.filter(app => 

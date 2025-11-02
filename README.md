@@ -115,6 +115,10 @@ npm run dev
 
 - `GET /health` - Server health status
 
+### Admin
+
+- `DELETE /api/admin/clear-all` - Clear all data from collections (Admin only)
+
 ## 🎮 E-Sport Connection Platform
 
 This platform is designed to help gamers:

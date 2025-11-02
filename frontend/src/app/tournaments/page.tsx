@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import TournamentCard, { Tournament } from "../../components/TournamentCard";
-import { demoTournaments } from "../../data/demoTournaments";
 import { API_ENDPOINTS } from "../../config/api";
 import { safeFetch, parseJsonSafe } from "../../lib/safeFetch";
 
@@ -93,13 +92,12 @@ export default function TournamentsPage() {
           setTournaments([]);
         }
       } else {
-        setTournaments(demoTournaments);
+        setTournaments([]);
       }
     } catch (error) {
       console.error("Error fetching tournaments:", error);
-      // Use demo data as fallback
-      setTournaments(demoTournaments);
-      setError(null); // Clear error since we have demo data
+      setTournaments([]);
+      setError("Failed to load tournaments. Please try again later.");
     } finally {
       setIsLoading(false);
     }

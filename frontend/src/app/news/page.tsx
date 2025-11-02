@@ -34,114 +34,6 @@ interface NewsItem {
   readTime: string;
 }
 
-const mockNewsData: NewsItem[] = [
-  {
-    id: "1",
-    type: "update",
-    title: "Mobile Legends New Update 1.8.0",
-    description:
-      "Major balance changes, new hero releases, and improved matchmaking system. Experience enhanced gameplay with updated graphics and performance optimizations.",
-    image:
-      "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=300&fit=crop",
-    date: "2024-01-15",
-    author: "MLBB Team",
-    featured: true,
-    category: "Game Updates",
-    readTime: "5 min read",
-  },
-  {
-    id: "2",
-    type: "tournament",
-    title: "Mythic Championship 2024",
-    description:
-      "The biggest Mobile Legends tournament of the year is here! Top teams from around the world compete for the ultimate prize pool of $500,000.",
-    image:
-      "https://images.unsplash.com/photo-1511882150382-421056c89033?w=400&h=300&fit=crop",
-    date: "2024-01-14",
-    author: "Tournament Admin",
-    category: "E-Sport",
-    readTime: "3 min read",
-  },
-  {
-    id: "3",
-    type: "player",
-    title: "Pro Player 'DragonSlayer' Joins Team Phoenix",
-    description:
-      "Famous Mobile Legends player DragonSlayer has officially joined Team Phoenix. This strategic move is expected to shake up the competitive scene.",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-    date: "2024-01-13",
-    author: "E-Sports Reporter",
-    category: "E-Sport",
-    readTime: "2 min read",
-  },
-  {
-    id: "4",
-    type: "winner",
-    title: "Team Thunder Wins Regional Finals",
-    description:
-      "In an intense 5-game series, Team Thunder emerged victorious against Team Lightning. The final match lasted over 45 minutes with incredible plays.",
-    image:
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop",
-    date: "2024-01-12",
-    author: "Tournament Admin",
-    category: "E-Sport",
-    readTime: "4 min read",
-  },
-  {
-    id: "5",
-    type: "feature",
-    title: "New Ranked Season Begins",
-    description:
-      "Season 15 of Mobile Legends ranked play is now live! New rewards, updated matchmaking, and fresh challenges await all players.",
-    image:
-      "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=300&fit=crop",
-    date: "2024-01-11",
-    author: "MLBB Team",
-    category: "Game Updates",
-    readTime: "3 min read",
-  },
-  {
-    id: "6",
-    type: "update",
-    title: "Hero Balance Changes",
-    description:
-      "Latest patch notes include significant buffs to underused heroes and nerfs to overpowered ones. Meta is expected to shift dramatically.",
-    image:
-      "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=300&fit=crop",
-    date: "2024-01-10",
-    author: "Game Balance Team",
-    category: "Game Updates",
-    readTime: "6 min read",
-  },
-  {
-    id: "7",
-    type: "player",
-    title: "Rookie Player 'ShadowKnight' Makes Debut",
-    description:
-      "Young talent ShadowKnight joins the professional scene with impressive solo queue performance. Teams are already showing interest.",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-    date: "2024-01-09",
-    author: "E-Sports Reporter",
-    category: "E-Sport",
-    readTime: "2 min read",
-  },
-  {
-    id: "8",
-    type: "tournament",
-    title: "Community Tournament Registration Open",
-    description:
-      "Join the monthly community tournament! Open to all skill levels with prizes for winners. Registration closes in 2 weeks.",
-    image:
-      "https://images.unsplash.com/photo-1511882150382-421056c89033?w=400&h=300&fit=crop",
-    date: "2024-01-08",
-    author: "Community Manager",
-    category: "Other",
-    readTime: "1 min read",
-  },
-];
-
 export default function NewsPage() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [featuredNews, setFeaturedNews] = useState<NewsItem | null>(null);
@@ -229,18 +121,18 @@ export default function NewsPage() {
           } catch (categoriesError) {
             }
         } catch (apiError) {
-          // Fallback to mock data if API fails
-          setNews(mockNewsData);
-          setFeaturedNews(mockNewsData.find((item) => item.featured) || null);
+          // API failed, show empty state
+          setNews([]);
+          setFeaturedNews(null);
           setCategories(["All", "Game Updates", "E-Sport", "Other"]);
-          setError("API недоступен. Показываем демо данные.");
+          setError("Failed to load news. Please try again later.");
         }
       } catch (error) {
         console.error("❌ Error fetching news:", error);
-        setError("Не удалось загрузить новости. Попробуйте позже.");
-        // Fallback to mock data
-        setNews(mockNewsData);
-        setFeaturedNews(mockNewsData.find((item) => item.featured) || null);
+        setError("Failed to load news. Please try again later.");
+        // Show empty state on error
+        setNews([]);
+        setFeaturedNews(null);
         setCategories(["All", "Game Updates", "E-Sport", "Other"]);
       } finally {
         setLoading(false);

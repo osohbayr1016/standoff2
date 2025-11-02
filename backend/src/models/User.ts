@@ -10,9 +10,7 @@ export enum UserRole {
 
 export interface IUser extends Document {
   email: string;
-  name: string;
-  password: string;
-  role: UserRole;
+  name?: string;
   avatar?: string;
   bio?: string;
   gameExpertise?: string;
@@ -24,6 +22,8 @@ export interface IUser extends Document {
   lastSeen: Date;
   googleId?: string;
   facebookId?: string;
+  password?: string;
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -40,18 +40,7 @@ const userSchema = new Schema<IUser>(
     },
     name: {
       type: String,
-      required: true,
       trim: true,
-    },
-    password: {
-      type: String,
-      required: true,
-      minlength: 6,
-    },
-    role: {
-      type: String,
-      enum: Object.values(UserRole),
-      default: UserRole.PLAYER,
     },
     avatar: {
       type: String,
@@ -98,6 +87,15 @@ const userSchema = new Schema<IUser>(
       unique: true,
       sparse: true,
     },
+    password: {
+      type: String,
+      minlength: 6,
+    },
+    role: {
+      type: String,
+      enum: Object.values(UserRole),
+      default: UserRole.PLAYER,
+    },
   },
   {
     timestamps: true,
@@ -106,7 +104,7 @@ const userSchema = new Schema<IUser>(
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password") || !this.password) return next();
 
   try {
     const salt = await bcrypt.genSalt(12);
@@ -121,6 +119,7 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
+  if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
 };
 

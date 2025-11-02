@@ -226,6 +226,9 @@ async function registerRoutes() {
     fastify.register(adminAchievementRoutes.default, {
       prefix: "/api",
     });
+    // Admin routes
+    const adminRoutes = await import("./routes/adminRoutes");
+    fastify.register(adminRoutes.default, { prefix: "/api/admin" });
   } catch (error) {
     console.error("❌ Error registering routes:", error);
     // Continue without routes for basic health check

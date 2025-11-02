@@ -78,89 +78,6 @@ const categories = [
   "Гэр ахуйн бараа",
 ];
 
-// Mock data - in real app this would come from API
-const mockVendor: Vendor = {
-  id: "1",
-  name: "Gaming Pro Store",
-  logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop&crop=center",
-  banner: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&h=400&fit=crop",
-  description: "Гейминг хэрэгсэл, компьютер болон аксессуарууд",
-  rating: 4.8,
-  reviews: 1250,
-  products: 450,
-  followers: 5000,
-  verified: true,
-  categories: ["Гейминг хэрэгсэл", "Компьютер"],
-  featured: true,
-};
-
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    name: "Gaming Keyboard RGB",
-    price: 150000,
-    originalPrice: 200000,
-    image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400&h=300&fit=crop",
-    category: "Гейминг хэрэгсэл",
-    vendor: {
-      id: "1",
-      name: "Gaming Pro Store",
-      logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop&crop=center",
-      rating: 4.8,
-      reviews: 1250,
-      verified: true,
-    },
-    rating: 4.9,
-    reviews: 156,
-    sold: 89,
-    tags: ["RGB", "Mechanical", "Gaming"],
-    description: "RGB backlit mechanical gaming keyboard",
-    inStock: true,
-    discount: 25,
-  },
-  {
-    id: "2",
-    name: "Gaming Mouse Wireless",
-    price: 85000,
-    image: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=400&h=300&fit=crop",
-    category: "Гейминг хэрэгсэл",
-    vendor: {
-      id: "1",
-      name: "Gaming Pro Store",
-      logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop&crop=center",
-      rating: 4.8,
-      reviews: 1250,
-      verified: true,
-    },
-    rating: 4.7,
-    reviews: 98,
-    sold: 67,
-    tags: ["Wireless", "Gaming", "RGB"],
-    description: "High precision wireless gaming mouse",
-    inStock: true,
-  },
-  {
-    id: "4",
-    name: "Gaming Chair",
-    price: 450000,
-    image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop",
-    category: "Гейминг хэрэгсэл",
-    vendor: {
-      id: "1",
-      name: "Gaming Pro Store",
-      logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop&crop=center",
-      rating: 4.8,
-      reviews: 1250,
-      verified: true,
-    },
-    rating: 4.6,
-    reviews: 45,
-    sold: 23,
-    tags: ["Ergonomic", "RGB", "Adjustable"],
-    description: "Ergonomic gaming chair with RGB lighting",
-    inStock: true,
-  },
-];
 
 export default function StoreDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { user } = useAuth();
@@ -180,10 +97,15 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
     const fetchStoreData = async () => {
       try {
         setLoading(true);
-        // Simulate API call - in real app, fetch by resolvedParams.id
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setVendor(mockVendor);
-        setProducts(mockProducts);
+        // TODO: Implement API call to fetch store by ID
+        // const response = await fetch(`/api/stores/${resolvedParams.id}`);
+        // const data = await response.json();
+        // setVendor(data.vendor);
+        // setProducts(data.products);
+        
+        // For now, keep empty state
+        setVendor(null);
+        setProducts([]);
       } catch (error) {
         console.error("Error fetching store data:", error);
       } finally {

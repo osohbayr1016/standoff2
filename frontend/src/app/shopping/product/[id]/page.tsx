@@ -55,54 +55,6 @@ interface Product {
   shipping?: string;
 }
 
-// Mock product data - in real app this would come from API
-const mockProduct: Product = {
-  id: "1",
-  name: "Gaming Keyboard RGB Mechanical",
-  price: 150000,
-  originalPrice: 200000,
-  image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400&h=300&fit=crop",
-  category: "Гейминг хэрэгсэл",
-  vendor: {
-    id: "1",
-    name: "Gaming Pro Store",
-    logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop&crop=center",
-    rating: 4.8,
-    reviews: 1250,
-    verified: true,
-  },
-  rating: 4.9,
-  reviews: 156,
-  sold: 89,
-  tags: ["RGB", "Mechanical", "Gaming", "Wireless"],
-  description: "RGB backlit mechanical gaming keyboard with customizable lighting effects, tactile switches, and ergonomic design. Perfect for gaming and professional use.",
-  inStock: true,
-  discount: 25,
-  images: [
-    "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1601445638532-3c6f6c3aa1d6?w=400&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400&h=300&fit=crop",
-  ],
-  specifications: {
-    "Төрөл": "Механик клавиатур",
-    "Холболт": "USB-C",
-    "Товчны тоо": "104",
-    "RGB гэрэл": "Тийм",
-    "Хэмжээ": "45.5 x 15.5 x 3.5 см",
-    "Жин": "1.2 кг",
-    "Гарант": "2 жил",
-  },
-  features: [
-    "RGB гэрэлтүүлэг - 16.8 сая өнгө",
-    "Механик товч - Cherry MX Blue",
-    "Anti-ghosting технологи",
-    "USB-C холболт",
-    "Эргономик дизайн",
-    "Гарын хэв маяг",
-  ],
-  warranty: "2 жилийн албан ёсны гарант",
-  shipping: "Улаанбаатар хотод 1-2 хоногт хүргэнэ",
-};
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { user } = useAuth();
@@ -119,9 +71,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        // Simulate API call - in real app, fetch by resolvedParams.id
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setProduct(mockProduct);
+        // TODO: Implement API call to fetch product by ID
+        // const response = await fetch(`/api/products/${resolvedParams.id}`);
+        // const data = await response.json();
+        // setProduct(data.product);
+        
+        // For now, keep empty state
+        setProduct(null);
       } catch (error) {
         console.error("Error fetching product:", error);
       } finally {

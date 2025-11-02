@@ -121,52 +121,6 @@ export async function GET(request: NextRequest) {
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
-    // If no real data, provide mock activities
-    if (activities.length === 0) {
-      const mockActivities = [
-        {
-          id: "1",
-          type: "news",
-          title: "New article: MLBB Season 15 Updates",
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-          icon: "newspaper",
-          color: "bg-blue-500/20 text-blue-400",
-        },
-        {
-          id: "2",
-          type: "user",
-          title: "New user registered: john_doe",
-          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
-          icon: "user",
-          color: "bg-green-500/20 text-green-400",
-        },
-        {
-          id: "3",
-          type: "tournament",
-          title: "New tournament: Spring Championship 2024",
-          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
-          icon: "trophy",
-          color: "bg-purple-500/20 text-purple-400",
-        },
-        {
-          id: "4",
-          type: "profile",
-          title: "New profile created: ProGamer123",
-          timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), // 8 hours ago
-          icon: "shield",
-          color: "bg-orange-500/20 text-orange-400",
-        },
-        {
-          id: "5",
-          type: "pro-player",
-          title: "New pro player: MLBB_Champion",
-          timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
-          icon: "trophy",
-          color: "bg-yellow-500/20 text-yellow-400",
-        },
-      ];
-      activities.push(...mockActivities);
-    }
 
     // Return only the 5 most recent activities
     const recentActivities = activities.slice(0, 5);
@@ -178,37 +132,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching dashboard activity:", error);
 
-    // Fallback mock activities
-    const fallbackActivities = [
-      {
-        id: "1",
-        type: "news",
-        title: "New article: MLBB Season 15 Updates",
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        icon: "newspaper",
-        color: "bg-blue-500/20 text-blue-400",
-      },
-      {
-        id: "2",
-        type: "user",
-        title: "New user registered: john_doe",
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-        icon: "user",
-        color: "bg-green-500/20 text-green-400",
-      },
-      {
-        id: "3",
-        type: "tournament",
-        title: "New tournament: Spring Championship 2024",
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-        icon: "trophy",
-        color: "bg-purple-500/20 text-purple-400",
-      },
-    ];
-
     return NextResponse.json({
       success: true,
-      activities: fallbackActivities,
+      activities: [],
     });
   }
 }

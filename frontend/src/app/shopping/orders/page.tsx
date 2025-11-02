@@ -49,102 +49,6 @@ interface Order {
   trackingNumber?: string;
 }
 
-// Mock orders data - in real app this would come from API
-const mockOrders: Order[] = [
-  {
-    id: "ORD-2024-001",
-    orderNumber: "ES-2024-001234",
-    items: [
-      {
-        id: "1",
-        name: "Gaming Keyboard RGB",
-        price: 150000,
-        quantity: 1,
-        image: "/images/keyboard.jpg",
-        vendor: {
-          id: "1",
-          name: "Gaming Pro Store",
-          logo: "/images/gaming-store.png",
-        },
-      },
-    ],
-    subtotal: 150000,
-    shipping: 5000,
-    total: 155000,
-    status: "delivered",
-    paymentStatus: "paid",
-    paymentMethod: "Банкны карт",
-    createdAt: "2024-01-20T10:30:00Z",
-    estimatedDelivery: "2024-01-23T18:00:00Z",
-    trackingNumber: "TRK-001234567",
-  },
-  {
-    id: "ORD-2024-002",
-    orderNumber: "ES-2024-001235",
-    items: [
-      {
-        id: "2",
-        name: "Gaming Mouse Wireless",
-        price: 85000,
-        quantity: 2,
-        image: "/images/mouse.jpg",
-        vendor: {
-          id: "1",
-          name: "Gaming Pro Store",
-          logo: "/images/gaming-store.png",
-        },
-      },
-      {
-        id: "3",
-        name: "Gaming Headset",
-        price: 120000,
-        quantity: 1,
-        image: "/images/headset.jpg",
-        vendor: {
-          id: "2",
-          name: "Tech Hub Mongolia",
-          logo: "/images/tech-store.png",
-        },
-      },
-    ],
-    subtotal: 290000,
-    shipping: 5000,
-    total: 295000,
-    status: "shipped",
-    paymentStatus: "paid",
-    paymentMethod: "QPay",
-    createdAt: "2024-01-22T14:15:00Z",
-    estimatedDelivery: "2024-01-25T18:00:00Z",
-    trackingNumber: "TRK-001234568",
-  },
-  {
-    id: "ORD-2024-003",
-    orderNumber: "ES-2024-001236",
-    items: [
-      {
-        id: "4",
-        name: "Gaming Chair",
-        price: 450000,
-        quantity: 1,
-        image: "/images/chair.jpg",
-        vendor: {
-          id: "1",
-          name: "Gaming Pro Store",
-          logo: "/images/gaming-store.png",
-        },
-      },
-    ],
-    subtotal: 450000,
-    shipping: 5000,
-    total: 455000,
-    status: "confirmed",
-    paymentStatus: "paid",
-    paymentMethod: "SocialPay",
-    createdAt: "2024-01-24T09:45:00Z",
-    estimatedDelivery: "2024-01-27T18:00:00Z",
-  },
-];
-
 const statusFilters = [
   { key: "all", label: "Бүгд" },
   { key: "pending", label: "Хүлээгдэж байна" },
@@ -166,9 +70,12 @@ export default function OrderHistoryPage() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setOrders(mockOrders);
+        // TODO: Implement API call to fetch user orders
+        // const response = await fetch('/api/orders');
+        // const data = await response.json();
+        // setOrders(data.orders);
+        
+        setOrders([]);
       } catch (error) {
         console.error("Error fetching orders:", error);
       } finally {

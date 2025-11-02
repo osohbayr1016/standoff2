@@ -88,20 +88,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // If all API calls failed, provide mock data for development
-    if (
-      newsStats.total === 0 &&
-      usersStats.total === 0 &&
-      tournamentsStats.total === 0 &&
-      profilesStats.total === 0
-    ) {
-      // Mock data for development/testing
-      newsStats = { total: 12, new: 3 };
-      usersStats = { total: 156, new: 23 };
-      tournamentsStats = { total: 8, new: 2 };
-      profilesStats = { total: 89, new: 15 };
-    }
-
     const stats = {
       news: newsStats,
       users: usersStats,
@@ -116,17 +102,14 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
 
-    // Fallback mock data
-    const fallbackStats = {
-      news: { total: 12, new: 3 },
-      users: { total: 156, new: 23 },
-      tournaments: { total: 8, new: 2 },
-      profiles: { total: 89, new: 15 },
-    };
-
     return NextResponse.json({
       success: true,
-      stats: fallbackStats,
+      stats: {
+        news: { total: 0, new: 0 },
+        users: { total: 0, new: 0 },
+        tournaments: { total: 0, new: 0 },
+        profiles: { total: 0, new: 0 },
+      },
     });
   }
 }

@@ -85,167 +85,19 @@ const categories = [
   "Гэр ахуйн бараа",
 ];
 
-const vendors: Vendor[] = [
-  {
-    id: "1",
-    name: "Gaming Pro Store",
-    logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop&crop=center",
-    banner: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&h=400&fit=crop",
-    description: "Гейминг хэрэгсэл, компьютер болон аксессуарууд",
-    rating: 4.8,
-    reviews: 1250,
-    products: 450,
-    followers: 5000,
-    verified: true,
-    categories: ["Гейминг хэрэгсэл", "Компьютер"],
-    featured: true,
-  },
-  {
-    id: "2",
-    name: "Tech Hub Mongolia",
-    logo: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=100&h=100&fit=crop&crop=center",
-    banner: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1200&h=400&fit=crop",
-    description: "Шинэ технологийн бүх төрлийн бараа",
-    rating: 4.6,
-    reviews: 890,
-    products: 320,
-    followers: 3200,
-    verified: true,
-    categories: ["Компьютер", "Цахилгаан бараа"],
-    featured: true,
-  },
-  {
-    id: "3",
-    name: "Sports Zone",
-    logo: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=100&h=100&fit=crop&crop=center",
-    banner: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=400&fit=crop",
-    description: "Спорт болон фитнесийн бүх төрлийн бараа",
-    rating: 4.7,
-    reviews: 650,
-    products: 280,
-    followers: 2100,
-    verified: false,
-    categories: ["Спорт бараа", "Хувцас"],
-    featured: false,
-  },
-  {
-    id: "4",
-    name: "Fashion Store",
-    logo: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=100&h=100&fit=crop&crop=center",
-    banner: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=400&fit=crop",
-    description: "Загварын хувцас болон аксессуарууд",
-    rating: 4.5,
-    reviews: 420,
-    products: 150,
-    followers: 1800,
-    verified: false,
-    categories: ["Хувцас", "Аксессуар"],
-    featured: false,
-  },
-];
-
-const products: Product[] = [
-  {
-    id: "1",
-    name: "Gaming Keyboard RGB",
-    price: 150000,
-    originalPrice: 200000,
-    image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400&h=300&fit=crop",
-    category: "Гейминг хэрэгсэл",
-    vendor: {
-      id: "1",
-      name: "Gaming Pro Store",
-      logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop&crop=center",
-      rating: 4.8,
-      reviews: 1250,
-      verified: true,
-    },
-    rating: 4.9,
-    reviews: 156,
-    sold: 89,
-    tags: ["RGB", "Mechanical", "Gaming"],
-    description: "RGB backlit mechanical gaming keyboard",
-    inStock: true,
-    discount: 25,
-  },
-  {
-    id: "2",
-    name: "Gaming Mouse Wireless",
-    price: 85000,
-    image: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=400&h=300&fit=crop",
-    category: "Гейминг хэрэгсэл",
-    vendor: {
-      id: "1",
-      name: "Gaming Pro Store",
-      logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop&crop=center",
-      rating: 4.8,
-      reviews: 1250,
-      verified: true,
-    },
-    rating: 4.7,
-    reviews: 98,
-    sold: 67,
-    tags: ["Wireless", "Gaming", "RGB"],
-    description: "High precision wireless gaming mouse",
-    inStock: true,
-  },
-  {
-    id: "3",
-    name: "Gaming Headset",
-    price: 120000,
-    originalPrice: 150000,
-    image: "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=400&h=300&fit=crop",
-    category: "Гейминг хэрэгсэл",
-    vendor: {
-      id: "2",
-      name: "Tech Hub Mongolia",
-      logo: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=100&h=100&fit=crop&crop=center",
-      rating: 4.6,
-      reviews: 890,
-      verified: true,
-    },
-    rating: 4.8,
-    reviews: 203,
-    sold: 134,
-    tags: ["7.1 Surround", "Noise Cancelling"],
-    description: "Professional gaming headset with 7.1 surround sound",
-    inStock: true,
-    discount: 20,
-  },
-  {
-    id: "4",
-    name: "Gaming Chair",
-    price: 450000,
-    image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop",
-    category: "Гейминг хэрэгсэл",
-    vendor: {
-      id: "1",
-      name: "Gaming Pro Store",
-      logo: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop&crop=center",
-      rating: 4.8,
-      reviews: 1250,
-      verified: true,
-    },
-    rating: 4.6,
-    reviews: 45,
-    sold: 23,
-    tags: ["Ergonomic", "RGB", "Adjustable"],
-    description: "Ergonomic gaming chair with RGB lighting",
-    inStock: true,
-  },
-];
-
 export default function ShoppingPage() {
   const { user } = useAuth();
   const { addItem, getItemQuantity, toggleCart, state } = useCart();
   
-  console.log("Shopping page - Cart state:", state);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Бүгд");
   const [sortBy, setSortBy] = useState("popular");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
