@@ -90,30 +90,30 @@ export default function InviteFriendModal({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden relative border border-gray-200 dark:border-gray-700 m-auto theme-transition"
+            className="bg-gray-800 rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden relative border border-blue-500/30 m-auto theme-transition"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 theme-transition">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white theme-transition">
+            <div className="flex items-center justify-between p-6 border-b border-blue-500/30 theme-transition">
+              <h2 className="text-2xl font-bold text-white theme-transition">
                 Найзаа урих
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors theme-transition"
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors theme-transition"
               >
-                <X className="w-5 h-5 text-gray-500 theme-transition" />
+                <X className="w-5 h-5 text-gray-400 theme-transition" />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-200 dark:border-gray-700 theme-transition">
+            <div className="flex border-b border-blue-500/30 theme-transition">
               <button
                 onClick={() => setActiveTab("search")}
                 className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                   activeTab === "search"
-                    ? "text-purple-600 dark:text-green-400 border-b-2 border-purple-600 dark:border-green-400 bg-purple-50 dark:bg-green-900/20"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                    ? "text-purple-400 dark:text-green-400 border-b-2 border-purple-400 dark:border-green-400 bg-purple-500/20 dark:bg-green-500/20"
+                    : "text-gray-400 hover:text-gray-300"
                 }`}
               >
                 <Search className="w-4 h-4 inline mr-2" />
@@ -123,8 +123,8 @@ export default function InviteFriendModal({
                 onClick={() => setActiveTab("email")}
                 className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                   activeTab === "email"
-                    ? "text-purple-600 dark:text-green-400 border-b-2 border-purple-600 dark:border-green-400 bg-purple-50 dark:bg-green-900/20"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                    ? "text-purple-400 dark:text-green-400 border-b-2 border-purple-400 dark:border-green-400 bg-purple-500/20 dark:bg-green-500/20"
+                    : "text-gray-400 hover:text-gray-300"
                 }`}
               >
                 <Mail className="w-4 h-4 inline mr-2" />
@@ -134,8 +134,8 @@ export default function InviteFriendModal({
                 onClick={() => setActiveTab("link")}
                 className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                   activeTab === "link"
-                    ? "text-purple-600 dark:text-green-400 border-b-2 border-purple-600 dark:border-green-400 bg-purple-50 dark:bg-green-900/20"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                    ? "text-purple-400 dark:text-green-400 border-b-2 border-purple-400 dark:border-green-400 bg-purple-500/20 dark:bg-green-500/20"
+                    : "text-gray-400 hover:text-gray-300"
                 }`}
               >
                 <LinkIcon className="w-4 h-4 inline mr-2" />
@@ -156,7 +156,7 @@ export default function InviteFriendModal({
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Найзынхаа нэр эсвэл и-мэйл хайх..."
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-400 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-2 border border-blue-500/30 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-400 focus:border-transparent"
                       />
                     </div>
 
@@ -164,7 +164,7 @@ export default function InviteFriendModal({
                       {filteredFriends.map((friend) => (
                                           <div
                     key={friend.id}
-                    className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors theme-transition"
+                    className="flex items-center justify-between p-3 border border-blue-500/30 rounded-lg hover:bg-gray-700/50 transition-colors theme-transition"
                   >
                           <div className="flex items-center space-x-3">
                             <Image
@@ -175,10 +175,10 @@ export default function InviteFriendModal({
                               className="rounded-full"
                             />
                                                           <div>
-                                <div className="font-medium text-gray-900 dark:text-white theme-transition">
+                                <div className="font-medium text-white theme-transition">
                                   {friend.name}
                                 </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400 theme-transition">
+                                <div className="text-sm text-gray-400 theme-transition">
                                   {friend.game} • {friend.rank}
                                 </div>
                               </div>
@@ -205,13 +205,13 @@ export default function InviteFriendModal({
                     </div>
 
                     {filteredFriends.length === 0 && searchTerm && (
-                      <p className="text-gray-500 dark:text-gray-400 text-center py-4 theme-transition">
+                      <p className="text-gray-400 text-center py-4 theme-transition">
                         Хэрэглэгч олдсонгүй
                       </p>
                     )}
 
                     {!searchTerm && (
-                      <p className="text-gray-500 dark:text-gray-400 text-center py-4 theme-transition">
+                      <p className="text-gray-400 text-center py-4 theme-transition">
                         Найзын жагсаалт API-аас ачаалагдах болно
                       </p>
                     )}
@@ -221,7 +221,7 @@ export default function InviteFriendModal({
                 {/* Email Tab */}
                 {activeTab === "email" && (
                   <div className="space-y-4">
-                    <p className="text-gray-600 dark:text-gray-300 text-sm theme-transition">
+                    <p className="text-gray-300 text-sm theme-transition">
                       Найзынхаа и-мэйл хаягийг оруулж урилга илгээнэ үү:
                     </p>
 
@@ -231,7 +231,7 @@ export default function InviteFriendModal({
                         value={emailInput}
                         onChange={(e) => setEmailInput(e.target.value)}
                         placeholder="friend@example.com"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-400 focus:border-transparent theme-transition"
+                        className="w-full px-3 py-2 border border-blue-500/30 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-400 focus:border-transparent theme-transition"
                       />
 
                       <motion.button
@@ -241,8 +241,8 @@ export default function InviteFriendModal({
                         whileTap={{ scale: emailInput.trim() ? 0.95 : 1 }}
                         className={`w-full py-2 px-4 rounded-lg font-medium transition-all ${
                           emailInput.trim()
-                            ? "bg-gray-500 dark:bg-gray-500 text-white hover:bg-gray-600 dark:hover:bg-gray-600"
-                            : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                            ? "bg-gray-500 text-white hover:bg-gray-600"
+                            : "bg-gray-700 text-gray-500 cursor-not-allowed"
                         }`}
                       >
                         Урилга илгээх
@@ -254,7 +254,7 @@ export default function InviteFriendModal({
                 {/* Link Tab */}
                 {activeTab === "link" && (
                   <div className="space-y-4">
-                    <p className="text-gray-600 dark:text-gray-300 text-sm theme-transition">
+                    <p className="text-gray-300 text-sm theme-transition">
                       Энэ холбоосыг найзуудтайгаа хуваалцаж E-Sport Connection-д
                       урина уу:
                     </p>
@@ -264,7 +264,7 @@ export default function InviteFriendModal({
                         type="text"
                         value={inviteLink}
                         readOnly
-                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white theme-transition"
+                        className="flex-1 px-3 py-2 border border-blue-500/30 rounded-lg bg-gray-800/50 text-white theme-transition"
                       />
                       <motion.button
                         onClick={handleCopyLink}

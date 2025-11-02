@@ -337,25 +337,25 @@ export default function CreateProfilePage() {
   if (success) {
     return (
       <ProtectedRoute requireAuth requirePlayer>
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+        <div className="min-h-screen bg-gray-900">
           <Navigation />
           <main className="pt-20 pb-16">
             <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center"
+                className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-8 text-center"
               >
                 <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                <h1 className="text-2xl font-bold text-white mb-4">
                   Profile Created Successfully!
                 </h1>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                <p className="text-gray-300 mb-6">
                   Your profile has been created and is now visible to other
                   players and teams.
                 </p>
                 <div className="animate-pulse">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-400">
                     Redirecting to your profile...
                   </p>
                 </div>
@@ -369,7 +369,13 @@ export default function CreateProfilePage() {
 
   return (
     <ProtectedRoute requireAuth requirePlayer>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+      <style>{`
+        select option {
+          background-color: #1f2937;
+          color: #ffffff;
+        }
+      `}</style>
+      <div className="min-h-screen bg-gray-900">
         <Navigation />
 
         <main className="pt-20 pb-16">
@@ -387,10 +393,10 @@ export default function CreateProfilePage() {
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Home</span>
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-3xl font-bold text-white mb-2">
                 Create Your Player Profile
               </h1>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-300">
                 Showcase your gaming skills and connect with teams
               </p>
             </motion.div>
@@ -400,12 +406,12 @@ export default function CreateProfilePage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8"
+                className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-8 mb-8"
               >
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <h2 className="text-2xl font-bold text-white mb-2">
                   Game
                 </h2>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-gray-300">
                   Mobile Legends
                 </p>
               </motion.div>
@@ -415,16 +421,16 @@ export default function CreateProfilePage() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8"
+                  className="bg-gray-800/50 border border-blue-500/30 rounded-lg shadow-lg p-8 mb-8"
                 >
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                  <h2 className="text-2xl font-bold text-white mb-6">
                     Profile Details
                   </h2>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Primary Roles Selection */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
                         Primary Roles * (Select up to 2)
                       </label>
                       <div className="grid grid-cols-2 gap-2">
@@ -450,27 +456,27 @@ export default function CreateProfilePage() {
                             }}
                             className={`p-3 rounded-lg border-2 transition-all duration-200 ${
                               formData.roles?.includes(role)
-                                ? "border-purple-500 dark:border-green-500 bg-purple-50 dark:bg-green-900/20"
-                                : "border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-green-300"
+                                ? "border-purple-500 dark:border-green-500 bg-purple-500/20 dark:bg-green-500/20"
+                                : "border-blue-500/30 bg-gray-800/50 hover:border-purple-400/50 dark:hover:border-green-400/50"
                             }`}
                           >
                             <div className="flex items-center space-x-2">
                               {getRoleIcon(role)}
-                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                              <span className="text-sm font-medium text-white">
                                 {role}
                               </span>
                             </div>
                           </button>
                         ))}
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      <p className="text-xs text-gray-400 mt-2">
                         Selected: {formData.roles?.length || 0}/2
                       </p>
                     </div>
 
                     {/* Highest Rank Selection */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
                         Highest Rank *
                       </label>
                       <select
@@ -482,7 +488,7 @@ export default function CreateProfilePage() {
                             handleInputChange("rankStars", undefined);
                           }
                         }}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                        className="w-full p-3 border border-blue-500/30 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
                         required
                       >
                         <option value="">Select Highest Rank</option>
@@ -496,7 +502,7 @@ export default function CreateProfilePage() {
                       {/* Stars input for Mythical Immortal */}
                       {formData.rank === "+Mythical Immortal" && (
                         <div className="mt-3">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
                             Stars *
                           </label>
                           <input
@@ -509,11 +515,11 @@ export default function CreateProfilePage() {
                                 parseInt(e.target.value) || undefined
                               )
                             }
-                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                            className="w-full p-3 border border-blue-500/30 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
                             placeholder="Enter your stars (100+)"
                             required
                           />
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <p className="text-xs text-gray-400 mt-1">
                             How many stars do you have in Mythical Immortal?
                             (Minimum 100)
                           </p>
@@ -523,7 +529,7 @@ export default function CreateProfilePage() {
 
                     {/* Real Name */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
                         Жинхэнэ нэр *
                       </label>
                       <input
@@ -532,18 +538,18 @@ export default function CreateProfilePage() {
                         onChange={(e) =>
                           handleInputChange("realName", e.target.value)
                         }
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                        className="w-full p-3 border border-blue-500/30 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
                         placeholder="Таны жинхэнэ нэр"
                         required
                       />
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-400 mt-1">
                         Энэ нэр зөвхөн профайлын дэлгэрэнгүй хуудсанд харагдана
                       </p>
                     </div>
 
                     {/* In-Game Name */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
                         Тоглоомын нэр *
                       </label>
                       <input
@@ -552,18 +558,18 @@ export default function CreateProfilePage() {
                         onChange={(e) =>
                           handleInputChange("inGameName", e.target.value)
                         }
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                        className="w-full p-3 border border-blue-500/30 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
                         placeholder="Таны тоглоомын нэр (username)"
                         required
                       />
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-400 mt-1">
                         Энэ нэр тоглогчдын жагсаалтад харагдана
                       </p>
                     </div>
 
                     {/* MLBB Game ID */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
                         MLBB Game ID
                       </label>
                       <input
@@ -572,18 +578,18 @@ export default function CreateProfilePage() {
                         onChange={(e) =>
                           handleInputChange("mlbbId", e.target.value)
                         }
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                        className="w-full p-3 border border-blue-500/30 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
                         placeholder="Таны MLBB Game ID (optional)"
                         maxLength={20}
                       />
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-400 mt-1">
                         Таны Mobile Legends: Bang Bang Game ID (заавал биш)
                       </p>
                     </div>
 
                     {/* Experience */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
                         Experience *
                       </label>
                       <select
@@ -591,7 +597,7 @@ export default function CreateProfilePage() {
                         onChange={(e) =>
                           handleInputChange("experience", e.target.value)
                         }
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                        className="w-full p-3 border border-blue-500/30 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
                         required
                       >
                         <option value="">Select Experience</option>
@@ -608,7 +614,7 @@ export default function CreateProfilePage() {
 
                   {/* Profile Image */}
                   <div className="mt-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                    <label className="block text-sm font-medium text-gray-300 mb-4">
                       Profile Image
                     </label>
                     <ImageUploader
@@ -620,14 +626,14 @@ export default function CreateProfilePage() {
 
                   {/* Bio */}
                   <div className="mt-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Bio *
                     </label>
                     <textarea
                       value={formData.bio}
                       onChange={(e) => handleInputChange("bio", e.target.value)}
                       rows={4}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+                      className="w-full p-3 border border-blue-500/30 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
                       placeholder="Tell us about your gaming experience, achievements, and what you're looking for..."
                       required
                     />
@@ -653,9 +659,9 @@ export default function CreateProfilePage() {
                             e.target.checked
                           )
                         }
-                        className="w-4 h-4 text-purple-600 dark:text-green-600 border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500 dark:focus:ring-green-500"
+                        className="w-4 h-4 text-purple-600 dark:text-green-600 border-blue-500/30 bg-gray-800/50 rounded focus:ring-purple-500 dark:focus:ring-green-500"
                       />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <span className="text-sm font-medium text-gray-300">
                         I&apos;m looking for a team
                       </span>
                     </label>
@@ -668,11 +674,11 @@ export default function CreateProfilePage() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+                  className="mb-6 p-4 bg-red-900/20 border border-red-800 rounded-lg"
                 >
                   <div className="flex items-center space-x-2">
                     <AlertCircle className="w-5 h-5 text-red-500" />
-                    <span className="text-red-700 dark:text-red-300">
+                    <span className="text-red-300">
                       {error}
                     </span>
                   </div>
@@ -708,6 +714,7 @@ export default function CreateProfilePage() {
             </form>
           </div>
         </main>
+
       </div>
     </ProtectedRoute>
   );

@@ -85,10 +85,10 @@ export default function YouTubeVideoInput({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+          className="flex items-center space-x-2 p-3 bg-red-900/20 border border-red-800 rounded-lg"
         >
           <AlertCircle className="w-5 h-5 text-red-500" />
-          <span className="text-red-700 dark:text-red-300 text-sm">
+          <span className="text-red-300 text-sm">
             {error}
           </span>
         </motion.div>
@@ -99,10 +99,10 @@ export default function YouTubeVideoInput({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
+          className="flex items-center space-x-2 p-3 bg-green-900/20 border border-green-800 rounded-lg"
         >
           <CheckCircle className="w-5 h-5 text-green-500" />
-          <span className="text-green-700 dark:text-green-300 text-sm">
+          <span className="text-green-300 text-sm">
             ✅ YouTube URL saved! Click &quot;Save Changes&quot; to update your
             profile.
           </span>
@@ -127,12 +127,12 @@ export default function YouTubeVideoInput({
             />
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-400">
               YouTube Highlight Video
             </p>
             <button
               onClick={handleRemoveVideo}
-              className="inline-flex items-center space-x-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors duration-200"
+              className="inline-flex items-center space-x-2 text-red-400 hover:text-red-300 transition-colors duration-200"
             >
               <X className="w-4 h-4" />
               <span>Remove</span>
@@ -143,7 +143,7 @@ export default function YouTubeVideoInput({
 
       {/* URL Input */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="block text-sm font-medium text-gray-300">
           YouTube Highlight Video URL (Optional)
         </label>
         <div className="flex space-x-2">
@@ -154,7 +154,7 @@ export default function YouTubeVideoInput({
               value={videoUrl}
               onChange={handleUrlChange}
               placeholder="https://www.youtube.com/watch?v=..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-blue-500/30 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 dark:focus:ring-green-500 focus:border-transparent"
             />
           </div>
           {videoUrl.trim() && !isValid && (
@@ -167,7 +167,7 @@ export default function YouTubeVideoInput({
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-gray-400">
           Paste a YouTube video URL to showcase your skills
         </p>
       </div>
