@@ -12,12 +12,12 @@ const getApiBaseUrl = () => {
       return "http://localhost:5001";
     } else {
       // Production - use Render backend
-      return "https://e-sport-connection-0596.onrender.com";
+      return "https://standoff2.onrender.com";
     }
   } else {
     // On server (SSR)
     return process.env.NODE_ENV === "production"
-      ? "https://e-sport-connection-0596.onrender.com"
+      ? "https://standoff2.onrender.com"
       : "http://localhost:5001";
   }
 };
@@ -27,7 +27,7 @@ const API_BASE_URL = getApiBaseUrl();
 const WS_BASE_URL =
   process.env.NEXT_PUBLIC_WS_URL ||
   (typeof window !== "undefined" && window.location.hostname !== "localhost"
-    ? "https://e-sport-connection-0596.onrender.com"
+    ? "https://standoff2.onrender.com"
     : "http://localhost:5001");
 
 export const API_ENDPOINTS = {

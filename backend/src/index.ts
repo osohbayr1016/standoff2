@@ -36,33 +36,18 @@ const connectDB = async (): Promise<void> => {
   }
 };
 
-// CORS configuration
-const allowedOrigins = [
-  process.env.FRONTEND_URL || "http://localhost:3000",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:3001",
-  "http://127.0.0.1:3001",
-  "https://e-sport-connection.vercel.app",
-];
-
-// Register CORS
+// CORS configuration - Allow all origins for production flexibility
 fastify.register(cors, {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"), false);
-    }
-  },
+  origin: true, // Allow all origins
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+    "Origin",
+  ],
 });
 
 // Enable response compression (gzip/brotli) and ETag for caching
