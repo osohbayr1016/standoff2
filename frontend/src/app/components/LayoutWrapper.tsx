@@ -1,57 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Navigation from "./Navigation";
 import Footer from "./Footer";
-import NotificationToast from "./NotificationToast";
-import MessageListModal from "./MessageListModal";
-import ChatModal from "./ChatModal";
 
 export default function LayoutWrapper({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [chatModalState, setChatModalState] = useState<{
-    isOpen: boolean;
-    userId: string;
-    userName: string;
-    userAvatar?: string;
-  } | null>(null);
+  const pathname = usePathname();
 
-  const handleOpenChat = (
-    userId: string,
-    userName: string,
-    userAvatar?: string
-  ) => {
-    setChatModalState({
-      isOpen: true,
-      userId,
-      userName,
-      userAvatar,
-    });
-  };
+  // Check if current page is an auth page
+  const isAuthPage = pathname?.startsWith("/auth");
 
-  const handleCloseChat = () => {
-    setChatModalState(null);
-  };
+  // Auth pages render without navigation and footer
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
 
   return (
-    <div className="min-h-screen flex flex-col theme-transition">
+    <div className="min-h-screen flex flex-col bg-[#0f1419]">
       <Navigation />
-      <main className="flex-1 pt-16 theme-transition">{children}</main>
+      <main className="flex-1 pt-16">{children}</main>
       <Footer />
-      <NotificationToast onMessageNotificationClick={handleOpenChat} />
-      <MessageListModal onOpenChat={handleOpenChat} />
-      {chatModalState && (
-        <ChatModal
-          isOpen={chatModalState.isOpen}
-          onClose={handleCloseChat}
-          playerId={chatModalState.userId}
-          playerName={chatModalState.userName}
-          playerAvatar={chatModalState.userAvatar}
-        />
-      )}
     </div>
   );
 }

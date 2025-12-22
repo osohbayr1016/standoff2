@@ -38,7 +38,7 @@ export interface Squad {
   leader: User;
   members: User[];
   maxMembers: number;
-  game: "Mobile Legends: Bang Bang"; // Fixed to Mobile Legends only
+  game: "Standoff 2"; // Fixed to Standoff 2 only
   description?: string;
   logo?: string;
   isActive: boolean;
@@ -61,7 +61,7 @@ export interface SquadInvitation {
     _id: string;
     name: string;
     tag: string;
-    game: "Mobile Legends: Bang Bang";
+    game: "Standoff 2";
     logo?: string;
   };
   invitedUser: User;
@@ -79,7 +79,7 @@ export interface SquadApplication {
     _id: string;
     name: string;
     tag: string;
-    game: "Mobile Legends: Bang Bang";
+    game: "Standoff 2";
     logo?: string;
   };
   applicant: User;

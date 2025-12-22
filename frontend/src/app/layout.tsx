@@ -3,10 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
-import { DarkModeProvider } from "./contexts/DarkModeContext";
 import { AuthProvider } from "./contexts/AuthContext";
-import { SocketProvider } from "./contexts/SocketContext";
-import { CartProvider } from "./contexts/CartContext";
 import LayoutWrapper from "./components/LayoutWrapper";
 
 const geistSans = Geist({
@@ -20,14 +17,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "E-Sport Connection - Level Up Your Game",
+  title: "Standoff 2 - Competitive Hub",
   description:
-    "Connect with top coaches, track your progress, and dominate the competitive gaming scene. Your journey to becoming a pro starts here.",
+    "Join the ultimate Standoff 2 competitive hub. Find matches, climb the leaderboard, and earn rewards.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
       { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon.png", type: "image/png" }
+      { url: "/favicon.png", type: "image/png" },
     ],
     apple: "/favicon.png",
   },
@@ -39,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="transition-colors duration-300">
+    <html lang="en">
       <head>
         <Script
           async
@@ -49,17 +46,11 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased transition-colors duration-300 theme-transition`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0f1419]`}
       >
-        <DarkModeProvider>
-          <AuthProvider>
-            <SocketProvider>
-              <CartProvider>
-                <LayoutWrapper>{children}</LayoutWrapper>
-              </CartProvider>
-            </SocketProvider>
-          </AuthProvider>
-        </DarkModeProvider>
+        <AuthProvider>
+          <LayoutWrapper>{children}</LayoutWrapper>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>

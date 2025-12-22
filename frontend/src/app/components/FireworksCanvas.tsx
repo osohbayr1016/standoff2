@@ -3,174 +3,129 @@
 import { useEffect, useRef } from "react";
 
 interface FireworksCanvasProps {
-  durationMs?: number;
+  durationMs: number;
 }
 
-export default function FireworksCanvas({
-  durationMs = 2500,
-}: FireworksCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  alpha: number;
+  color: string;
+  decay: number;
+}
+
+export default function FireworksCanvas({ durationMs }: FireworksCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let animationFrame = 0;
-    let running = true;
-    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    // Set canvas size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    const resize = () => {
-      const { innerWidth, innerHeight } = window;
-      canvas.width = Math.floor(innerWidth * dpr);
-      canvas.height = Math.floor(innerHeight * dpr);
-      canvas.style.width = `${innerWidth}px`;
-      canvas.style.height = `${innerHeight}px`;
-      ctx.scale(dpr, dpr);
-    };
-    resize();
-
-    window.addEventListener("resize", resize);
-
-    type Particle = {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      alpha: number;
-      color: string;
-    };
-    type Firework = {
-      x: number;
-      y: number;
-      vy: number;
-      exploded: boolean;
-      color: string;
-      particles: Particle[];
-    };
-
-    const fireworks: Firework[] = [];
-
-    const random = (min: number, max: number) =>
-      Math.random() * (max - min) + min;
+    const particles: Particle[] = [];
     const colors = [
-      "#60a5fa",
-      "#22d3ee",
-      "#a78bfa",
-      "#f472b6",
-      "#34d399",
-      "#fbbf24",
+      "#ff6b35",
+      "#f7931e",
+      "#ffd700",
+      "#4ecdc4",
+      "#ff5a5f",
+      "#c7f0db",
     ];
 
-    const spawn = () => {
-      if (!running) return;
-      const x = random(80, window.innerWidth - 80);
-      const y = window.innerHeight + 10;
-      const fw: Firework = {
-        x,
-        y,
-        vy: random(-10, -14),
-        exploded: false,
-        color: colors[(Math.random() * colors.length) | 0],
-        particles: [],
-      };
-      fireworks.push(fw);
-      setTimeout(spawn, random(120, 260));
-    };
-    spawn();
+    let animationId: number;
+    let startTime = Date.now();
 
-    const explode = (fw: Firework) => {
-      const count = (60 + Math.random() * 40) | 0;
-      for (let i = 0; i < count; i++) {
-        const angle = (i / count) * Math.PI * 2;
-        const speed = random(2, 5);
-        fw.particles.push({
-          x: fw.x,
-          y: fw.y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
+    const createFirework = (x: number, y: number) => {
+      const particleCount = 50;
+      for (let i = 0; i < particleCount; i++) {
+        const angle = (Math.PI * 2 * i) / particleCount;
+        const velocity = 2 + Math.random() * 3;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * velocity,
+          vy: Math.sin(angle) * velocity,
           alpha: 1,
-          color: fw.color,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          decay: 0.015 + Math.random() * 0.015,
         });
       }
     };
 
-    const gravity = 0.08;
-    const drag = 0.99;
-
-    const tick = () => {
-      if (!running) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // background subtle alpha to create trails
-      ctx.fillStyle = "rgba(0,0,0,0.15)";
-      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-
-      // update fireworks
-      for (let i = fireworks.length - 1; i >= 0; i--) {
-        const fw = fireworks[i];
-        if (!fw.exploded) {
-          fw.y += fw.vy;
-          fw.vy += gravity * 0.3;
-          ctx.beginPath();
-          ctx.arc(fw.x, fw.y, 2, 0, Math.PI * 2);
-          ctx.fillStyle = fw.color;
-          ctx.fill();
-          if (fw.vy >= -1) {
-            fw.exploded = true;
-            explode(fw);
-          }
-        } else {
-          // particles
-          for (let p = fw.particles.length - 1; p >= 0; p--) {
-            const part = fw.particles[p];
-            part.vx *= drag;
-            part.vy = part.vy * drag + gravity;
-            part.x += part.vx;
-            part.y += part.vy;
-            part.alpha *= 0.985;
-
-            if (part.alpha <= 0.02) {
-              fw.particles.splice(p, 1);
-              continue;
-            }
-
-            ctx.globalAlpha = part.alpha;
-            ctx.fillStyle = part.color;
-            ctx.fillRect(part.x, part.y, 2, 2);
-            ctx.globalAlpha = 1;
-          }
-
-          if (fw.particles.length === 0) {
-            fireworks.splice(i, 1);
-          }
-        }
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      if (elapsed > durationMs) {
+        cancelAnimationFrame(animationId);
+        return;
       }
 
-      animationFrame = requestAnimationFrame(tick);
-    };
-    animationFrame = requestAnimationFrame(tick);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const timeout = setTimeout(() => {
-      running = false;
-      cancelAnimationFrame(animationFrame);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }, durationMs);
+      // Update and draw particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.05; // gravity
+        p.alpha -= p.decay;
+
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.alpha;
+        ctx.fill();
+      }
+
+      ctx.globalAlpha = 1;
+
+      // Create new fireworks randomly
+      if (Math.random() < 0.08) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * (canvas.height * 0.5) + canvas.height * 0.1;
+        createFirework(x, y);
+      }
+
+      animationId = requestAnimationFrame(animate);
+    };
+
+    // Start with initial fireworks
+    createFirework(canvas.width * 0.3, canvas.height * 0.3);
+    createFirework(canvas.width * 0.7, canvas.height * 0.4);
+
+    animate();
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      running = false;
-      cancelAnimationFrame(animationFrame);
-      clearTimeout(timeout);
-      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(animationId);
+      window.removeEventListener("resize", handleResize);
     };
   }, [durationMs]);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 z-[60] pointer-events-none"
-      aria-hidden="true"
+      className="absolute inset-0 pointer-events-none"
+      style={{ zIndex: 1 }}
     />
   );
 }

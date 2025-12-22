@@ -45,17 +45,8 @@ const playerProfileRoutes: FastifyPluginAsync = async (
 
       const profileData = request.body as any;
 
-      // Debug logging
       // Validate required fields
-      const requiredFields = [
-        "category",
-        "game",
-        "roles",
-        "inGameName",
-        "rank",
-        "experience",
-        "bio",
-      ];
+      const requiredFields = ["inGameName"];
       const missingFields = requiredFields.filter(
         (field) => !profileData[field]
       );
@@ -67,6 +58,14 @@ const playerProfileRoutes: FastifyPluginAsync = async (
           missingFields,
         });
       }
+
+      // Set default values if not provided
+      profileData.category = profileData.category || "Mobile";
+      profileData.game = profileData.game || "Standoff 2";
+      profileData.roles = profileData.roles || ["Player"];
+      profileData.rank = profileData.rank || "Unranked";
+      profileData.experience = profileData.experience || "New Player";
+      profileData.bio = profileData.bio || "";
 
       // Check if profile already exists
       const existingProfile = await PlayerProfile.findOne({
@@ -89,8 +88,10 @@ const playerProfileRoutes: FastifyPluginAsync = async (
 
       // Trigger achievement check for profile creation
       try {
-        const { AchievementService } = await import("../services/achievementService");
-        
+        const { AchievementService } = await import(
+          "../services/achievementService"
+        );
+
         await AchievementService.processAchievementTrigger({
           userId: decoded.id,
           type: "profile_update",
@@ -101,7 +102,10 @@ const playerProfileRoutes: FastifyPluginAsync = async (
           },
         });
       } catch (achievementError) {
-        console.error("Error processing achievement triggers:", achievementError);
+        console.error(
+          "Error processing achievement triggers:",
+          achievementError
+        );
         // Don't fail the profile creation if achievement processing fails
       }
 
