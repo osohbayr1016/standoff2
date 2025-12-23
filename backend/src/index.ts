@@ -13,7 +13,10 @@ import { QueueService } from "./services/queueService";
 dotenv.config();
 
 const fastify = Fastify({
-  logger: true,
+  logger: process.env.NODE_ENV === 'production' ? false : true,
+  requestTimeout: 30000,
+  bodyLimit: 1048576, // 1MB limit
+  maxParamLength: 100,
 });
 
 const PORT = process.env.PORT || 8000;
@@ -30,7 +33,12 @@ const connectDB = async (): Promise<void> => {
       throw new Error("MONGODB_URI environment variable is required");
     }
 
-    await mongoose.connect(mongoURI);
+    await mongoose.connect(mongoURI, {
+      maxPoolSize: 10, // Limit connection pool
+      minPoolSize: 2,
+      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 5000,
+    });
   } catch (error) {
     console.error("❌ MongoDB connection failed:", error);
     process.exit(1);
@@ -206,17 +214,13 @@ const startServer = async () => {
     MatchDeadlineChecker.start();
     console.log("✅ Match deadline checker started");
 
-    // Start Queue Matcher - runs every 2 seconds
+    // Start Queue Matcher - runs every 5 seconds (optimized for low memory)
     setInterval(async () => {
       try {
         const lobbyId = await QueueService.findMatch();
         if (lobbyId) {
-          console.log(`✅ Match found! Lobby created: ${lobbyId}`);
-          
-          // Get lobby details
+          console.log(`✅ Match found! Lobby: ${lobbyId}`);
           const lobby = await QueueService.getLobby(lobbyId);
-          
-          // Notify all players via Socket.IO
           const playerIds = lobby.players.map((p: any) => p.userId.toString());
           socketManager.notifyLobbyFound(playerIds, {
             lobbyId,
@@ -224,38 +228,24 @@ const startServer = async () => {
             teamAlpha: lobby.teamAlpha,
             teamBravo: lobby.teamBravo,
           });
-
-          // Update queue count for remaining players
           const totalInQueue = await QueueService.getTotalInQueue();
-          console.log(`📊 Broadcasting queue update: ${totalInQueue} players remaining`);
           socketManager.broadcastQueueUpdate(totalInQueue);
         }
       } catch (error) {
-        console.error("Error in queue matcher:", error);
-      }
-    }, 2000);
-    console.log("✅ Queue matcher started (checking every 2 seconds)");
-
-    // Broadcast queue count to all listeners every 5 seconds
-    setInterval(async () => {
-      try {
-        const totalInQueue = await QueueService.getTotalInQueue();
-        socketManager.broadcastQueueUpdate(totalInQueue);
-      } catch (error) {
-        console.error("Error broadcasting queue count:", error);
+        console.error("Queue matcher error:", error);
       }
     }, 5000);
-    console.log("✅ Queue count broadcaster started (every 5 seconds)");
+    console.log("✅ Queue matcher started");
 
-    // Clean up expired lobbies every minute
+    // Clean up expired lobbies every 3 minutes
     setInterval(async () => {
       try {
         await QueueService.cleanupExpiredLobbies();
       } catch (error) {
-        console.error("Error cleaning up expired lobbies:", error);
+        console.error("Lobby cleanup error:", error);
       }
-    }, 60000);
-    console.log("✅ Lobby cleanup started (checking every minute)");
+    }, 180000);
+    console.log("✅ Lobby cleanup started");
   } catch (error) {
     console.error("❌ Failed to start server:", error);
     console.error("Stack trace:", error.stack);

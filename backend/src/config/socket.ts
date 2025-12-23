@@ -18,11 +18,16 @@ export class SocketManager {
   public initialize(server: HTTPServer): void {
     this.io = new SocketIOServer(server, {
       cors: {
-        origin: true, // Allow all origins
+        origin: true,
         methods: ["GET", "POST"],
         credentials: true,
       },
       transports: ["websocket", "polling"],
+      pingTimeout: 60000,
+      pingInterval: 25000,
+      maxHttpBufferSize: 1e6, // 1MB
+      allowEIO3: true,
+      connectTimeout: 45000,
     });
 
     this.io.use(async (socket, next) => {
