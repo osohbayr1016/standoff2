@@ -36,27 +36,14 @@ checkDir(path.join(__dirname, 'src'), 'src/');
 checkDir(path.join(__dirname, 'package.json'), 'package.json');
 checkDir(path.join(__dirname, 'tsconfig.json'), 'tsconfig.json');
 
-// Try to build if dist doesn't exist
+// Check if dist exists (should be pre-built and committed)
 const distPath = path.join(__dirname, 'dist');
 if (!fs.existsSync(distPath)) {
-    console.log('\n🔨 dist/ directory not found, attempting to build...');
-    try {
-        console.log('Running: npm run build');
-        execSync('npm run build', { 
-            cwd: __dirname, 
-            stdio: 'inherit',
-            timeout: 60000 
-        });
-        console.log('✅ Build completed');
-    } catch (error) {
-        console.error('❌ Build failed:', error.message);
-        console.log('\n🔍 Checking for TypeScript installation...');
-        try {
-            execSync('npx tsc --version', { cwd: __dirname, stdio: 'inherit' });
-        } catch (tsError) {
-            console.error('❌ TypeScript not available:', tsError.message);
-        }
-    }
+    console.error('\n❌ ERROR: dist/ directory not found!');
+    console.error('The application must be pre-built before deployment.');
+    console.error('Build locally with: npm run build');
+    console.error('Then commit the dist/ folder to git.');
+    process.exit(1);
 }
 
 // Try multiple possible paths for the built application

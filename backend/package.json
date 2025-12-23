@@ -8,7 +8,7 @@
     "build": "node prod-build.js",
     "build:clean": "npm run clean:dist && npm run build",
     "clean:dist": "powershell -Command \"if (Test-Path dist) { Remove-Item -Recurse -Force dist }\"",
-    "render-build": "npm install && npm run build:clean",
+    "render-build": "npm install --production",
     "render-start": "node --max-old-space-size=256 --optimize-for-size --gc-interval=100 --expose-gc dist/index.js",
     "prod": "node prod-start.js",
     "migrate": "node migrate-database.js",
