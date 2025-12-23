@@ -25,9 +25,10 @@ export class SocketManager {
       transports: ["websocket", "polling"],
       pingTimeout: 60000,
       pingInterval: 25000,
-      maxHttpBufferSize: 1e6, // 1MB
+      maxHttpBufferSize: 5e5, // 500KB (reduced from 1MB)
       allowEIO3: true,
       connectTimeout: 45000,
+      perMessageDeflate: false, // Disable compression to save CPU/memory
     });
 
     this.io.use(async (socket, next) => {

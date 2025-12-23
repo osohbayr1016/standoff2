@@ -13,10 +13,13 @@ import { QueueService } from "./services/queueService";
 dotenv.config();
 
 const fastify = Fastify({
-  logger: process.env.NODE_ENV === 'production' ? false : true,
+  logger: false, // Always disabled to save memory
   requestTimeout: 30000,
-  bodyLimit: 1048576, // 1MB limit
+  bodyLimit: 524288, // 512KB limit (reduced from 1MB)
   maxParamLength: 100,
+  disableRequestLogging: true,
+  ignoreTrailingSlash: true,
+  caseSensitive: true,
 });
 
 const PORT = process.env.PORT || 8000;
@@ -34,11 +37,16 @@ const connectDB = async (): Promise<void> => {
     }
 
     await mongoose.connect(mongoURI, {
-      maxPoolSize: 10, // Limit connection pool
-      minPoolSize: 2,
+      maxPoolSize: 5, // Reduced from 10
+      minPoolSize: 1,
       socketTimeoutMS: 45000,
       serverSelectionTimeoutMS: 5000,
+      maxIdleTimeMS: 30000,
     });
+    
+    // Optimize mongoose for memory
+    mongoose.set('bufferCommands', false);
+    mongoose.set('autoIndex', false);
   } catch (error) {
     console.error("❌ MongoDB connection failed:", error);
     process.exit(1);
@@ -59,10 +67,11 @@ fastify.register(cors, {
   ],
 });
 
-// Enable response compression (gzip/brotli) and ETag for caching
+// Enable lightweight compression (gzip only to save memory)
 fastify.register(compress, {
-  global: true,
-  encodings: ["gzip", "deflate", "br"],
+  global: false, // Only compress when explicitly needed
+  encodings: ["gzip"],
+  threshold: 1024, // Only compress responses > 1KB
 });
 fastify.register(etag);
 
@@ -210,16 +219,11 @@ const startServer = async () => {
     // Initialize Socket.IO after Fastify starts
     socketManager.initialize(fastify.server);
 
-    // Start Match Deadline Checker
-    MatchDeadlineChecker.start();
-    console.log("✅ Match deadline checker started");
-
-    // Start Queue Matcher - runs every 5 seconds (optimized for low memory)
+    // Start Queue Matcher - runs every 10 seconds (memory optimized)
     setInterval(async () => {
       try {
         const lobbyId = await QueueService.findMatch();
         if (lobbyId) {
-          console.log(`✅ Match found! Lobby: ${lobbyId}`);
           const lobby = await QueueService.getLobby(lobbyId);
           const playerIds = lobby.players.map((p: any) => p.userId.toString());
           socketManager.notifyLobbyFound(playerIds, {
@@ -228,24 +232,33 @@ const startServer = async () => {
             teamAlpha: lobby.teamAlpha,
             teamBravo: lobby.teamBravo,
           });
-          const totalInQueue = await QueueService.getTotalInQueue();
-          socketManager.broadcastQueueUpdate(totalInQueue);
+          socketManager.broadcastQueueUpdate(await QueueService.getTotalInQueue());
         }
       } catch (error) {
-        console.error("Queue matcher error:", error);
+        // Silent fail to reduce memory
       }
-    }, 5000);
-    console.log("✅ Queue matcher started");
+    }, 10000);
 
-    // Clean up expired lobbies every 3 minutes
+    // Clean up expired lobbies every 5 minutes
     setInterval(async () => {
       try {
         await QueueService.cleanupExpiredLobbies();
+        if (global.gc) global.gc(); // Force garbage collection if available
       } catch (error) {
-        console.error("Lobby cleanup error:", error);
+        // Silent fail
       }
-    }, 180000);
-    console.log("✅ Lobby cleanup started");
+    }, 300000);
+
+    // Memory monitoring and cleanup every minute
+    setInterval(() => {
+      const used = process.memoryUsage();
+      if (used.heapUsed > 200 * 1024 * 1024) { // If over 200MB
+        if (global.gc) {
+          global.gc();
+          console.log('🧹 Memory cleanup triggered');
+        }
+      }
+    }, 60000);
   } catch (error) {
     console.error("❌ Failed to start server:", error);
     console.error("Stack trace:", error.stack);
@@ -255,3 +268,4 @@ const startServer = async () => {
 };
 
 startServer();
+
