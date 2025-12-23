@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import PlayerProfile from "../models/PlayerProfile";
 
 const playerProfileRoutes: FastifyPluginAsync = async (
@@ -142,8 +143,10 @@ const playerProfileRoutes: FastifyPluginAsync = async (
   fastify.get("/my-profile", async (request, reply) => {
     try {
       const token = request.headers.authorization?.replace("Bearer ", "");
+      console.log("[My Profile] Request received");
 
       if (!token) {
+        console.log("[My Profile] ERROR: No token provided");
         return reply.status(401).send({
           success: false,
           message: "Authentication required",
@@ -152,30 +155,42 @@ const playerProfileRoutes: FastifyPluginAsync = async (
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
       if (!decoded) {
+        console.log("[My Profile] ERROR: Invalid token");
         return reply.status(401).send({
           success: false,
           message: "Invalid token",
         });
       }
 
-      const profile = await PlayerProfile.findOne({ userId: decoded.id });
+      console.log(`[My Profile] Looking for profile with userId: ${decoded.id}`);
+
+      const profile = await PlayerProfile.findOne({ 
+        userId: decoded.id 
+      }).populate(
+        "userId",
+        "name email avatar isOnline"
+      ).lean();
 
       if (!profile) {
+        console.log(`[My Profile] Profile not found for userId: ${decoded.id}`);
         return reply.status(404).send({
           success: false,
           message: "Profile not found",
         });
       }
 
+      console.log(`[My Profile] SUCCESS: Found profile for ${(profile as any).inGameName}`);
       return reply.status(200).send({
         success: true,
         profile,
       });
     } catch (error) {
-      console.error("Get profile error:", error);
+      console.error("[My Profile] EXCEPTION:", error);
       return reply.status(500).send({
         success: false,
         message: "Failed to get profile",
+        error:
+          process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
       });
     }
   });
@@ -264,13 +279,12 @@ const playerProfileRoutes: FastifyPluginAsync = async (
     }
   });
 
-  // Get all profiles (for browsing)
+  // Get all profiles (for browsing, public)
   fastify.get("/profiles", async (request, reply) => {
     try {
-      const profiles = await PlayerProfile.find({}).populate(
-        "userId",
-        "name email"
-      );
+      const profiles = await PlayerProfile.find({})
+        .populate("userId", "name email avatar isOnline")
+        .select("-friends"); // Don't expose friends list publicly
 
       return reply.status(200).send({
         success: true,
@@ -285,10 +299,140 @@ const playerProfileRoutes: FastifyPluginAsync = async (
     }
   });
 
-  // Get profile by ID
+  // Get profile by unique ID (public, no auth required) - MUST BE BEFORE /profiles/:id
+  fastify.get("/profiles/unique/:uniqueId", async (request, reply) => {
+    try {
+      const { uniqueId } = request.params as { uniqueId: string };
+      console.log(`[Profile Lookup] Received uniqueId param: "${uniqueId}"`);
+
+      if (!uniqueId) {
+        console.log("[Profile Lookup] ERROR: No uniqueId provided");
+        return reply.status(400).send({
+          success: false,
+          message: "Unique ID is required",
+        });
+      }
+
+      console.log(`[Profile Lookup] Searching for profile with uniqueId: "${uniqueId}"`);
+      const profile = await PlayerProfile.findOne({ uniqueId }).populate(
+        "userId",
+        "name email avatar isOnline"
+      ).lean();
+
+      if (!profile) {
+        console.log(`[Profile Lookup] Profile not found for uniqueId: ${uniqueId}`);
+        return reply.status(404).send({
+          success: false,
+          message: "Profile not found",
+        });
+      }
+
+      console.log(`[Profile Lookup] SUCCESS: Found profile ${(profile as any).inGameName} by uniqueId`);
+
+
+      return reply.status(200).send({
+        success: true,
+        profile,
+      });
+    } catch (error) {
+      console.error("Get profile by uniqueId error:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Failed to get profile",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  });
+
+  // Get profile by userId (public) - MUST BE BEFORE /profiles/:id
+  fastify.get("/profiles/user/:userId", async (request, reply) => {
+    try {
+      const { userId } = request.params as { userId: string };
+      console.log(`[Profile Lookup] Received userId param: "${userId}"`);
+
+      if (!userId) {
+        console.log("[Profile Lookup] ERROR: No userId provided");
+        return reply.status(400).send({
+          success: false,
+          message: "User ID is required",
+        });
+      }
+
+      // Try to find profile by userId (ObjectId)
+      let profile;
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
+      console.log(`[Profile Lookup] Is valid ObjectId: ${isValidObjectId}`);
+      
+      if (isValidObjectId) {
+        const objectId = new mongoose.Types.ObjectId(userId);
+        console.log(`[Profile Lookup] Searching for profile with userId ObjectId: ${objectId}`);
+        
+        profile = await PlayerProfile.findOne({ 
+          userId: objectId 
+        }).populate(
+          "userId",
+          "name email avatar isOnline"
+        ).lean();
+        
+        console.log(`[Profile Lookup] Result from ObjectId query: ${profile ? 'FOUND' : 'NOT FOUND'}`);
+        if (profile) {
+          console.log(`[Profile Lookup] Found profile: ${(profile as any).inGameName} (profileId: ${(profile as any)._id})`);
+        }
+      }
+
+      // If not found by ObjectId, try as string match (for edge cases)
+      if (!profile) {
+        console.log(`[Profile Lookup] Trying string match for userId: "${userId}"`);
+        profile = await PlayerProfile.findOne({ userId }).populate(
+          "userId",
+          "name email avatar isOnline"
+        ).lean();
+        console.log(`[Profile Lookup] Result from string query: ${profile ? 'FOUND' : 'NOT FOUND'}`);
+      }
+
+      if (!profile) {
+        console.log(`[Profile Lookup] FINAL RESULT: Profile not found for userId: ${userId}`);
+        return reply.status(404).send({
+          success: false,
+          message: "Profile not found for this user ID",
+        });
+      }
+
+      console.log(`[Profile Lookup] SUCCESS: Returning profile for ${(profile as any).inGameName}`);
+      return reply.status(200).send({
+        success: true,
+        profile,
+      });
+    } catch (error) {
+      console.error("[Profile Lookup] EXCEPTION:", error);
+      return reply.status(500).send({
+        success: false,
+        message: "Failed to get profile",
+        error:
+          process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+      });
+    }
+  });
+
+  // Get profile by ID (MongoDB _id) - LAST because it's a catch-all
   fastify.get("/profiles/:id", async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
+
+      // Try to find by uniqueId first (if it's not a MongoDB ObjectId)
+      if (id && id.length !== 24) {
+        const profileByUniqueId = await PlayerProfile.findOne({
+          uniqueId: id,
+        }).populate("userId", "name email avatar isOnline");
+
+        if (profileByUniqueId) {
+          return reply.status(200).send({
+            success: true,
+            profile: profileByUniqueId,
+          });
+        }
+      }
 
       // Validate MongoDB ObjectId format
       if (!id || id.length !== 24) {
@@ -300,7 +444,7 @@ const playerProfileRoutes: FastifyPluginAsync = async (
 
       const profile = await PlayerProfile.findById(id).populate(
         "userId",
-        "name email"
+        "name email avatar isOnline"
       );
 
       if (!profile) {

@@ -1,58 +1,228 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, X, UserX, UserCheck } from "lucide-react";
+import { Users, AlertCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import Image from "next/image";
-import PartyQueue from "./components/PartyQueue";
-import InviteFriendsModal from "./components/InviteFriendsModal";
-import InviteNotification from "./components/InviteNotification";
+import { API_ENDPOINTS, WS_BASE_URL } from "../../config/api";
+import { io, Socket } from "socket.io-client";
+import LobbyView from "./components/LobbyView";
+import QueuePlayersModal from "./components/QueuePlayersModal";
 
-interface PartyMember {
-  id: string;
-  username: string;
-  avatar: string;
-  isLeader: boolean;
-  level?: number;
+interface LobbyPlayer {
+  userId: string;
+  inGameName: string;
+  standoff2Id?: string;
+  elo: number;
+  isReady: boolean;
 }
 
-interface Invite {
-  id: string;
-  from: {
-    username: string;
-    avatar: string;
-    level: number;
-  };
-  partySize: number;
-  expiresIn: number;
-}
-
-interface Notification {
-  id: string;
-  type: "accept" | "reject";
-  username: string;
-  message: string;
+interface LobbyData {
+  lobbyId: string;
+  players: LobbyPlayer[];
+  teamAlpha: string[];
+  teamBravo: string[];
+  allPlayersReady?: boolean;
 }
 
 export default function MatchmakingPage() {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [isSearching, setIsSearching] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const estimatedTime = 90; // 01:30 in seconds
-  const [partyMembers, setPartyMembers] = useState<PartyMember[]>([
-    {
-      id: "1",
-      username: user?.username || "Player",
-      avatar: user?.avatar || "/default-avatar.png",
-      isLeader: true,
-      level: user?.level || 1,
-    },
-  ]);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [currentInvite, setCurrentInvite] = useState<Invite | null>(null);
-  const [notification, setNotification] = useState<Notification | null>(null);
+  const [playersInQueue, setPlayersInQueue] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [lobbyData, setLobbyData] = useState<LobbyData | null>(null);
+  const [socketConnected, setSocketConnected] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
+  const [buttonClicked, setButtonClicked] = useState(false);
+  const [showPlayersModal, setShowPlayersModal] = useState(false);
+  const [queuePlayers, setQueuePlayers] = useState<any[]>([]);
+  const [loadingPlayers, setLoadingPlayers] = useState(false);
+  const showPlayersButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Debug: Log when playersInQueue changes
+  useEffect(() => {
+    console.log(`🎯 playersInQueue state changed to: ${playersInQueue}`);
+  }, [playersInQueue]);
+
+  // Initialize Socket.IO connection
+  useEffect(() => {
+    if (!user) {
+      console.log("❌ No user, waiting for authentication");
+      return;
+    }
+
+    const initSocket = async () => {
+      const token = await getToken();
+      if (!token) {
+        console.log("❌ No token available, skipping socket connection");
+        return;
+      }
+
+      console.log("🔌 Initializing Socket.IO connection to:", WS_BASE_URL);
+      const socket = io(WS_BASE_URL, {
+        auth: { token },
+        transports: ["websocket", "polling"],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+      });
+
+      socketRef.current = socket;
+      let queueInterval: NodeJS.Timeout;
+
+      // Socket event listeners
+      socket.on("connect", () => {
+        console.log("✅ Connected to Socket.IO - Socket ID:", socket.id);
+        setSocketConnected(true);
+        setError(null);
+
+        // Join matchmaking queue room to receive updates
+        console.log("🔔 Joining matchmaking room for updates...");
+        socket.emit("join_matchmaking_room");
+
+        // Get initial queue status
+        setTimeout(() => {
+          console.log("🔍 Requesting initial queue status...");
+          socket.emit("get_queue_status");
+        }, 100);
+
+        // Request queue updates every 1 second for more responsive updates
+        queueInterval = setInterval(() => {
+          if (socket.connected) {
+            socket.emit("get_queue_status");
+          }
+        }, 1000);
+      });
+
+      socket.on("connect_error", (error) => {
+        console.error("❌ Socket connection error:", error);
+        setSocketConnected(false);
+        setError("Connection error. Please refresh the page.");
+      });
+
+      socket.on("queue_joined", (data) => {
+        console.log("✅ Joined queue:", data);
+        setIsSearching(true);
+        setElapsedTime(0);
+        setError(null);
+        setButtonClicked(false); // Re-enable button after successful join
+
+        // Immediately request updated queue count
+        socket.emit("get_queue_status");
+      });
+
+      socket.on("queue_update", (data) => {
+        console.log("📊 Queue update received:", data);
+        const count = data.totalPlayers || 0;
+        console.log(`Setting playersInQueue to: ${count}`);
+        setPlayersInQueue(count);
+      });
+
+      socket.on("queue_status", (data) => {
+        console.log("📊 Queue status received:", data);
+        const count = data.totalPlayers || 0;
+        console.log(`Setting playersInQueue to: ${count}`);
+        setPlayersInQueue(count);
+        if (data.inQueue) {
+          setIsSearching(true);
+        }
+      });
+
+      socket.on("lobby_found", (data) => {
+        console.log("Lobby found:", data);
+        setIsSearching(false);
+        setLobbyData({
+          lobbyId: data.lobbyId,
+          players: data.players,
+          teamAlpha: data.teamAlpha,
+          teamBravo: data.teamBravo,
+          allPlayersReady: false,
+        });
+        // Join the lobby room
+        socket.emit("join_lobby", { lobbyId: data.lobbyId });
+      });
+
+      socket.on("lobby_update", (data) => {
+        console.log("Lobby update:", data);
+        if (data.lobby && data.lobby.players) {
+          setLobbyData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  players: data.lobby.players,
+                  allPlayersReady: data.allReady || false,
+                }
+              : null
+          );
+        }
+      });
+
+      socket.on("all_players_ready", (data) => {
+        console.log("All players ready:", data);
+        if (data.lobby && data.lobby.players) {
+          setLobbyData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  players: data.lobby.players,
+                  allPlayersReady: true,
+                }
+              : null
+          );
+        }
+      });
+
+      socket.on("lobby_cancelled", (data) => {
+        console.log("Lobby cancelled:", data);
+        setLobbyData(null);
+        setError(data.reason || "Lobby was cancelled");
+        setTimeout(() => setError(null), 5000);
+      });
+
+      socket.on("queue_left", (data) => {
+        console.log("✅ Left queue:", data);
+        setIsSearching(false);
+        setElapsedTime(0);
+        setButtonClicked(false); // Re-enable button
+      });
+
+      socket.on("queue_error", (data) => {
+        console.error("❌ Queue error:", data);
+        setError(data.error);
+        setIsSearching(false);
+        setButtonClicked(false); // Re-enable button on error
+        setPlayersInQueue((prev) => Math.max(0, prev - 1)); // Revert optimistic update
+        setTimeout(() => setError(null), 5000);
+      });
+
+      socket.on("lobby_error", (data) => {
+        console.error("Lobby error:", data);
+        setError(data.error);
+        setTimeout(() => setError(null), 5000);
+      });
+
+      socket.on("disconnect", () => {
+        console.log("❌ Disconnected from Socket.IO");
+        setSocketConnected(false);
+        if (queueInterval) {
+          clearInterval(queueInterval);
+        }
+      });
+    };
+
+    initSocket();
+
+    return () => {
+      console.log("🧹 Cleaning up socket connection");
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [user, getToken]);
+
+  // Timer for elapsed time
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isSearching) {
@@ -71,122 +241,225 @@ export default function MatchmakingPage() {
       .padStart(2, "0")}`;
   };
 
-  const handleStartSearch = () => {
-    setIsSearching(true);
-    setElapsedTime(0);
+  const handleStartSearch = async () => {
+    console.log("🎮 Find Match button clicked!");
+
+    // Prevent double clicks
+    if (isSearching || buttonClicked) {
+      console.log("⚠️ Already searching, ignoring click");
+      return;
+    }
+
+    setButtonClicked(true);
+
+    try {
+      if (!user) {
+        console.log("❌ No user, showing error");
+        setError("Please log in to find a match");
+        setButtonClicked(false);
+        setTimeout(() => setError(null), 3000);
+        return;
+      }
+
+      // Set searching immediately for instant feedback
+      setIsSearching(true);
+      setElapsedTime(0);
+
+      // Optimistically update queue count (will be corrected by server)
+      setPlayersInQueue((prev) => prev + 1);
+
+      // If socket isn't ready, create it now
+      if (!socketRef.current) {
+        console.log("🔌 Creating socket connection...");
+        const token = await getToken();
+        if (token) {
+          const socket = io(WS_BASE_URL, {
+            auth: { token },
+            transports: ["websocket", "polling"],
+          });
+          socketRef.current = socket;
+
+          // Wait for connection
+          await new Promise<void>((resolve) => {
+            socket.on("connect", () => {
+              console.log("✅ Socket connected!");
+              setSocketConnected(true);
+              resolve();
+            });
+
+            // Timeout after 5 seconds
+            setTimeout(() => resolve(), 5000);
+          });
+        }
+      }
+
+      // Emit join queue event
+      if (socketRef.current) {
+        console.log("✅ Emitting join_queue event");
+        socketRef.current.emit("join_queue", { partyMembers: [] });
+
+        // Request queue status immediately after joining
+        setTimeout(() => {
+          if (socketRef.current) {
+            socketRef.current.emit("get_queue_status");
+          }
+        }, 500);
+      } else {
+        console.log("❌ No socket available");
+        setError("Connection failed. Please refresh the page.");
+        setIsSearching(false);
+        setPlayersInQueue((prev) => Math.max(0, prev - 1)); // Revert optimistic update
+      }
+    } catch (error) {
+      console.error("❌ Error starting search:", error);
+      setError("Failed to join queue. Please try again.");
+      setIsSearching(false);
+      setPlayersInQueue((prev) => Math.max(0, prev - 1)); // Revert optimistic update
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   const handleCancelSearch = () => {
-    setIsSearching(false);
-    setElapsedTime(0);
+    if (socketRef.current) {
+      socketRef.current.emit("leave_queue");
+      setIsSearching(false);
+      setElapsedTime(0);
+      setButtonClicked(false); // Re-enable button
+
+      // Decrease queue count optimistically
+      setPlayersInQueue((prev) => Math.max(0, prev - 1));
+
+      // Request updated queue status
+      setTimeout(() => {
+        if (socketRef.current) {
+          socketRef.current.emit("get_queue_status");
+        }
+      }, 500);
+    }
   };
 
-  const handleOpenInviteModal = () => {
-    if (partyMembers.length >= 5) return;
-    setIsInviteModalOpen(true);
+  const handlePlayerReady = () => {
+    if (socketRef.current && lobbyData) {
+      socketRef.current.emit("player_ready", { lobbyId: lobbyData.lobbyId });
+    }
   };
 
-  const handleSendInvite = (friendId: string) => {
-    // Simulate sending invite
-    const invite: Invite = {
-      id: Date.now().toString(),
-      from: {
-        username: user?.username || "Player",
-        avatar: user?.avatar || "/default-avatar.png",
-        level: user?.level || 1,
-      },
-      partySize: partyMembers.length,
-      expiresIn: 60,
-    };
-
-    // For demo: Show invite notification after 2 seconds
-    setTimeout(() => {
-      setCurrentInvite(invite);
-    }, 2000);
+  const handleLeaveLobby = () => {
+    if (socketRef.current && lobbyData) {
+      socketRef.current.emit("leave_lobby", { lobbyId: lobbyData.lobbyId });
+      setLobbyData(null);
+    }
   };
 
-  const handleAcceptInvite = (inviteId: string) => {
-    if (partyMembers.length >= 5) return;
+  const handleShowPlayers = async () => {
+    console.log("👥 Show Players button clicked");
+    
+    // Toggle the dropdown
+    if (showPlayersModal) {
+      console.log("Closing dropdown");
+      setShowPlayersModal(false);
+      return;
+    }
+    
+    setLoadingPlayers(true);
+    console.log("Opening dropdown...");
+    
+    try {
+      const token = await getToken();
+      console.log("🔑 Token obtained:", token ? "Yes" : "No");
+      
+      const url = API_ENDPOINTS.QUEUE.PLAYERS;
+      console.log("🌐 Fetching from:", url);
+      
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
 
-    const newMember: PartyMember = {
-      id: Date.now().toString(),
-      username: `Player${partyMembers.length + 1}`,
-      avatar: "/default-avatar.png",
-      isLeader: false,
-      level: Math.floor(Math.random() * 50) + 1,
-    };
-    setPartyMembers([...partyMembers, newMember]);
-    setCurrentInvite(null);
+      console.log("📡 Response status:", response.status);
 
-    // Show accept notification to leader
-    setNotification({
-      id: Date.now().toString(),
-      type: "accept",
-      username: newMember.username,
-      message: `${newMember.username} joined the party`,
-    });
-
-    setTimeout(() => setNotification(null), 5000);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("📊 Response data:", data);
+        
+        const players = data.data || data.players || [];
+        console.log("👥 Players array:", players);
+        console.log("📝 Number of players:", players.length);
+        
+        setQueuePlayers(players);
+      } else {
+        const errorText = await response.text();
+        console.error("❌ Response not OK:", response.status, errorText);
+        // Show test data if API fails
+        setQueuePlayers([
+          { userId: "1", inGameName: "TestPlayer1", elo: 1000 },
+          { userId: "2", inGameName: "TestPlayer2", elo: 1200 },
+        ]);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching queue players:", error);
+      // Show test data if fetch fails
+      setQueuePlayers([
+        { userId: "1", inGameName: "TestPlayer1", elo: 1000 },
+        { userId: "2", inGameName: "TestPlayer2", elo: 1200 },
+      ]);
+    } finally {
+      setLoadingPlayers(false);
+      setShowPlayersModal(true);
+      console.log("✅ Dropdown opened, players:", queuePlayers.length);
+    }
   };
 
-  const handleRejectInvite = (inviteId: string) => {
-    const rejectedUsername = currentInvite?.from.username || "Player";
-    setCurrentInvite(null);
+  // If in lobby, show lobby view
+  if (lobbyData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#1a1d29] via-[#2a3a4a] to-[#1a2a3a] pt-20 relative overflow-hidden">
+        {/* Background Image with Blur */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: "url(/sand-yards-map.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "blur(8px) brightness(0.3)",
+          }}
+        />
 
-    // Show reject notification to leader
-    setNotification({
-      id: Date.now().toString(),
-      type: "reject",
-      username: rejectedUsername,
-      message: `Player declined the invite`,
-    });
+        <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
+          <LobbyView
+            lobbyId={lobbyData.lobbyId}
+            players={lobbyData.players}
+            teamAlpha={lobbyData.teamAlpha}
+            teamBravo={lobbyData.teamBravo}
+            currentUserId={user?.id || ""}
+            allPlayersReady={lobbyData.allPlayersReady || false}
+            onPlayerReady={handlePlayerReady}
+            onLeaveLobby={handleLeaveLobby}
+          />
+        </div>
+      </div>
+    );
+  }
 
-    setTimeout(() => setNotification(null), 5000);
-  };
-
-  const handleRemoveMember = (memberId: string) => {
-    setPartyMembers(partyMembers.filter((member) => member.id !== memberId));
-  };
-
+  // Main matchmaking UI
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a1d29] via-[#2a3a4a] to-[#1a2a3a] pt-20 relative overflow-hidden">
-      {/* Invite Friends Modal */}
-      <InviteFriendsModal
-        isOpen={isInviteModalOpen}
-        onClose={() => setIsInviteModalOpen(false)}
-        onInvite={handleSendInvite}
-      />
 
-      {/* Invite Notification */}
-      <InviteNotification
-        invite={currentInvite}
-        onAccept={handleAcceptInvite}
-        onReject={handleRejectInvite}
-      />
-
-      {/* Leader Notification Toast */}
+      {/* Error Notification */}
       <AnimatePresence>
-        {notification && (
+        {error && (
           <motion.div
             initial={{ opacity: 0, y: -50, x: "-50%" }}
             animate={{ opacity: 1, y: 0, x: "-50%" }}
             exit={{ opacity: 0, y: -50, x: "-50%" }}
             className="fixed top-20 sm:top-24 left-1/2 z-50 w-[calc(100%-2rem)] sm:w-auto"
           >
-            <div
-              className={`px-4 sm:px-6 py-3 sm:py-4 rounded-lg shadow-2xl border-2 flex items-center gap-2 sm:gap-3 ${
-                notification.type === "accept"
-                  ? "bg-green-600 border-green-500"
-                  : "bg-red-600 border-red-500"
-              }`}
-            >
-              {notification.type === "accept" ? (
-                <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" />
-              ) : (
-                <UserX className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" />
-              )}
+            <div className="px-4 sm:px-6 py-3 sm:py-4 rounded-lg shadow-2xl border-2 bg-red-600 border-red-500 flex items-center gap-2 sm:gap-3">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" />
               <p className="text-white font-medium text-xs sm:text-sm">
-                {notification.message}
+                {error}
               </p>
             </div>
           </motion.div>
@@ -214,74 +487,61 @@ export default function MatchmakingPage() {
               exit={{ opacity: 0, y: -20 }}
               className="flex flex-col items-center justify-center min-h-[70vh] px-3 sm:px-4 gap-6 sm:gap-8 md:gap-12"
             >
-              {/* Party Queue Section */}
-              <div className="w-full flex flex-col items-center gap-4 sm:gap-6 md:gap-8">
-                <PartyQueue
-                  partyMembers={partyMembers}
-                  onInvite={handleOpenInviteModal}
-                  onRemoveMember={handleRemoveMember}
-                  maxSlots={5}
-                  onOpenInviteModal={handleOpenInviteModal}
-                />
-
-                {/* Find Match Button */}
-              <motion.button
-                onClick={handleStartSearch}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full max-w-xs sm:max-w-sm px-8 sm:px-12 md:px-16 py-3 sm:py-4 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-base sm:text-lg md:text-xl font-bold rounded-lg shadow-2xl transition-all duration-300 uppercase tracking-wider"
+              {/* Queue Status */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center"
               >
-                Find Match
-              </motion.button>
-              </div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+                  Find a Match
+                </h1>
+                <div className="flex items-center justify-center gap-3 text-gray-300 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-orange-500" />
+                    <span className="text-lg font-medium">
+                      Players in Queue: {playersInQueue}/10
+                    </span>
+                  </div>
+                  {playersInQueue > 0 && (
+                    <div className="relative">
+                      <button
+                        ref={showPlayersButtonRef}
+                        onClick={handleShowPlayers}
+                        disabled={loadingPlayers}
+                        className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {loadingPlayers ? "Loading..." : "Show Players"}
+                      </button>
+                      {/* Dropdown appears here */}
+                      <QueuePlayersModal
+                        isOpen={showPlayersModal}
+                        onClose={() => setShowPlayersModal(false)}
+                        players={queuePlayers}
+                        buttonRef={showPlayersButtonRef}
+                      />
+                    </div>
+                  )}
+                </div>
+                {!user && (
+                  <p className="text-red-400 text-sm">
+                    Please log in to find a match
+                  </p>
+                )}
+              </motion.div>
 
-              {/* Match Type Selection */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-3xl mt-2 sm:mt-4">
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  className="bg-gradient-to-br from-[#1e2433] to-[#252d3d] rounded-lg sm:rounded-xl p-4 sm:p-6 border border-gray-700 hover:border-orange-500/50 transition-all duration-300 cursor-pointer"
-                >
-                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-500 rounded-full" />
-                    <h3 className="text-white font-bold text-base sm:text-lg">
-                      Standard Match
-                    </h3>
-                  </div>
-                  <p className="text-gray-400 text-xs sm:text-sm mb-2">5v5</p>
-                  <div className="space-y-0.5 sm:space-y-1">
-                    <p className="text-gray-500 text-[10px] sm:text-xs">
-                      ✓ All party sizes
-                    </p>
-                    <p className="text-gray-500 text-[10px] sm:text-xs">
-                      ✓ No Elo restrictions
-                    </p>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  className="bg-gradient-to-br from-[#1e2433] to-[#252d3d] rounded-lg sm:rounded-xl p-4 sm:p-6 border border-gray-700 hover:border-orange-500/50 transition-all duration-300 cursor-pointer"
-                >
-                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-yellow-500 rounded-full" />
-                    <h3 className="text-white font-bold text-base sm:text-lg">
-                      Competitive Match
-                    </h3>
-                  </div>
-                  <p className="text-gray-400 text-xs sm:text-sm mb-2">5v5</p>
-                  <div className="space-y-0.5 sm:space-y-1">
-                    <p className="text-gray-500 text-[10px] sm:text-xs">
-                      ✓ Solo, duo, trio
-                    </p>
-                    <p className="text-gray-500 text-[10px] sm:text-xs">
-                      ✓ 400 Elo range
-                    </p>
-                    <p className="text-gray-500 text-[10px] sm:text-xs">
-                      ✓ Verified matching
-                    </p>
-                  </div>
-                </motion.div>
-              </div>
+              {/* Find Match Button */}
+              <button
+                onClick={handleStartSearch}
+                disabled={!user || !socketConnected || isSearching}
+                className="w-full max-w-xs sm:max-w-sm px-8 sm:px-12 md:px-16 py-3 sm:py-4 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-base sm:text-lg md:text-xl font-bold rounded-lg shadow-2xl transition-all duration-300 uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+              >
+                {!user
+                  ? "Login Required"
+                  : !socketConnected
+                  ? "Connecting..."
+                  : "Find Match"}
+              </button>
             </motion.div>
           ) : (
             <motion.div
@@ -291,20 +551,6 @@ export default function MatchmakingPage() {
               exit={{ opacity: 0 }}
               className="flex flex-col items-center justify-center min-h-[70vh] relative"
             >
-              {/* Party Status Card - Hidden on mobile, shown on md screens */}
-              <motion.div
-                initial={{ opacity: 0, x: -100 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="hidden md:block absolute left-4 md:left-6 lg:left-8 top-6 md:top-8 bg-gradient-to-br from-[#1e2433]/95 to-[#252d3d]/95 backdrop-blur-md rounded-lg md:rounded-xl p-3 md:p-4 border border-gray-700/50 shadow-2xl z-10"
-              >
-                <div className="flex items-center gap-2 text-gray-300">
-                  <Users className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
-                  <span className="text-xs md:text-sm font-medium">
-                    {partyMembers.length}/{5} Players
-                  </span>
-                </div>
-              </motion.div>
-
               {/* Main Search Area */}
               <div className="text-center px-4">
                 <motion.h1
@@ -315,17 +561,28 @@ export default function MatchmakingPage() {
                   Searching for Match...
                 </motion.h1>
 
-                {/* Mobile Party Status - Shown only on mobile */}
+                {/* Queue Status */}
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="md:hidden bg-gradient-to-br from-[#1e2433]/95 to-[#252d3d]/95 backdrop-blur-md rounded-lg p-2.5 sm:p-3 border border-gray-700/50 shadow-xl mb-4 sm:mb-6"
+                  className="bg-gradient-to-br from-[#1e2433]/95 to-[#252d3d]/95 backdrop-blur-md rounded-lg p-3 sm:p-4 border border-gray-700/50 shadow-xl mb-6"
                 >
-                  <div className="flex items-center justify-center gap-2 text-gray-300">
-                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500" />
-                    <span className="text-xs sm:text-sm font-medium">
-                      {partyMembers.length}/{5} Players
-                    </span>
+                  <div className="flex items-center justify-center gap-3 text-gray-300">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
+                      <span className="text-sm sm:text-base font-medium">
+                        Players in Queue: {playersInQueue}/10
+                      </span>
+                    </div>
+                    {playersInQueue > 0 && (
+                      <button
+                        onClick={handleShowPlayers}
+                        disabled={loadingPlayers}
+                        className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors disabled:opacity-50"
+                      >
+                        {loadingPlayers ? "..." : "Show"}
+                      </button>
+                    )}
                   </div>
                 </motion.div>
 
@@ -435,9 +692,6 @@ export default function MatchmakingPage() {
                 >
                   <div className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-2">
                     {formatTime(elapsedTime)}
-                  </div>
-                  <div className="text-sm sm:text-base text-gray-400">
-                    Estimated Time: {formatTime(estimatedTime)}
                   </div>
                 </motion.div>
 

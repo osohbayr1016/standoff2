@@ -119,7 +119,7 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-gray-800/50">
           <div className="text-center">
             <p className="text-gray-400 text-sm">
-              © 2025 Standoff 2 Competitive Hub. All rights reserved.
+              © Twissu created this website
             </p>
           </div>
         </div>

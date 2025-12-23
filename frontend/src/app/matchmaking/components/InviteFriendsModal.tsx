@@ -39,33 +39,28 @@ export default function InviteFriendsModal({
     setLoading(true);
     try {
       const token = getToken();
-      const response = await fetch(
-        `${API_ENDPOINTS.PLAYER_PROFILES.ALL}?limit=50`,
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          credentials: "include",
-        }
-      );
+      const response = await fetch(API_ENDPOINTS.FRIENDS.ALL, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: "include",
+      });
 
       if (response.ok) {
         const data = await response.json();
-        const players = (data.profiles || [])
-          .filter((profile: any) => profile.userId !== user?.id)
-          .map((profile: any) => ({
-            id: profile._id || profile.userId || profile.id,
-            username: profile.inGameName || profile.name || "Unknown",
-            avatar: profile.avatar || "/default-avatar.png",
-            level: profile.rankStars ? Math.floor(profile.rankStars / 100) : 1,
-            status: profile.isOnline ? "online" : "offline",
-          }));
+        const players = (data.friends || []).map((friend: any) => ({
+          id: friend.userId || friend.id,
+          username: friend.inGameName || friend.name || "Unknown",
+          avatar: friend.avatar || "/default-avatar.png",
+          level: friend.elo ? Math.floor(friend.elo / 100) : 1,
+          status: friend.isOnline ? "online" : "offline",
+        }));
         setFriends(players);
       }
     } catch (error) {
-      console.error("Error fetching players:", error);
+      console.error("Error fetching friends:", error);
     } finally {
       setLoading(false);
     }
-  }, [isOpen, getToken, user?.id]);
+  }, [isOpen, getToken]);
 
   useEffect(() => {
     if (isOpen) {
@@ -74,10 +69,8 @@ export default function InviteFriendsModal({
     }
   }, [isOpen, fetchPlayers]);
 
-  const filteredFriends = friends.filter(
-    (friend) =>
-      friend.username.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      friend.status !== "offline"
+  const filteredFriends = friends.filter((friend) =>
+    friend.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleInvite = (friendId: string) => {
@@ -129,7 +122,7 @@ export default function InviteFriendsModal({
               <div className="p-4 sm:p-6 flex flex-col flex-1 min-h-0 overflow-hidden">
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
                   <h2 className="text-lg sm:text-2xl font-bold text-white">
-                    Invite Players
+                    Invite Friends
                   </h2>
                   <button
                     onClick={onClose}
@@ -145,7 +138,7 @@ export default function InviteFriendsModal({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search players..."
+                    placeholder="Search friends..."
                     className="w-full bg-[#1a1f2e] border border-gray-700 rounded-lg pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
                   />
                 </div>
@@ -158,8 +151,8 @@ export default function InviteFriendsModal({
                   ) : filteredFriends.length === 0 ? (
                     <div className="text-center py-8 text-sm sm:text-base text-gray-500">
                       {searchQuery
-                        ? "No players found matching your search"
-                        : "No online players available"}
+                        ? "No friends found matching your search"
+                        : "No friends yet. Add friends from the Friends page!"}
                     </div>
                   ) : (
                     filteredFriends.map((friend) => {
@@ -204,10 +197,16 @@ export default function InviteFriendsModal({
 
                           <button
                             onClick={() => handleInvite(friend.id)}
-                            disabled={isInvited || friend.status === "ingame"}
+                            disabled={
+                              isInvited ||
+                              friend.status === "ingame" ||
+                              friend.status === "offline"
+                            }
                             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm flex-shrink-0 ${
                               isInvited
                                 ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                                : friend.status === "offline"
+                                ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                                 : friend.status === "ingame"
                                 ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                                 : "bg-orange-600 hover:bg-orange-700 text-white"
@@ -220,6 +219,8 @@ export default function InviteFriendsModal({
                                   Pending
                                 </span>
                               </>
+                            ) : friend.status === "offline" ? (
+                              <span className="text-xs">Offline</span>
                             ) : (
                               <>
                                 <UserPlus className="w-3 h-3 sm:w-4 sm:h-4" />

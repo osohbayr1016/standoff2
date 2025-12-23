@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { API_ENDPOINTS } from "../../config/api";
 
 interface LeaderboardPlayer {
   _id: string;
+  userId: string;
   name: string;
   elo: number;
   wins: number;
@@ -14,6 +16,7 @@ interface LeaderboardPlayer {
 }
 
 export default function LeaderboardPage() {
+  const router = useRouter();
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardPlayer[]>(
     []
   );
@@ -34,16 +37,37 @@ export default function LeaderboardPage() {
 
       if (data.success && data.profiles) {
         // Transform profiles to leaderboard format using real data
+        const normalizeId = (val: any): string | undefined => {
+          if (!val) return undefined;
+          if (typeof val === "string") return val;
+          if (typeof val === "object") {
+            if (val._id) return String(val._id);
+            // Avoid returning "[object Object]"
+            const strVal = val.toString();
+            if (strVal && strVal !== "[object Object]") return strVal;
+          }
+          return undefined;
+        };
+
         const players = data.profiles
-          .map((profile: any) => ({
-            _id: profile._id || profile.id,
-            name: profile.inGameName || profile.name || "Unknown Player",
-            elo: profile.elo || profile.rankStars || 1000,
-            wins: profile.wins || 0,
-            losses: profile.losses || 0,
-            winRate: 0,
-            region: profile.region || "Global",
-          }))
+          .map((profile: any) => {
+            // Prioritize uniqueId for navigation, fall back to userId or _id
+            const profileId =
+              profile.uniqueId ||
+              normalizeId(profile.userId) ||
+              String(profile._id || profile.id);
+
+            return {
+              _id: String(profile._id || profile.id),
+              userId: profileId, // Use uniqueId when available, else normalized userId/_id
+              name: profile.inGameName || profile.name || "Unknown Player",
+              elo: profile.elo || profile.rankStars || 1000,
+              wins: profile.wins || 0,
+              losses: profile.losses || 0,
+              winRate: 0,
+              region: profile.region || "Global",
+            };
+          })
           .map((player: LeaderboardPlayer) => ({
             ...player,
             winRate:
@@ -107,10 +131,8 @@ export default function LeaderboardPage() {
           {/* Desktop Table Header */}
           <div className="hidden md:grid md:grid-cols-12 gap-2 md:gap-4 px-4 md:px-6 py-3 md:py-4 bg-gray-900/50 border-b border-gray-700 text-xs md:text-sm font-semibold text-gray-400">
             <div className="col-span-1">Rank</div>
-            <div className="col-span-5">Player</div>
-            <div className="col-span-2 text-center">ELO</div>
-            <div className="col-span-2 text-center">Wins</div>
-            <div className="col-span-2 text-center">Win Rate</div>
+            <div className="col-span-8">Player</div>
+            <div className="col-span-3 text-center">ELO</div>
           </div>
 
           {/* Mobile Table Header */}
@@ -137,7 +159,8 @@ export default function LeaderboardPage() {
               <div key={player._id}>
                 {/* Desktop Layout */}
                 <div
-                  className={`hidden md:grid md:grid-cols-12 gap-2 md:gap-4 px-4 md:px-6 py-3 md:py-4 border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors ${
+                  onClick={() => router.push(`/profile/${player.userId}`)}
+                  className={`hidden md:grid md:grid-cols-12 gap-2 md:gap-4 px-4 md:px-6 py-3 md:py-4 border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors cursor-pointer ${
                     index < 3 ? rankBadge.color : ""
                   }`}
                 >
@@ -148,31 +171,22 @@ export default function LeaderboardPage() {
                       {rankBadge.icon}
                     </div>
                   </div>
-                  <div className="col-span-5 flex items-center">
+                  <div className="col-span-8 flex items-center">
                     <span className="text-white font-medium text-sm md:text-base truncate">
                       {player.name}
                     </span>
                   </div>
-                  <div className="col-span-2 flex items-center justify-center">
+                  <div className="col-span-3 flex items-center justify-center">
                     <span className="text-orange-500 font-bold text-sm md:text-base">
                       {player.elo}
-                    </span>
-                  </div>
-                  <div className="col-span-2 flex items-center justify-center">
-                    <span className="text-white text-sm md:text-base">
-                      {player.wins}
-                    </span>
-                  </div>
-                  <div className="col-span-2 flex items-center justify-center">
-                    <span className="text-green-500 font-semibold text-sm md:text-base">
-                      {player.winRate}%
                     </span>
                   </div>
                 </div>
 
                 {/* Mobile Layout */}
                 <div
-                  className={`md:hidden grid grid-cols-3 gap-2 px-3 py-3 border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors ${
+                  onClick={() => router.push(`/profile/${player.userId}`)}
+                  className={`md:hidden grid grid-cols-3 gap-2 px-3 py-3 border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors cursor-pointer ${
                     index < 3 ? rankBadge.color : ""
                   }`}
                 >
@@ -192,19 +206,6 @@ export default function LeaderboardPage() {
                     <span className="text-orange-500 font-bold text-sm">
                       {player.elo}
                     </span>
-                  </div>
-                  {/* Mobile Stats Row */}
-                  <div className="col-span-3 flex items-center justify-between text-xs text-gray-400 mt-1 pt-2 border-t border-gray-700/30">
-                    <div className="flex items-center gap-1">
-                      <span className="text-gray-500">Wins:</span>
-                      <span className="text-white">{player.wins}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-gray-500">Win Rate:</span>
-                      <span className="text-green-500 font-semibold">
-                        {player.winRate}%
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>

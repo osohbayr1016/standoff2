@@ -10,7 +10,9 @@ interface ProfileHeaderProps {
   nickname: string;
   lastEdited?: string;
   elo: number;
+  uniqueId?: string;
   onEditClick?: () => void;
+  hideEditButton?: boolean;
 }
 
 export default function ProfileHeader({
@@ -18,7 +20,9 @@ export default function ProfileHeader({
   nickname,
   lastEdited,
   elo,
+  uniqueId,
   onEditClick,
+  hideEditButton = false,
 }: ProfileHeaderProps) {
   return (
     <motion.div
@@ -53,7 +57,7 @@ export default function ProfileHeader({
             <h1 className="text-2xl md:text-3xl font-bold text-white">
               {nickname}
             </h1>
-            {onEditClick && (
+            {onEditClick && !hideEditButton && (
               <button
                 onClick={onEditClick}
                 className="p-1.5 hover:bg-gray-700/50 rounded-lg transition-colors"
@@ -62,7 +66,7 @@ export default function ProfileHeader({
               </button>
             )}
           </div>
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 text-sm mb-2">
             Last edited: {lastEdited || "Never"}
           </p>
         </div>

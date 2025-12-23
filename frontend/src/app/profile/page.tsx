@@ -20,6 +20,7 @@ interface PlayerProfile {
   name: string;
   avatar?: string;
   inGameName: string;
+  uniqueId?: string;
   elo?: number;
   wins?: number;
   losses?: number;
@@ -76,7 +77,22 @@ export default function ProfilePage() {
 
       if (profileRes.ok) {
         const data = await profileRes.json();
-        setProfile(data.profile);
+        const profileData = data.profile;
+        
+        // Redirect to dynamic route using uniqueId or userId as fallback
+        if (profileData) {
+          const profileId = profileData.uniqueId || 
+                           (profileData.userId ? (typeof profileData.userId === 'object' ? profileData.userId._id || profileData.userId.toString() : String(profileData.userId)) : null) ||
+                           profileData._id || 
+                           profileData.id;
+          
+          if (profileId) {
+            router.push(`/profile/${profileId}`);
+            return;
+          }
+        }
+        
+        setProfile(profileData);
       } else if (profileRes.status === 404) {
         router.push("/create-profile");
         return;
@@ -196,7 +212,6 @@ export default function ProfilePage() {
               </motion.div>
             </div>
           </main>
-          <Footer />
         </div>
       </ProtectedRoute>
     );
@@ -220,6 +235,7 @@ export default function ProfilePage() {
               nickname={profile.inGameName || profile.name}
               lastEdited={formatLastEdited(profile.updatedAt)}
               elo={elo}
+              uniqueId={profile.uniqueId}
               onEditClick={() => router.push("/settings")}
             />
 

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Trophy, Loader2 } from "lucide-react";
 import { API_ENDPOINTS } from "../../config/api";
 
@@ -12,9 +12,11 @@ interface Player {
   name: string;
   avatar: string;
   points: number;
+  profileId: string; // For navigation
 }
 
 export default function LiveLeaderboardTop5() {
+  const router = useRouter();
   const [topPlayers, setTopPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,12 +33,31 @@ export default function LiveLeaderboardTop5() {
 
       if (data.success && data.profiles) {
         const players = data.profiles
-          .map((profile: any, index: number) => ({
-            rank: index + 1,
-            name: profile.inGameName || profile.name || "Unknown",
-            avatar: profile.avatar || "/default-avatar.png",
-            points: profile.elo || profile.rankStars || 1000,
-          }))
+          .map((profile: any, index: number) => {
+            // Extract navigation ID - prioritize uniqueId, then userId
+            const normalizeId = (val: any): string | undefined => {
+              if (!val) return undefined;
+              if (typeof val === "string") return val;
+              if (typeof val === "object") {
+                if (val._id) return String(val._id);
+                const strVal = val.toString();
+                if (strVal && strVal !== "[object Object]") return strVal;
+              }
+              return undefined;
+            };
+
+            const profileId = profile.uniqueId || 
+                             normalizeId(profile.userId) || 
+                             String(profile._id || profile.id);
+
+            return {
+              rank: index + 1,
+              name: profile.inGameName || profile.name || "Unknown",
+              avatar: profile.avatar || "/default-avatar.png",
+              points: profile.elo || profile.rankStars || 1000,
+              profileId: profileId,
+            };
+          })
           .sort((a: Player, b: Player) => b.points - a.points)
           .slice(0, 5)
           .map((p: Player, i: number) => ({ ...p, rank: i + 1 }));
@@ -119,17 +140,11 @@ export default function LiveLeaderboardTop5() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
                 whileHover={{ scale: 1.02, x: 5 }}
-                className={`flex items-center justify-between p-4 rounded-xl ${rankStyle.bg} border ${rankStyle.border} transition-all duration-300`}
+                onClick={() => router.push(`/profile/${player.profileId}`)}
+                className={`flex items-center justify-between p-4 rounded-xl ${rankStyle.bg} border ${rankStyle.border} transition-all duration-300 cursor-pointer`}
               >
                 <div className="flex items-center space-x-4">
                   <div className="text-2xl">{rankStyle.icon}</div>
-                  <Image
-                    src={player.avatar}
-                    alt={player.name}
-                    width={40}
-                    height={40}
-                    className="rounded-full border-2 border-orange-500/20"
-                  />
                   <span className="text-white font-semibold">
                     {player.name}
                   </span>

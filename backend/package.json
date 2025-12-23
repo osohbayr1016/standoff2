@@ -20,6 +20,7 @@
     "test:coverage": "jest --coverage",
     "e2e:tournament": "API_BASE=http://localhost:8000 ts-node src/scripts/testTournamentFlow.ts",
     "init:achievements": "ts-node src/scripts/runAchievementInit.ts",
+    "migrate:unique-ids": "ts-node src/scripts/addUniqueIdsToProfiles.ts",
     "deploy:build": "npm run build:clean && npm run init:achievements",
     "deploy:start": "node dist/index.js",
     "restore:data": "node restore-all-data.js",

@@ -49,6 +49,10 @@ export const API_ENDPOINTS = {
   PLAYER_PROFILES: {
     ALL: `${API_BASE_URL}/api/player-profiles/profiles`,
     GET: (id: string) => `${API_BASE_URL}/api/player-profiles/profiles/${id}`,
+    GET_BY_USER_ID: (userId: string) =>
+      `${API_BASE_URL}/api/player-profiles/profiles/user/${userId}`,
+    GET_BY_UNIQUE_ID: (uniqueId: string) =>
+      `${API_BASE_URL}/api/player-profiles/profiles/unique/${uniqueId}`,
     MY_PROFILE: `${API_BASE_URL}/api/player-profiles/my-profile`,
     CREATE: `${API_BASE_URL}/api/player-profiles/create-profile`,
     UPDATE: `${API_BASE_URL}/api/player-profiles/update-profile`,
@@ -228,6 +232,31 @@ export const API_ENDPOINTS = {
     AWARD_ACHIEVEMENT: `${API_BASE_URL}/api/admin/award-achievement`,
     AWARD_BADGE: `${API_BASE_URL}/api/admin/award-badge`,
     STATS: `${API_BASE_URL}/api/admin/achievement-stats`,
+  },
+  FRIENDS: {
+    SEARCH: `${API_BASE_URL}/api/friends/search`,
+    REQUEST: `${API_BASE_URL}/api/friends/request`,
+    INCOMING_REQUESTS: `${API_BASE_URL}/api/friends/requests/incoming`,
+    OUTGOING_REQUESTS: `${API_BASE_URL}/api/friends/requests/outgoing`,
+    ACCEPT: (requestId: string) =>
+      `${API_BASE_URL}/api/friends/accept/${requestId}`,
+    REJECT: (requestId: string) =>
+      `${API_BASE_URL}/api/friends/reject/${requestId}`,
+    CANCEL: (requestId: string) =>
+      `${API_BASE_URL}/api/friends/cancel/${requestId}`,
+    ALL: `${API_BASE_URL}/api/friends`,
+    REMOVE: (friendId: string) => `${API_BASE_URL}/api/friends/${friendId}`,
+  },
+  QUEUE: {
+    JOIN: `${API_BASE_URL}/api/queue/join`,
+    LEAVE: `${API_BASE_URL}/api/queue/leave`,
+    STATUS: `${API_BASE_URL}/api/queue/status`,
+    PLAYERS: `${API_BASE_URL}/api/queue/players`,
+  },
+  LOBBY: {
+    GET: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}`,
+    READY: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}/ready`,
+    LEAVE: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}/leave`,
   },
 
   HEALTH: `${API_BASE_URL}/health`,

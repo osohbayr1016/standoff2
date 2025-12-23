@@ -1,29 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 import { Menu, X, User, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { API_ENDPOINTS } from "../../config/api";
 
 export default function Navigation() {
-  const { user, logout } = useAuth();
+  const { user, logout, getToken } = useAuth();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
 
   const handleProfileClick = () => {
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
+    // Navigate to static profile page for own profile
     router.push("/profile");
   };
+
+  // Fetch pending friend request count
+  useEffect(() => {
+    const fetchPendingRequests = async () => {
+      if (!user) {
+        setPendingRequestCount(0);
+        return;
+      }
+
+      try {
+        const token = getToken();
+        if (!token) return;
+
+        const response = await fetch(API_ENDPOINTS.FRIENDS.INCOMING_REQUESTS, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const count = data.requests?.length || 0;
+          setPendingRequestCount(count);
+        }
+      } catch (error) {
+        console.error("Error fetching pending friend requests:", error);
+      }
+    };
+
+    fetchPendingRequests();
+    
+    // Poll every 30 seconds to update the count
+    const interval = setInterval(fetchPendingRequests, 30000);
+    
+    return () => clearInterval(interval);
+  }, [user, getToken]);
 
   // Main navigation items
   const navItems = [
     { name: "Home", href: "/" },
     { name: "Matchmaking", href: "/matchmaking" },
+    { name: "Friends", href: "/friends" },
     { name: "Leaderboard", href: "/leaderboard" },
     { name: "Rewards", href: "/rewards" },
   ];
@@ -51,9 +89,14 @@ export default function Navigation() {
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-4 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-orange-500/10 transition-all duration-200 font-medium text-sm"
+                  className="relative px-4 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-orange-500/10 transition-all duration-200 font-medium text-sm"
                 >
                   {item.name}
+                  {item.name === "Friends" && pendingRequestCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {pendingRequestCount > 9 ? "9+" : pendingRequestCount}
+                    </span>
+                  )}
                 </motion.div>
               </Link>
             ))}
@@ -196,9 +239,14 @@ export default function Navigation() {
                   >
                     <motion.div
                       whileTap={{ scale: 0.98 }}
-                      className="px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-orange-500/10 transition-colors font-medium"
+                      className="relative px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-orange-500/10 transition-colors font-medium"
                     >
                       {item.name}
+                      {item.name === "Friends" && pendingRequestCount > 0 && (
+                        <span className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                          {pendingRequestCount > 9 ? "9+" : pendingRequestCount}
+                        </span>
+                      )}
                     </motion.div>
                   </Link>
                 ))}

@@ -9,6 +9,7 @@ import StreamSession from "../models/StreamSession";
 import StreamChat from "../models/StreamChat";
 import StreamViewer from "../models/StreamViewer";
 import { StreamService } from "../services/streamService";
+import { QueueService } from "../services/queueService";
 
 export class SocketManager {
   private io: SocketIOServer | null = null;
@@ -482,28 +483,365 @@ export class SocketManager {
         this.broadcastUserStatus(socket.data.userId, status);
       });
 
+      // Friend-related socket events
+      socket.on("friend_request_sent", async (data) => {
+        try {
+          const { receiverId, senderData } = data;
+          const receiverSocketId = this.connectedUsers.get(receiverId);
+          
+          if (receiverSocketId) {
+            this.io!.to(receiverSocketId).emit("friend_request_received", {
+              sender: senderData,
+              timestamp: new Date().toISOString(),
+            });
+          }
+        } catch (error) {
+          console.error("Error handling friend request sent:", error);
+        }
+      });
+
+      socket.on("friend_request_accepted", async (data) => {
+        try {
+          const { senderId, acceptorData } = data;
+          const senderSocketId = this.connectedUsers.get(senderId);
+          
+          if (senderSocketId) {
+            this.io!.to(senderSocketId).emit("friend_request_accepted_notification", {
+              acceptor: acceptorData,
+              timestamp: new Date().toISOString(),
+            });
+          }
+
+          // Notify both users to refresh their friends list
+          socket.emit("friends_list_updated");
+          if (senderSocketId) {
+            this.io!.to(senderSocketId).emit("friends_list_updated");
+          }
+        } catch (error) {
+          console.error("Error handling friend request accepted:", error);
+        }
+      });
+
+      // Lobby invite events for matchmaking
+      socket.on("send_lobby_invite", async (data) => {
+        try {
+          const { friendId, lobbyData } = data;
+          const senderId = socket.data.userId;
+
+          if (!senderId) {
+            socket.emit("lobby_invite_error", {
+              error: "Authentication required",
+            });
+            return;
+          }
+
+          const friendSocketId = this.connectedUsers.get(friendId);
+          
+          if (friendSocketId) {
+            const sender = await User.findById(senderId).select("name avatar");
+            
+            this.io!.to(friendSocketId).emit("lobby_invite_received", {
+              inviteId: `invite_${Date.now()}`,
+              sender: {
+                id: senderId,
+                name: sender?.name,
+                avatar: sender?.avatar,
+              },
+              lobbyData,
+              timestamp: new Date().toISOString(),
+            });
+
+            socket.emit("lobby_invite_sent", {
+              friendId,
+              timestamp: new Date().toISOString(),
+            });
+          } else {
+            socket.emit("lobby_invite_error", {
+              error: "Friend is offline",
+            });
+          }
+        } catch (error) {
+          console.error("Error sending lobby invite:", error);
+          socket.emit("lobby_invite_error", {
+            error: "Failed to send invite",
+          });
+        }
+      });
+
+      socket.on("lobby_invite_response", async (data) => {
+        try {
+          const { inviteId, senderId, accepted } = data;
+          const responderId = socket.data.userId;
+
+          if (!responderId) {
+            return;
+          }
+
+          const senderSocketId = this.connectedUsers.get(senderId);
+          
+          if (senderSocketId) {
+            const responder = await User.findById(responderId).select("name avatar");
+            
+            this.io!.to(senderSocketId).emit("lobby_invite_responded", {
+              inviteId,
+              accepted,
+              responder: {
+                id: responderId,
+                name: responder?.name,
+                avatar: responder?.avatar,
+              },
+              timestamp: new Date().toISOString(),
+            });
+          }
+        } catch (error) {
+          console.error("Error handling lobby invite response:", error);
+        }
+      });
+
+      // ===== MATCHMAKING QUEUE EVENTS =====
+
+      // Join matchmaking room to receive queue updates
+      socket.on("join_matchmaking_room", async () => {
+        try {
+          socket.join("matchmaking_queue");
+          console.log(`👀 User ${socket.data.userId} joined matchmaking room for updates`);
+          
+          // Send current queue count
+          const totalInQueue = await QueueService.getTotalInQueue();
+          socket.emit("queue_update", {
+            totalPlayers: totalInQueue,
+          });
+        } catch (error: any) {
+          console.error("Join matchmaking room error:", error);
+        }
+      });
+
+      // Join matchmaking queue
+      socket.on("join_queue", async (data) => {
+        try {
+          const userId = socket.data.userId;
+          if (!userId) {
+            socket.emit("queue_error", {
+              error: "Authentication required",
+            });
+            return;
+          }
+
+          const partyMembers = data?.partyMembers || [];
+          const result = await QueueService.addToQueue(userId, partyMembers);
+
+          // Join queue room for broadcasts
+          socket.join("matchmaking_queue");
+
+          socket.emit("queue_joined", {
+            success: true,
+            position: result.position,
+          });
+
+          // Broadcast updated queue count to all in queue
+          const totalInQueue = await QueueService.getTotalInQueue();
+          this.io!.to("matchmaking_queue").emit("queue_update", {
+            totalPlayers: totalInQueue,
+          });
+        } catch (error: any) {
+          console.error("Join queue error:", error);
+          socket.emit("queue_error", {
+            error: error.message || "Failed to join queue",
+          });
+        }
+      });
+
+      // Leave matchmaking queue
+      socket.on("leave_queue", async () => {
+        try {
+          const userId = socket.data.userId;
+          if (!userId) return;
+
+          await QueueService.removeFromQueue(userId);
+          socket.leave("matchmaking_queue");
+
+          socket.emit("queue_left", {
+            success: true,
+          });
+
+          // Broadcast updated queue count
+          const totalInQueue = await QueueService.getTotalInQueue();
+          this.io!.to("matchmaking_queue").emit("queue_update", {
+            totalPlayers: totalInQueue,
+          });
+        } catch (error: any) {
+          console.error("Leave queue error:", error);
+          socket.emit("queue_error", {
+            error: error.message || "Failed to leave queue",
+          });
+        }
+      });
+
+      // Get queue status
+      socket.on("get_queue_status", async () => {
+        try {
+          const userId = socket.data.userId;
+          if (!userId) {
+            socket.emit("queue_status", {
+              inQueue: false,
+              totalPlayers: await QueueService.getTotalInQueue(),
+            });
+            return;
+          }
+
+          const position = await QueueService.getQueuePosition(userId);
+          const totalInQueue = await QueueService.getTotalInQueue();
+
+          socket.emit("queue_status", {
+            inQueue: position > 0,
+            position,
+            totalPlayers: totalInQueue,
+          });
+        } catch (error: any) {
+          console.error("Get queue status error:", error);
+        }
+      });
+
+      // ===== LOBBY EVENTS =====
+
+      // Join lobby room
+      socket.on("join_lobby", async (data) => {
+        try {
+          const { lobbyId } = data;
+          if (!lobbyId) return;
+
+          socket.join(`lobby_${lobbyId}`);
+          
+          // Send current lobby state
+          const lobby = await QueueService.getLobby(lobbyId);
+          socket.emit("lobby_state", { lobby });
+        } catch (error: any) {
+          console.error("Join lobby error:", error);
+          socket.emit("lobby_error", {
+            error: error.message || "Failed to join lobby",
+          });
+        }
+      });
+
+      // Player clicks ready
+      socket.on("player_ready", async (data) => {
+        try {
+          const { lobbyId } = data;
+          const userId = socket.data.userId;
+
+          if (!userId || !lobbyId) {
+            socket.emit("lobby_error", {
+              error: "Invalid request",
+            });
+            return;
+          }
+
+          const result = await QueueService.markPlayerReady(lobbyId, userId);
+
+          // Broadcast updated lobby state to all players in lobby
+          this.io!.to(`lobby_${lobbyId}`).emit("lobby_update", {
+            lobby: result.lobby,
+            allReady: result.allReady,
+          });
+
+          if (result.allReady) {
+            // All players ready - emit special event
+            this.io!.to(`lobby_${lobbyId}`).emit("all_players_ready", {
+              lobby: result.lobby,
+            });
+          }
+        } catch (error: any) {
+          console.error("Player ready error:", error);
+          socket.emit("lobby_error", {
+            error: error.message || "Failed to mark ready",
+          });
+        }
+      });
+
+      // Leave lobby (cancels for everyone)
+      socket.on("leave_lobby", async (data) => {
+        try {
+          const { lobbyId } = data;
+          const userId = socket.data.userId;
+
+          if (!userId || !lobbyId) return;
+
+          const cancelled = await QueueService.cancelLobby(lobbyId);
+
+          if (cancelled) {
+            // Notify all players that lobby was cancelled
+            this.io!.to(`lobby_${lobbyId}`).emit("lobby_cancelled", {
+              reason: "A player left the lobby",
+            });
+
+            // Remove all players from lobby room
+            const socketsInRoom = await this.io!.in(`lobby_${lobbyId}`).fetchSockets();
+            socketsInRoom.forEach((s) => {
+              s.leave(`lobby_${lobbyId}`);
+            });
+          }
+
+          socket.emit("lobby_left", {
+            success: true,
+          });
+        } catch (error: any) {
+          console.error("Leave lobby error:", error);
+          socket.emit("lobby_error", {
+            error: error.message || "Failed to leave lobby",
+          });
+        }
+      });
+
       // Handle disconnection
       socket.on("disconnect", async () => {
-        this.connectedUsers.delete(socket.data.userId);
+        const userId = socket.data.userId;
+        
+        if (userId) {
+          this.connectedUsers.delete(userId);
 
-        // Update user offline status in database
-        await User.findByIdAndUpdate(socket.data.userId, {
-          isOnline: false,
-          lastSeen: new Date(),
-        });
+          // Remove from queue if in queue
+          await QueueService.removeFromQueue(userId);
 
-        this.broadcastUserStatus(socket.data.userId, "offline");
+          // Update user offline status in database
+          await User.findByIdAndUpdate(userId, {
+            isOnline: false,
+            lastSeen: new Date(),
+          });
+
+          this.broadcastUserStatus(userId, "offline");
+        }
       });
     });
   }
 
-  private broadcastUserStatus(userId: string, status: string): void {
+  private async broadcastUserStatus(userId: string, status: string): Promise<void> {
     if (this.io) {
       this.io.emit("user_status_changed", {
         userId,
         status,
         timestamp: new Date().toISOString(),
       });
+
+      // Also notify friends specifically
+      try {
+        const PlayerProfile = (await import("../models/PlayerProfile")).default;
+        const profile = await PlayerProfile.findOne({ userId });
+        
+        if (profile && profile.friends && profile.friends.length > 0) {
+          profile.friends.forEach((friendId) => {
+            const friendSocketId = this.connectedUsers.get(friendId.toString());
+            if (friendSocketId) {
+              this.io!.to(friendSocketId).emit("friend_status_changed", {
+                friendId: userId,
+                status,
+                timestamp: new Date().toISOString(),
+              });
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error notifying friends of status change:", error);
+      }
     }
   }
 
@@ -533,7 +871,11 @@ export class SocketManager {
   }
 
   // Stream-specific methods
-  public broadcastStreamEvent(streamId: string, event: string, data: any): void {
+  public broadcastStreamEvent(
+    streamId: string,
+    event: string,
+    data: any
+  ): void {
     if (this.io) {
       this.io.to(`stream_${streamId}`).emit(event, data);
     }
@@ -570,6 +912,30 @@ export class SocketManager {
         timestamp: new Date().toISOString(),
       });
     }
+  }
+
+  // Matchmaking-specific methods
+  public notifyLobbyFound(userIds: string[], lobbyData: any): void {
+    if (this.io) {
+      userIds.forEach((userId) => {
+        const socketId = this.connectedUsers.get(userId);
+        if (socketId) {
+          this.io!.to(socketId).emit("lobby_found", lobbyData);
+        }
+      });
+    }
+  }
+
+  public broadcastQueueUpdate(totalPlayers: number): void {
+    if (this.io) {
+      this.io.to("matchmaking_queue").emit("queue_update", {
+        totalPlayers,
+      });
+    }
+  }
+
+  public getIO(): SocketIOServer | null {
+    return this.io;
   }
 }
 
