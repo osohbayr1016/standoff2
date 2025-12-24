@@ -1,9 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import LobbyPlayerCard from "./LobbyPlayerCard";
 import TeamColumn from "./TeamColumn";
-import { X } from "lucide-react";
+import { Link as LinkIcon, Map as MapIcon, Users, Shield, Copy, Check, UserPlus } from "lucide-react";
+import { useState } from "react";
 
 interface LobbyPlayer {
   userId: string;
@@ -19,8 +19,14 @@ interface LobbyViewProps {
   teamAlpha: string[];
   teamBravo: string[];
   currentUserId: string;
+  leaderId: string;
+  selectedMap: string;
+  lobbyLink: string;
   allPlayersReady: boolean;
   onPlayerReady: () => void;
+  onJoinTeam: (team: "alpha" | "bravo") => void;
+  onKick: (userId: string) => void;
+  onInviteOpen: () => void;
   adminReadyAllButton?: React.ReactNode;
   countdownElement?: React.ReactNode;
   addResultButton?: React.ReactNode;
@@ -32,27 +38,31 @@ export default function LobbyView({
   teamAlpha,
   teamBravo,
   currentUserId,
+  leaderId,
+  selectedMap,
+  lobbyLink,
   allPlayersReady,
   onPlayerReady,
+  onJoinTeam,
+  onKick,
+  onInviteOpen,
   adminReadyAllButton,
   countdownElement,
   addResultButton,
 }: LobbyViewProps) {
-  // Split players into teams
-  const alphaPlayers = players.filter((p) =>
-    teamAlpha.includes(p.userId.toString())
-  );
-  const bravoPlayers = players.filter((p) =>
-    teamBravo.includes(p.userId.toString())
-  );
+  const [linkCopied, setLinkCopied] = useState(false);
 
-  // Determine team leaders (highest ELO from each team)
-  const alphaLeader = [...alphaPlayers].sort((a, b) => b.elo - a.elo)[0];
-  const bravoLeader = [...bravoPlayers].sort((a, b) => b.elo - a.elo)[0];
+  // Split players into teams based on their presence in teamAlpha/teamBravo arrays
+  const alphaPlayers = players.filter((p) => teamAlpha.includes(p.userId));
+  const bravoPlayers = players.filter((p) => teamBravo.includes(p.userId));
 
-  const alphaTeamName = alphaLeader ? `Team ${alphaLeader.inGameName}` : "Team Alpha";
-  const bravoTeamName = bravoLeader ? `Team ${bravoLeader.inGameName}` : "Team Bravo";
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(lobbyLink);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
+  const isLeader = currentUserId === leaderId;
   const readyCount = players.filter((p) => p.isReady).length;
 
   return (
@@ -61,45 +71,83 @@ export default function LobbyView({
       animate={{ opacity: 1 }}
       className="flex flex-col items-center justify-center min-h-[70vh] relative px-4"
     >
+      {/* Lobby Info Bar */}
+      <div className="w-full max-w-6xl flex flex-wrap items-center justify-between gap-4 mb-8 bg-[#1e2433]/80 backdrop-blur-md border border-gray-700/50 p-4 rounded-2xl shadow-2xl">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <MapIcon className="text-orange-500" size={20} />
+            <span className="text-white font-black uppercase tracking-wider">{selectedMap}</span>
+          </div>
+          <div className="h-4 w-px bg-gray-700" />
+          <div className="flex items-center gap-2 text-gray-400">
+            <Users size={18} />
+            <span className="font-bold">{players.length}/10 Players</span>
+          </div>
+          <button
+            onClick={onInviteOpen}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 rounded-xl border border-blue-500/20 transition-all font-bold text-xs uppercase"
+          >
+            <UserPlus size={14} /> Invite Friends
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-[#161b28] px-4 py-2 rounded-xl border border-gray-700">
+            <LinkIcon className="text-gray-500" size={16} />
+            <span className="text-gray-300 text-xs font-mono max-w-[200px] truncate">{lobbyLink}</span>
+            <button 
+              onClick={handleCopyLink}
+              className="p-1.5 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-white"
+            >
+              {linkCopied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+            </button>
+          </div>
+          {isLeader && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <Shield size={14} className="text-yellow-500" />
+              <span className="text-yellow-500 text-[10px] font-black uppercase">Host</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+
       {/* Header */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-10">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl sm:text-4xl font-bold text-white mb-2"
+          className="text-4xl md:text-5xl font-black text-white mb-3 tracking-tight"
         >
-          Match Found!
+          LOBBY <span className="text-orange-500">PREPARATION</span>
         </motion.h1>
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={`ready-${readyCount}-${allPlayersReady}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="text-gray-400 text-sm sm:text-base"
-          >
-            {allPlayersReady
-              ? "All players ready! Copy IDs to join the game"
-              : `Waiting for players to ready up (${readyCount}/10)`}
-          </motion.p>
-        </AnimatePresence>
+        <p className="text-gray-400 font-medium">
+          {allPlayersReady
+            ? "Everyone is ready! Good luck in the match."
+            : `Joining teams and getting ready (${readyCount}/10)`}
+        </p>
       </div>
 
       {/* Teams Container */}
-      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
         <TeamColumn
-          teamName={alphaTeamName}
+          teamName="Team Alpha"
           teamPlayers={alphaPlayers}
           currentUserId={currentUserId}
+          leaderId={leaderId}
+          onJoinTeam={onJoinTeam}
+          onKick={onKick}
           allPlayersReady={allPlayersReady}
           onPlayerReady={onPlayerReady}
           teamColor="alpha"
         />
         <TeamColumn
-          teamName={bravoTeamName}
+          teamName="Team Bravo"
           teamPlayers={bravoPlayers}
           currentUserId={currentUserId}
+          leaderId={leaderId}
+          onJoinTeam={onJoinTeam}
+          onKick={onKick}
           allPlayersReady={allPlayersReady}
           onPlayerReady={onPlayerReady}
           teamColor="bravo"
@@ -107,45 +155,11 @@ export default function LobbyView({
       </div>
 
       {/* Action Buttons */}
-      {!allPlayersReady && adminReadyAllButton && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8 flex flex-wrap items-center justify-center gap-4"
-        >
-          {adminReadyAllButton}
-        </motion.div>
-      )}
-
-      {/* All Ready Message with Countdown and Result Button */}
-      {allPlayersReady && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mt-8 flex flex-col items-center"
-        >
-          {/* Countdown Timer */}
-          {countdownElement}
-
-          {/* All Players Ready Message */}
-          <div className="p-6 bg-green-900/30 border-2 border-green-500 rounded-xl text-center">
-            <h3 className="text-2xl font-bold text-green-400 mb-2">
-              All Players Ready!
-            </h3>
-            <p className="text-gray-300 text-sm">
-              Copy the Standoff2 IDs above and join the game manually
-            </p>
-          </div>
-
-          {/* Add Result Button */}
-          {addResultButton && (
-            <div className="mt-6">{addResultButton}</div>
-          )}
-        </motion.div>
-      )}
+      <div className="mt-12 flex flex-col items-center gap-6">
+        {adminReadyAllButton}
+        {countdownElement}
+        {addResultButton}
+      </div>
     </motion.div>
   );
 }
-

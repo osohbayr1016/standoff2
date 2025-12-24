@@ -85,6 +85,14 @@ const matchResultSchema = new mongoose_1.Schema({
         type: String,
         maxlength: 500,
     },
+    winnerTeam: {
+        type: String,
+        enum: ["alpha", "bravo"],
+    },
+    moderatorNotes: {
+        type: String,
+        maxlength: 1000,
+    },
 }, {
     timestamps: true,
 });

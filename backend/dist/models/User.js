@@ -46,6 +46,7 @@ var UserRole;
     UserRole["COACH"] = "COACH";
     UserRole["ORGANIZATION"] = "ORGANIZATION";
     UserRole["ADMIN"] = "ADMIN";
+    UserRole["MODERATOR"] = "MODERATOR";
 })(UserRole || (exports.UserRole = UserRole = {}));
 const userSchema = new mongoose_1.Schema({
     email: {

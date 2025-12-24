@@ -41,7 +41,6 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const MatchmakingQueue_1 = __importDefault(require("../models/MatchmakingQueue"));
 const MatchLobby_1 = __importStar(require("../models/MatchLobby"));
 const PlayerProfile_1 = __importDefault(require("../models/PlayerProfile"));
-const mapBanService_1 = require("./mapBanService");
 class QueueService {
     static async addToQueue(userId, partyMembers = []) {
         try {
@@ -152,149 +151,14 @@ class QueueService {
         }
     }
     static async findMatch() {
-        try {
-            const queueEntries = await MatchmakingQueue_1.default.find()
-                .sort({ joinedAt: 1 })
-                .lean();
-            console.log(`🔍 Checking for matches: ${queueEntries.length} queue entries`);
-            if (queueEntries.length === 0)
-                return null;
-            const selectedPlayers = [];
-            const selectedEntries = [];
-            let totalPlayers = 0;
-            for (const entry of queueEntries) {
-                if (totalPlayers + entry.partySize <= 10) {
-                    selectedPlayers.push(...entry.partyMembers);
-                    selectedEntries.push(entry);
-                    totalPlayers += entry.partySize;
-                    if (totalPlayers === 10)
-                        break;
-                }
-            }
-            console.log(`👥 Total players found: ${totalPlayers}/10`);
-            if (totalPlayers !== 10) {
-                console.log(`⏳ Waiting for more players (${totalPlayers}/10)`);
-                return null;
-            }
-            console.log(`🎯 10 players found! Creating lobby...`);
-            const lobbyId = await this.createLobbyFromQueue(selectedPlayers);
-            console.log(`✅ Lobby created: ${lobbyId}`);
-            await MatchmakingQueue_1.default.deleteMany({
-                _id: { $in: selectedEntries.map((e) => e._id) },
-            });
-            console.log(`🧹 Removed ${selectedEntries.length} entries from queue`);
-            return lobbyId;
-        }
-        catch (error) {
-            console.error("❌ Error finding match:", error);
-            return null;
-        }
+        return null;
     }
     static async createLobbyFromQueue(playerIds) {
-        try {
-            console.log(`🎮 Creating lobby for ${playerIds.length} players`);
-            if (playerIds.length !== 10) {
-                throw new Error(`Must have exactly 10 players, got ${playerIds.length}`);
-            }
-            console.log(`🔍 Fetching player profiles...`);
-            const profiles = await PlayerProfile_1.default.find({
-                userId: { $in: playerIds },
-            }).lean();
-            console.log(`📊 Found ${profiles.length} profiles out of ${playerIds.length} players`);
-            if (profiles.length !== 10) {
-                console.error(`❌ Missing profiles for players:`, {
-                    expected: playerIds.map((id) => id.toString()),
-                    found: profiles.map((p) => p.userId.toString()),
-                });
-                throw new Error(`Could not find all player profiles (found ${profiles.length}/10)`);
-            }
-            const missingStandoff2Id = profiles.filter((p) => !p.standoff2Id);
-            if (missingStandoff2Id.length > 0) {
-                console.error(`❌ Players missing standoff2Id:`, missingStandoff2Id.map((p) => ({
-                    userId: p.userId.toString(),
-                    inGameName: p.inGameName,
-                })));
-                throw new Error(`${missingStandoff2Id.length} players missing Standoff2 ID`);
-            }
-            profiles.sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
-            console.log(`⚖️ Sorted players by ELO:`, profiles.map((p) => ({ name: p.inGameName, elo: p.elo })));
-            const teamAlpha = [];
-            const teamBravo = [];
-            for (let i = 0; i < profiles.length; i++) {
-                if (i === 0 || i === 3 || i === 4 || i === 7 || i === 8) {
-                    teamAlpha.push(profiles[i].userId);
-                }
-                else {
-                    teamBravo.push(profiles[i].userId);
-                }
-            }
-            console.log(`🔵 Team Alpha: ${teamAlpha.length} players`);
-            console.log(`🔴 Team Bravo: ${teamBravo.length} players`);
-            const lobbyPlayers = profiles.map((profile) => ({
-                userId: profile.userId,
-                isReady: false,
-                standoff2Id: profile.standoff2Id,
-                inGameName: profile.inGameName,
-                elo: profile.elo || 1000,
-                avatar: profile.avatar,
-            }));
-            console.log(`💾 Saving lobby to database...`);
-            const lobby = await MatchLobby_1.default.create({
-                players: lobbyPlayers,
-                teamAlpha,
-                teamBravo,
-                status: MatchLobby_1.LobbyStatus.MAP_BAN_PHASE,
-                createdAt: new Date(),
-                expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-                allPlayersReady: false,
-            });
-            console.log(`✅ Lobby created successfully: ${lobby._id.toString()}`);
-            console.log(`🗺️ Initializing map ban phase...`);
-            await mapBanService_1.MapBanService.initializeMapBan(lobby._id.toString());
-            console.log(`✅ Map ban phase initialized`);
-            return lobby._id.toString();
-        }
-        catch (error) {
-            console.error("❌ Error creating lobby:", error);
-            console.error("Stack trace:", error.stack);
-            throw new Error(error.message || "Failed to create lobby");
-        }
+        throw new Error("Automated lobby creation is disabled");
     }
     static async markPlayerReady(lobbyId, userId) {
-        try {
-            const lobby = await MatchLobby_1.default.findById(lobbyId);
-            if (!lobby) {
-                throw new Error("Lobby not found");
-            }
-            if (lobby.status === MatchLobby_1.LobbyStatus.CANCELLED) {
-                throw new Error("Lobby has been cancelled");
-            }
-            if (lobby.status === MatchLobby_1.LobbyStatus.ALL_READY) {
-                throw new Error("All players are already ready");
-            }
-            const playerIndex = lobby.players.findIndex((p) => p.userId.toString() === userId);
-            if (playerIndex === -1) {
-                throw new Error("Player not in this lobby");
-            }
-            if (lobby.players[playerIndex].isReady) {
-                throw new Error("Player is already ready");
-            }
-            lobby.players[playerIndex].isReady = true;
-            const allReady = lobby.players.every((p) => p.isReady);
-            lobby.allPlayersReady = allReady;
-            if (allReady) {
-                lobby.status = MatchLobby_1.LobbyStatus.ALL_READY;
-            }
-            await lobby.save();
-            return {
-                success: true,
-                lobby,
-                allReady,
-            };
-        }
-        catch (error) {
-            throw new Error(error.message || "Failed to mark player as ready");
-        }
+        const { LobbyService } = await Promise.resolve().then(() => __importStar(require("./lobbyService")));
+        return LobbyService.markPlayerReady(lobbyId, userId);
     }
     static async cancelLobby(lobbyId) {
         try {
@@ -313,9 +177,8 @@ class QueueService {
     static async getLobby(lobbyId) {
         try {
             const lobby = await MatchLobby_1.default.findById(lobbyId);
-            if (!lobby) {
+            if (!lobby)
                 throw new Error("Lobby not found");
-            }
             return lobby;
         }
         catch (error) {
@@ -328,7 +191,7 @@ class QueueService {
             const now = new Date();
             const lobby = await MatchLobby_1.default.findOne({
                 "players.userId": userIdObj,
-                status: { $in: [MatchLobby_1.LobbyStatus.READY_PHASE, MatchLobby_1.LobbyStatus.ALL_READY] },
+                status: { $in: [MatchLobby_1.LobbyStatus.OPEN, MatchLobby_1.LobbyStatus.FULL, MatchLobby_1.LobbyStatus.ALL_READY] },
                 expiresAt: { $gt: now },
             })
                 .select("_id players teamAlpha teamBravo status allPlayersReady createdAt expiresAt")

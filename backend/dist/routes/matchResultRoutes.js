@@ -1,39 +1,71 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const multipart_1 = __importDefault(require("@fastify/multipart"));
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
-const MatchResult_1 = __importDefault(require("../models/MatchResult"));
-const MatchLobby_1 = __importDefault(require("../models/MatchLobby"));
+const MatchResult_1 = __importStar(require("../models/MatchResult"));
+const MatchLobby_1 = __importStar(require("../models/MatchLobby"));
 const auth_1 = require("../middleware/auth");
-const stream_1 = require("stream");
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-const uploadToCloudinary = (buffer, folder) => {
-    return new Promise((resolve, reject) => {
-        const uploadStream = cloudinary_1.default.uploader.upload_stream({
+const isCloudinaryConfigured = () => {
+    return (process.env.CLOUDINARY_CLOUD_NAME &&
+        process.env.CLOUDINARY_API_KEY &&
+        process.env.CLOUDINARY_API_SECRET);
+};
+const uploadToCloudinary = async (buffer, mimetype, folder) => {
+    try {
+        const base64Image = buffer.toString("base64");
+        const dataURI = `data:${mimetype};base64,${base64Image}`;
+        const uploadOptions = {
             folder,
             resource_type: "image",
-            transformation: [
-                { width: 1920, height: 1080, crop: "limit" },
-                { quality: "auto:good" },
-            ],
-        }, (error, result) => {
-            if (error) {
-                reject(error);
-            }
-            else if (result) {
-                resolve(result.secure_url);
-            }
-            else {
-                reject(new Error("Upload failed"));
-            }
-        });
-        const readable = stream_1.Readable.from(buffer);
-        readable.pipe(uploadStream);
-    });
+            timeout: 60000,
+        };
+        console.log(`📤 Uploading to Cloudinary with options:`, JSON.stringify(uploadOptions));
+        const uploadResult = await cloudinary_1.default.uploader.upload(dataURI, uploadOptions);
+        console.log(`✅ Successfully uploaded to Cloudinary: ${uploadResult.secure_url}`);
+        return uploadResult.secure_url;
+    }
+    catch (error) {
+        console.error("❌ Cloudinary upload error:", error);
+        throw new Error(error.message || "Failed to upload to Cloudinary");
+    }
 };
 const matchResultRoutes = async (fastify) => {
     await fastify.register(multipart_1.default, {
@@ -44,26 +76,45 @@ const matchResultRoutes = async (fastify) => {
     });
     fastify.post("/upload", { preHandler: auth_1.authenticateToken }, async (request, reply) => {
         try {
+            console.log("📸 Match result upload request received");
+            if (!isCloudinaryConfigured()) {
+                console.log("❌ Cloudinary not configured");
+                return reply.status(503).send({
+                    success: false,
+                    message: "Image upload service is not configured. Please contact administrator.",
+                });
+            }
             const userId = request.user.id;
+            console.log(`🔑 User authenticated: ${userId}`);
             const parts = request.parts();
             const files = [];
             let lobbyId;
             for await (const part of parts) {
                 if (part.type === "file") {
+                    console.log(`📁 Processing file: ${part.filename}, type: ${part.mimetype}`);
                     if (!ALLOWED_TYPES.includes(part.mimetype)) {
+                        console.log(`❌ Invalid file type: ${part.mimetype}`);
                         return reply.status(400).send({
                             success: false,
                             message: `Invalid file type: ${part.mimetype}. Only JPG, PNG, and WEBP are allowed.`,
                         });
                     }
                     const buffer = await part.toBuffer();
-                    if (buffer.length > MAX_FILE_SIZE) {
+                    console.log(`📊 File buffer size: ${buffer.length} bytes`);
+                    if (buffer.length === 0) {
                         return reply.status(400).send({
                             success: false,
-                            message: "File too large. Maximum size is 5MB.",
+                            message: "File appears to be empty or corrupted",
                         });
                     }
-                    files.push(buffer);
+                    if (buffer.length > MAX_FILE_SIZE) {
+                        const maxSizeMB = MAX_FILE_SIZE / (1024 * 1024);
+                        return reply.status(400).send({
+                            success: false,
+                            message: `File too large. Maximum size is ${maxSizeMB}MB.`,
+                        });
+                    }
+                    files.push({ buffer, mimetype: part.mimetype });
                 }
                 else {
                     if (part.fieldname === "lobbyId") {
@@ -89,8 +140,13 @@ const matchResultRoutes = async (fastify) => {
                     message: "Lobby ID is required",
                 });
             }
-            const uploadPromises = files.map((buffer) => uploadToCloudinary(buffer, `match-results/${lobbyId}`));
+            console.log(`📤 Uploading ${files.length} images to Cloudinary for lobby ${lobbyId}`);
+            const uploadPromises = files.map((file, index) => {
+                console.log(`📤 Uploading image ${index + 1}/${files.length}`);
+                return uploadToCloudinary(file.buffer, file.mimetype, `match-results/${lobbyId}`);
+            });
             const imageUrls = await Promise.all(uploadPromises);
+            console.log(`✅ Successfully uploaded ${imageUrls.length} images`);
             return reply.send({
                 success: true,
                 data: { imageUrls },
@@ -98,6 +154,7 @@ const matchResultRoutes = async (fastify) => {
         }
         catch (error) {
             console.error("Upload error:", error);
+            console.error("Error stack:", error.stack);
             return reply.status(500).send({
                 success: false,
                 message: error.message || "Failed to upload images",
@@ -146,9 +203,11 @@ const matchResultRoutes = async (fastify) => {
                 matchLobbyId: lobbyId,
                 submittedBy: userId,
                 screenshots: imageUrls,
+                status: MatchResult_1.ResultStatus.PENDING,
                 submittedAt: new Date(),
             });
-            lobby.status = "RESULT_SUBMITTED";
+            console.log(`✅ Match result created with ID: ${matchResult._id}, Status: ${matchResult.status}`);
+            lobby.status = MatchLobby_1.LobbyStatus.RESULT_SUBMITTED;
             await lobby.save();
             return reply.send({
                 success: true,

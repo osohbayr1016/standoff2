@@ -38,7 +38,11 @@ const matchChatSchema = new mongoose_1.Schema({
     matchId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "Match",
-        required: true,
+        index: true,
+    },
+    lobbyId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "MatchLobby",
         index: true,
     },
     senderId: {

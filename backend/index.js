@@ -165,6 +165,43 @@ fastify.register(async function (fastify) {
       timestamp: new Date().toISOString(),
     };
   });
+
+  // Lobby routes - MUST be registered before parameterized routes
+  try {
+    const lobbyRoutes = require("./dist/routes/lobbyRoutes").default;
+    await fastify.register(lobbyRoutes, { prefix: "/api/lobby" });
+    console.log("✅ Lobby routes registered in JS fallback");
+  } catch (error) {
+    console.error("❌ Failed to register lobby routes in JS fallback:", error.message);
+    console.error("Stack:", error.stack);
+  }
+
+  // Queue routes
+  try {
+    const queueRoutes = require("./dist/routes/queueRoutes").default;
+    await fastify.register(queueRoutes, { prefix: "/api/queue" });
+    console.log("✅ Queue routes registered");
+  } catch (error) {
+    console.error("❌ Failed to register queue routes:", error.message);
+  }
+
+  // Match routes
+  try {
+    const matchRoutes = require("./dist/routes/matchRoutes").default;
+    await fastify.register(matchRoutes, { prefix: "/api/matches" });
+    console.log("✅ Match routes registered");
+  } catch (error) {
+    console.error("❌ Failed to register match routes:", error.message);
+  }
+
+  // Friend routes
+  try {
+    const friendRoutes = require("./dist/routes/friendRoutes").default;
+    await fastify.register(friendRoutes.default || friendRoutes, { prefix: "/api/friends" });
+    console.log("✅ Friend routes registered");
+  } catch (error) {
+    console.error("❌ Failed to register friend routes:", error.message);
+  }
 });
 
 // Error handling

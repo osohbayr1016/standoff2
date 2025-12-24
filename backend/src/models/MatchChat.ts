@@ -1,7 +1,8 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IMatchChat extends Document {
-  matchId: mongoose.Types.ObjectId;
+  matchId?: mongoose.Types.ObjectId;
+  lobbyId?: mongoose.Types.ObjectId;
   senderId: mongoose.Types.ObjectId;
   message: string;
   createdAt: Date;
@@ -13,7 +14,11 @@ const matchChatSchema = new Schema<IMatchChat>(
     matchId: {
       type: Schema.Types.ObjectId,
       ref: "Match",
-      required: true,
+      index: true,
+    },
+    lobbyId: {
+      type: Schema.Types.ObjectId,
+      ref: "MatchLobby",
       index: true,
     },
     senderId: {

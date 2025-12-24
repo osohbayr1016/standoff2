@@ -1,31 +1,64 @@
 import { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { authenticateToken, AuthenticatedRequest } from "../middleware/auth";
-import { QueueService } from "../services/queueService";
+import { LobbyService } from "../services/lobbyService";
 import mongoose from "mongoose";
 
 const lobbyRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
-  // Get user's active lobby
-  fastify.get(
-    "/user/active",
+  console.log("📋 Registering lobby routes...");
+  
+  // Create a new lobby
+  fastify.post(
+    "/create",
     { preHandler: authenticateToken },
     async (request, reply) => {
       try {
         const userId = (request as AuthenticatedRequest).user.id;
-        const activeLobby = await QueueService.getUserActiveLobby(userId);
+        const { map, link } = request.body as { map: string; link: string };
+
+        if (!map || !link) {
+          return reply.status(400).send({
+            success: false,
+            message: "Map and Link are required",
+          });
+        }
+
+        const lobby = await LobbyService.createLobby(userId, map, link);
 
         return reply.send({
           success: true,
-          data: activeLobby,
+          data: lobby,
         });
       } catch (error: any) {
-        console.error("Get user active lobby error:", error);
+        console.error("Create lobby error:", error);
         return reply.status(500).send({
           success: false,
-          message: error.message || "Failed to get active lobby",
+          message: error.message || "Failed to create lobby",
         });
       }
     }
   );
+  console.log("  ✅ POST /api/lobby/create registered");
+
+  // Get active lobbies - MUST be before /:id route
+  fastify.get(
+    "/active",
+    async (request, reply) => {
+      try {
+        const lobbies = await LobbyService.getActiveLobbies();
+        return reply.send({
+          success: true,
+          data: lobbies,
+        });
+      } catch (error: any) {
+        console.error("Get active lobbies error:", error);
+        return reply.status(500).send({
+          success: false,
+          message: "Failed to get active lobbies",
+        });
+      }
+    }
+  );
+  console.log("  ✅ GET /api/lobby/active registered (public)");
 
   // Get lobby details
   fastify.get<{ Params: { id: string } }>(
@@ -34,104 +67,89 @@ const lobbyRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     async (request, reply) => {
       try {
         const { id } = request.params;
-
         if (!mongoose.Types.ObjectId.isValid(id)) {
-          return reply.status(400).send({
-            success: false,
-            message: "Invalid lobby ID",
-          });
+          return reply.status(400).send({ success: false, message: "Invalid lobby ID" });
         }
 
-        const lobby = await QueueService.getLobby(id);
+        const lobby = await LobbyService.getLobby(id);
+        if (!lobby) {
+          return reply.status(404).send({ success: false, message: "Lobby not found" });
+        }
 
-        return reply.send({
-          success: true,
-          data: lobby,
-        });
+        return reply.send({ success: true, data: lobby });
       } catch (error: any) {
-        console.error("Get lobby error:", error);
-        return reply.status(404).send({
-          success: false,
-          message: error.message || "Lobby not found",
-        });
+        return reply.status(500).send({ success: false, message: error.message });
       }
     }
   );
 
-  // Mark player as ready
+  // Join lobby
   fastify.post<{ Params: { id: string } }>(
-    "/:id/ready",
+    "/:id/join",
     { preHandler: authenticateToken },
     async (request, reply) => {
       try {
         const { id } = request.params;
         const userId = (request as AuthenticatedRequest).user.id;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-          return reply.status(400).send({
-            success: false,
-            message: "Invalid lobby ID",
-          });
-        }
-
-        const result = await QueueService.markPlayerReady(id, userId);
-
-        return reply.send({
-          success: true,
-          message: "Marked as ready",
-          data: {
-            lobby: result.lobby,
-            allReady: result.allReady,
-          },
-        });
+        const lobby = await LobbyService.joinLobby(id, userId);
+        return reply.send({ success: true, data: lobby });
       } catch (error: any) {
-        console.error("Mark ready error:", error);
-        return reply.status(400).send({
-          success: false,
-          message: error.message || "Failed to mark as ready",
-        });
+        return reply.status(400).send({ success: false, message: error.message });
       }
     }
   );
 
-  // Leave lobby (cancels for everyone)
+  // Select team
+  fastify.post<{ Params: { id: string } }>(
+    "/:id/team",
+    { preHandler: authenticateToken },
+    async (request, reply) => {
+      try {
+        const { id } = request.params;
+        const userId = (request as AuthenticatedRequest).user.id;
+        const { team } = request.body as { team: "alpha" | "bravo" };
+        const lobby = await LobbyService.selectTeam(id, userId, team);
+        return reply.send({ success: true, data: lobby });
+      } catch (error: any) {
+        return reply.status(400).send({ success: false, message: error.message });
+      }
+    }
+  );
+
+  // Kick player
+  fastify.post<{ Params: { id: string } }>(
+    "/:id/kick",
+    { preHandler: authenticateToken },
+    async (request, reply) => {
+      try {
+        const { id } = request.params;
+        const leaderId = (request as AuthenticatedRequest).user.id;
+        const { targetUserId } = request.body as { targetUserId: string };
+        const lobby = await LobbyService.kickPlayer(id, leaderId, targetUserId);
+        return reply.send({ success: true, data: lobby });
+      } catch (error: any) {
+        return reply.status(400).send({ success: false, message: error.message });
+      }
+    }
+  );
+
+  // Leave lobby
   fastify.post<{ Params: { id: string } }>(
     "/:id/leave",
     { preHandler: authenticateToken },
     async (request, reply) => {
       try {
         const { id } = request.params;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-          return reply.status(400).send({
-            success: false,
-            message: "Invalid lobby ID",
-          });
-        }
-
-        const cancelled = await QueueService.cancelLobby(id);
-
-        if (!cancelled) {
-          return reply.status(404).send({
-            success: false,
-            message: "Lobby not found",
-          });
-        }
-
-        return reply.send({
-          success: true,
-          message: "Left lobby successfully",
-        });
+        const userId = (request as AuthenticatedRequest).user.id;
+        await LobbyService.leaveLobby(id, userId);
+        return reply.send({ success: true, message: "Left lobby successfully" });
       } catch (error: any) {
-        console.error("Leave lobby error:", error);
-        return reply.status(500).send({
-          success: false,
-          message: error.message || "Failed to leave lobby",
-        });
+        return reply.status(500).send({ success: false, message: error.message });
       }
     }
   );
+  
+  console.log("✅ All lobby routes registered successfully");
 };
 
 export default lobbyRoutes;
-

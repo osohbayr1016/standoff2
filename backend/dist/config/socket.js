@@ -39,13 +39,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SocketManager = void 0;
 const socket_io_1 = require("socket.io");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const Message_1 = __importDefault(require("../models/Message"));
 const User_1 = __importDefault(require("../models/User"));
 const Notification_1 = __importDefault(require("../models/Notification"));
 const StreamChat_1 = __importDefault(require("../models/StreamChat"));
 const StreamViewer_1 = __importDefault(require("../models/StreamViewer"));
+const MatchChat_1 = __importDefault(require("../models/MatchChat"));
 const streamService_1 = require("../services/streamService");
 const queueService_1 = require("../services/queueService");
+const lobbyService_1 = require("../services/lobbyService");
 class SocketManager {
     constructor() {
         this.io = null;
@@ -77,6 +80,10 @@ class SocketManager {
                 const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
                 socket.data.userId = decoded.id;
                 socket.data.userEmail = decoded.email;
+                const user = await User_1.default.findById(decoded.id).select("name");
+                if (user) {
+                    socket.data.userName = user.name;
+                }
                 next();
             }
             catch (error) {
@@ -555,30 +562,6 @@ class SocketManager {
                     this.io.to("matchmaking_queue").emit("queue_update", {
                         totalPlayers: totalInQueue,
                     });
-                    console.log(`🎯 Player joined queue. Total in queue: ${totalInQueue}`);
-                    if (totalInQueue >= 10) {
-                        console.log(`🚀 10+ players in queue! Triggering immediate match check...`);
-                        try {
-                            const lobbyId = await queueService_1.QueueService.findMatch();
-                            if (lobbyId) {
-                                console.log(`🎮 Match found! Creating lobby ${lobbyId}`);
-                                const lobby = await queueService_1.QueueService.getLobby(lobbyId);
-                                const playerIds = lobby.players.map((p) => p.userId.toString());
-                                console.log(`📢 Notifying ${playerIds.length} players of lobby`);
-                                this.notifyLobbyFound(playerIds, {
-                                    lobbyId,
-                                    players: lobby.players,
-                                    teamAlpha: lobby.teamAlpha,
-                                    teamBravo: lobby.teamBravo,
-                                });
-                                this.broadcastQueueUpdate(await queueService_1.QueueService.getTotalInQueue());
-                                console.log(`✅ Lobby ${lobbyId} created successfully`);
-                            }
-                        }
-                        catch (matchError) {
-                            console.error("❌ Error creating match immediately:", matchError);
-                        }
-                    }
                 }
                 catch (error) {
                     console.error("Join queue error:", error);
@@ -631,14 +614,60 @@ class SocketManager {
                     console.error("Get queue status error:", error);
                 }
             });
+            socket.on("send_lobby_chat", async (data) => {
+                try {
+                    const { lobbyId, message } = data;
+                    const userId = socket.data.userId;
+                    const userName = socket.data.userName || "Unknown";
+                    if (!userId || !lobbyId || !message || !message.trim()) {
+                        return;
+                    }
+                    const chatMessage = await MatchChat_1.default.create({
+                        lobbyId: new mongoose_1.default.Types.ObjectId(lobbyId),
+                        senderId: new mongoose_1.default.Types.ObjectId(userId),
+                        message: message.trim(),
+                    });
+                    const chatData = {
+                        id: chatMessage._id.toString(),
+                        lobbyId,
+                        senderId: userId,
+                        senderName: userName,
+                        message: message.trim(),
+                        timestamp: chatMessage.createdAt.toISOString(),
+                    };
+                    const targetRoom = `lobby_${lobbyId.toString()}`;
+                    this.io.to(targetRoom).emit("new_lobby_chat", chatData);
+                    console.log(`💬 Lobby Chat [${targetRoom}]: ${userName}: ${message.trim()}`);
+                }
+                catch (error) {
+                    console.error("Lobby chat error:", error);
+                }
+            });
             socket.on("join_lobby", async (data) => {
                 try {
                     const { lobbyId } = data;
                     if (!lobbyId)
                         return;
-                    socket.join(`lobby_${lobbyId}`);
-                    const lobby = await queueService_1.QueueService.getLobby(lobbyId);
-                    socket.emit("lobby_state", { lobby });
+                    const roomName = `lobby_${lobbyId.toString()}`;
+                    socket.join(roomName);
+                    console.log(`👤 User ${socket.data.userId} joined room: ${roomName}`);
+                    const lobby = await lobbyService_1.LobbyService.getLobby(lobbyId);
+                    if (lobby) {
+                        socket.emit("lobby_state", { lobby });
+                        const chatHistory = await MatchChat_1.default.find({ lobbyId: new mongoose_1.default.Types.ObjectId(lobbyId) })
+                            .sort({ createdAt: -1 })
+                            .limit(50)
+                            .populate("senderId", "name avatar");
+                        socket.emit("lobby_chat_history", chatHistory.reverse().map(msg => ({
+                            id: msg._id,
+                            lobbyId: msg.lobbyId,
+                            senderId: msg.senderId._id,
+                            senderName: msg.senderId.name,
+                            senderAvatar: msg.senderId.avatar,
+                            message: msg.message,
+                            timestamp: msg.createdAt,
+                        })));
+                    }
                 }
                 catch (error) {
                     console.error("Join lobby error:", error);
@@ -646,6 +675,19 @@ class SocketManager {
                         error: error.message || "Failed to join lobby",
                     });
                 }
+            });
+            socket.on("refresh_lobby", async (data) => {
+                const { lobbyId } = data;
+                if (!lobbyId)
+                    return;
+                const lobby = await lobbyService_1.LobbyService.getLobby(lobbyId);
+                if (lobby) {
+                    this.io.to(`lobby_${lobbyId}`).emit("lobby_update", { lobby });
+                }
+            });
+            socket.on("player_kicked_notify", (data) => {
+                const { lobbyId, targetUserId } = data;
+                this.io.to(`lobby_${lobbyId}`).emit("player_kicked", { targetUserId });
             });
             socket.on("player_ready", async (data) => {
                 try {
@@ -657,14 +699,32 @@ class SocketManager {
                         });
                         return;
                     }
-                    const result = await queueService_1.QueueService.markPlayerReady(lobbyId, userId);
+                    const result = await lobbyService_1.LobbyService.markPlayerReady(lobbyId, userId);
                     this.io.to(`lobby_${lobbyId}`).emit("lobby_update", {
-                        lobby: result.lobby,
+                        lobby: {
+                            ...result.lobby.toObject(),
+                            players: result.lobby.players.map((p) => ({
+                                userId: p.userId.toString(),
+                                inGameName: p.inGameName,
+                                standoff2Id: p.standoff2Id,
+                                elo: p.elo,
+                                isReady: p.isReady,
+                            })),
+                        },
                         allReady: result.allReady,
                     });
                     if (result.allReady) {
                         this.io.to(`lobby_${lobbyId}`).emit("all_players_ready", {
-                            lobby: result.lobby,
+                            lobby: {
+                                ...result.lobby.toObject(),
+                                players: result.lobby.players.map((p) => ({
+                                    userId: p.userId.toString(),
+                                    inGameName: p.inGameName,
+                                    standoff2Id: p.standoff2Id,
+                                    elo: p.elo,
+                                    isReady: p.isReady,
+                                })),
+                            },
                         });
                     }
                 }

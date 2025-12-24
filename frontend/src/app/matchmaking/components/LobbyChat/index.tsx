@@ -91,8 +91,14 @@ const LobbyChat: React.FC<LobbyChatProps> = ({ lobbyId, socket, currentUserId })
     };
 
     socket.on("new_lobby_chat", handleNewMessage);
+
+    socket.on("lobby_chat_history", (history: any[]) => {
+      setMessages(history);
+    });
+
     return () => {
       socket.off("new_lobby_chat", handleNewMessage);
+      socket.off("lobby_chat_history");
     };
   }, [socket, lobbyId, currentUserId]);
 

@@ -185,6 +185,17 @@ const playerProfileSchema = new mongoose_1.Schema({
         sparse: true,
         trim: true,
     },
+    verificationCode: {
+        type: String,
+        trim: true,
+    },
+    verificationCodeExpiresAt: {
+        type: Date,
+    },
+    isIdVerified: {
+        type: Boolean,
+        default: false,
+    },
 }, {
     timestamps: true,
 });

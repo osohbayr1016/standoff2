@@ -37,11 +37,14 @@ exports.LobbyStatus = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 var LobbyStatus;
 (function (LobbyStatus) {
-    LobbyStatus["MAP_BAN_PHASE"] = "map_ban_phase";
-    LobbyStatus["WAITING"] = "waiting";
-    LobbyStatus["READY_PHASE"] = "ready_phase";
+    LobbyStatus["OPEN"] = "open";
+    LobbyStatus["FULL"] = "full";
+    LobbyStatus["PLAYING"] = "playing";
     LobbyStatus["ALL_READY"] = "all_ready";
     LobbyStatus["CANCELLED"] = "cancelled";
+    LobbyStatus["MAP_BAN_PHASE"] = "map_ban_phase";
+    LobbyStatus["READY_PHASE"] = "ready_phase";
+    LobbyStatus["RESULT_SUBMITTED"] = "result_submitted";
 })(LobbyStatus || (exports.LobbyStatus = LobbyStatus = {}));
 const lobbyPlayerSchema = new mongoose_1.Schema({
     userId: {
@@ -67,17 +70,29 @@ const lobbyPlayerSchema = new mongoose_1.Schema({
     avatar: {
         type: String,
     },
+    team: {
+        type: String,
+        enum: ["alpha", "bravo", null],
+        default: null,
+    },
 }, { _id: false });
 const matchLobbySchema = new mongoose_1.Schema({
+    leader: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
+    lobbyLink: {
+        type: String,
+        required: true,
+    },
+    selectedMap: {
+        type: String,
+        required: true,
+    },
     players: {
         type: [lobbyPlayerSchema],
         required: true,
-        validate: {
-            validator: function (val) {
-                return val.length === 10;
-            },
-            message: "Lobby must have exactly 10 players",
-        },
     },
     teamAlpha: [
         {
@@ -94,7 +109,7 @@ const matchLobbySchema = new mongoose_1.Schema({
     status: {
         type: String,
         enum: Object.values(LobbyStatus),
-        default: LobbyStatus.READY_PHASE,
+        default: LobbyStatus.OPEN,
     },
     createdAt: {
         type: Date,
@@ -120,9 +135,6 @@ const matchLobbySchema = new mongoose_1.Schema({
     bannedMaps: {
         type: [String],
         default: [],
-    },
-    selectedMap: {
-        type: String,
     },
     currentBanTeam: {
         type: String,

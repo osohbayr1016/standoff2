@@ -163,8 +163,10 @@ async function registerRoutes() {
     const queueRoutes = await import("./routes/queueRoutes");
     fastify.register(queueRoutes.default, { prefix: "/api/queue" });
     // Lobby routes
+    console.log("📋 Registering lobby routes module...");
     const lobbyRoutes = await import("./routes/lobbyRoutes");
-    fastify.register(lobbyRoutes.default, { prefix: "/api/lobby" });
+    await fastify.register(lobbyRoutes.default, { prefix: "/api/lobby" });
+    console.log("✅ Lobby routes module registered with prefix /api/lobby");
     // Admin queue routes
     const adminQueueRoutes = await import("./routes/adminQueueRoutes");
     fastify.register(adminQueueRoutes.default, { prefix: "/api/admin/queue" });
@@ -234,71 +236,8 @@ const startServer = async () => {
     // Initialize Socket.IO after Fastify starts
     socketManager.initialize(fastify.server);
 
-    // Attach socketManager to fastify instance for use in routes
+    // Attached socketManager to fastify instance for use in routes
     (fastify as any).socketManager = socketManager;
-
-    // Start Queue Matcher - runs every 2 seconds for faster matchmaking
-    setInterval(async () => {
-      try {
-        const lobbyId = await QueueService.findMatch();
-        if (lobbyId) {
-          console.log(`🎮 Match found! Creating lobby ${lobbyId}`);
-          const lobby = await QueueService.getLobby(lobbyId);
-          const playerIds = lobby.players.map((p: any) => p.userId.toString());
-          console.log(`📢 Notifying ${playerIds.length} players of lobby`);
-          socketManager.notifyLobbyFound(playerIds, {
-            lobbyId,
-            players: lobby.players,
-            teamAlpha: lobby.teamAlpha,
-            teamBravo: lobby.teamBravo,
-          });
-
-          // Emit map_ban_started event if in map ban phase
-          if (lobby.status === "map_ban_phase" || lobby.mapBanPhase) {
-            const { MapBanService } = await import("./services/mapBanService");
-            const banStatus = await MapBanService.getMapBanStatus(lobbyId);
-
-            // Send map_ban_started to each player
-            playerIds.forEach((userId) => {
-              socketManager.sendToUser(userId, "map_ban_started", banStatus);
-            });
-
-            // Start bot auto-banning if needed
-            setTimeout(async () => {
-              const botBannedLobby = await MapBanService.autoBanForBots(lobbyId);
-              if (botBannedLobby) {
-                const updatedBanStatus = await MapBanService.getMapBanStatus(lobbyId);
-                const io = socketManager.getIO();
-                if (io) {
-                  io.to(`lobby_${lobbyId}`).emit("map_ban_update", {
-                    availableMaps: updatedBanStatus.availableMaps,
-                    bannedMaps: updatedBanStatus.bannedMaps,
-                    selectedMap: updatedBanStatus.selectedMap,
-                    currentBanTeam: updatedBanStatus.currentBanTeam,
-                    mapBanPhase: updatedBanStatus.mapBanPhase,
-                    banHistory: updatedBanStatus.banHistory,
-                    teamAlphaLeader: updatedBanStatus.teamAlphaLeader,
-                    teamBravoLeader: updatedBanStatus.teamBravoLeader,
-                  });
-
-                  if (!updatedBanStatus.mapBanPhase && updatedBanStatus.selectedMap) {
-                    io.to(`lobby_${lobbyId}`).emit("map_ban_complete", {
-                      selectedMap: updatedBanStatus.selectedMap,
-                      lobby: await QueueService.getLobby(lobbyId),
-                    });
-                  }
-                }
-              }
-            }, 1000);
-          }
-
-          socketManager.broadcastQueueUpdate(await QueueService.getTotalInQueue());
-          console.log(`✅ Lobby ${lobbyId} created successfully`);
-        }
-      } catch (error) {
-        console.error("❌ Error in matchmaking:", error);
-      }
-    }, 2000);
 
     // Clean up expired lobbies every 5 minutes
     setInterval(async () => {
