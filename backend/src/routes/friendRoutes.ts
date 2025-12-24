@@ -57,7 +57,7 @@ const friendRoutes: FastifyPluginAsync = async (fastify) => {
           avatar:
             profile.avatar || profile.userId.avatar || "/default-avatar.png",
           elo: profile.elo || 1000,
-          isOnline: profile.isOnline || false,
+          isOnline: profile.userId.isOnline || false,
         }));
 
       console.log(`Returning ${results.length} results after filtering`);
@@ -249,17 +249,25 @@ const friendRoutes: FastifyPluginAsync = async (fastify) => {
         friendRequest.status = FriendRequestStatus.ACCEPTED;
         await friendRequest.save({ session });
 
-        await PlayerProfile.findOneAndUpdate(
+        const acceptorProfile = await PlayerProfile.findOneAndUpdate(
           { userId },
           { $addToSet: { friends: friendRequest.senderId } },
-          { session }
+          { session, new: true }
         );
 
-        await PlayerProfile.findOneAndUpdate(
+        const senderProfile = await PlayerProfile.findOneAndUpdate(
           { userId: friendRequest.senderId },
           { $addToSet: { friends: userId } },
-          { session }
+          { session, new: true }
         );
+
+        console.log(`[Friend Accept] Updated profiles. Acceptor profile: ${!!acceptorProfile}, Sender profile: ${!!senderProfile}`);
+
+        if (!acceptorProfile || !senderProfile) {
+          console.warn(`[Friend Accept] One or both profiles not found. Acceptor: ${!!acceptorProfile}, Sender: ${!!senderProfile}`);
+          // We still continue as the friend request status is updated, 
+          // but this indicates a profile management issue.
+        }
 
         await Notification.create(
           [
@@ -275,6 +283,20 @@ const friendRoutes: FastifyPluginAsync = async (fastify) => {
         );
 
         await session.commitTransaction();
+
+        // Notify both users via socket
+        const socketManager = (req as any).fastify?.socketManager || (fastify as any).socketManager;
+        if (socketManager) {
+          socketManager.sendToUser(userId, "friends_list_updated", {});
+          socketManager.sendToUser(friendRequest.senderId.toString(), "friends_list_updated", {});
+          socketManager.sendToUser(friendRequest.senderId.toString(), "friend_request_accepted_notification", {
+            acceptor: {
+              id: userId,
+              name: userName
+            }
+          });
+        }
+
         reply.send({ message: "Friend request accepted" });
       } catch (error) {
         await session.abortTransaction();
@@ -419,7 +441,7 @@ const friendRoutes: FastifyPluginAsync = async (fastify) => {
         standoff2Id: fp.standoff2Id,
         avatar: fp.avatar || (fp.userId as any).avatar,
         elo: fp.elo,
-        isOnline: fp.isOnline,
+        isOnline: (fp.userId as any).isOnline || false,
         lastSeen: (fp.userId as any).lastSeen,
         wins: fp.wins,
         losses: fp.losses,

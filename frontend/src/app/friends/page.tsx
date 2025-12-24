@@ -141,7 +141,17 @@ export default function FriendsPage() {
       });
 
       if (response.ok) {
+        const acceptedRequest = requests.find(r => r.id === requestId);
         setRequests((prev) => prev.filter((r) => r.id !== requestId));
+        
+        // Notify via socket for immediate update on the other side
+        if (acceptedRequest) {
+          socketService.emitFriendRequestAccepted(acceptedRequest.sender.id, {
+            id: user?.id,
+            name: user?.name
+          });
+        }
+        
         await fetchFriends();
       } else {
         const data = await response.json();

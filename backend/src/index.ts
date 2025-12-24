@@ -225,6 +225,10 @@ const startServer = async () => {
   try {
     // Connect to database first
     await connectDB();
+
+    // Attached socketManager to fastify instance for use in routes
+    (fastify as any).socketManager = socketManager;
+
     // Register routes
     await registerRoutes();
 
@@ -236,9 +240,6 @@ const startServer = async () => {
 
     // Initialize Socket.IO after Fastify starts
     socketManager.initialize(fastify.server);
-
-    // Attached socketManager to fastify instance for use in routes
-    (fastify as any).socketManager = socketManager;
 
     // Clean up expired lobbies every 5 minutes
     setInterval(async () => {
