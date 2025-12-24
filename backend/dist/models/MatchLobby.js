@@ -41,6 +41,7 @@ var LobbyStatus;
     LobbyStatus["WAITING"] = "waiting";
     LobbyStatus["READY_PHASE"] = "ready_phase";
     LobbyStatus["ALL_READY"] = "all_ready";
+    LobbyStatus["RESULT_SUBMITTED"] = "result_submitted";
     LobbyStatus["CANCELLED"] = "cancelled";
 })(LobbyStatus || (exports.LobbyStatus = LobbyStatus = {}));
 const lobbyPlayerSchema = new mongoose_1.Schema({

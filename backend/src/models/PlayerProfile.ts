@@ -157,7 +157,7 @@ playerProfileSchema.index({ isLookingForTeam: 1 });
 playerProfileSchema.index({ elo: -1 });
 playerProfileSchema.index({ isOnline: 1 });
 playerProfileSchema.index({ region: 1 });
-playerProfileSchema.index({ uniqueId: 1 });
+playerProfileSchema.index({ region: 1 });
 
 export default mongoose.model<IPlayerProfile>(
   "PlayerProfile",

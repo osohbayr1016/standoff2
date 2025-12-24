@@ -77,6 +77,10 @@ class SocketManager {
                 const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
                 socket.data.userId = decoded.id;
                 socket.data.userEmail = decoded.email;
+                const user = await User_1.default.findById(decoded.id).select("name");
+                if (user) {
+                    socket.data.userName = user.name;
+                }
                 next();
             }
             catch (error) {
@@ -631,12 +635,44 @@ class SocketManager {
                     console.error("Get queue status error:", error);
                 }
             });
+            socket.on("send_lobby_chat", async (data) => {
+                try {
+                    const { lobbyId, message } = data;
+                    const userId = socket.data.userId;
+                    const userName = socket.data.userName || "Unknown";
+                    if (!userId || !lobbyId || !message || !message.trim()) {
+                        return;
+                    }
+                    let finalUserName = userName;
+                    if (finalUserName === "Unknown") {
+                        const user = await User_1.default.findById(userId).select("name");
+                        if (user)
+                            finalUserName = user.name;
+                    }
+                    const chatData = {
+                        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        lobbyId,
+                        senderId: userId,
+                        senderName: finalUserName,
+                        message: message.trim(),
+                        timestamp: new Date().toISOString(),
+                    };
+                    const targetRoom = `lobby_${lobbyId.toString()}`;
+                    this.io.to(targetRoom).emit("new_lobby_chat", chatData);
+                    console.log(`💬 Lobby Chat [${targetRoom}]: ${finalUserName}: ${message.trim()}`);
+                }
+                catch (error) {
+                    console.error("Lobby chat error:", error);
+                }
+            });
             socket.on("join_lobby", async (data) => {
                 try {
                     const { lobbyId } = data;
                     if (!lobbyId)
                         return;
-                    socket.join(`lobby_${lobbyId}`);
+                    const roomName = `lobby_${lobbyId.toString()}`;
+                    socket.join(roomName);
+                    console.log(`👤 User ${socket.data.userId} joined room: ${roomName}`);
                     const lobby = await queueService_1.QueueService.getLobby(lobbyId);
                     socket.emit("lobby_state", { lobby });
                 }
@@ -659,12 +695,30 @@ class SocketManager {
                     }
                     const result = await queueService_1.QueueService.markPlayerReady(lobbyId, userId);
                     this.io.to(`lobby_${lobbyId}`).emit("lobby_update", {
-                        lobby: result.lobby,
+                        lobby: {
+                            ...result.lobby,
+                            players: result.lobby.players.map((p) => ({
+                                userId: p.userId.toString(),
+                                inGameName: p.inGameName,
+                                standoff2Id: p.standoff2Id,
+                                elo: p.elo,
+                                isReady: p.isReady,
+                            })),
+                        },
                         allReady: result.allReady,
                     });
                     if (result.allReady) {
                         this.io.to(`lobby_${lobbyId}`).emit("all_players_ready", {
-                            lobby: result.lobby,
+                            lobby: {
+                                ...result.lobby,
+                                players: result.lobby.players.map((p) => ({
+                                    userId: p.userId.toString(),
+                                    inGameName: p.inGameName,
+                                    standoff2Id: p.standoff2Id,
+                                    elo: p.elo,
+                                    isReady: p.isReady,
+                                })),
+                            },
                         });
                     }
                 }

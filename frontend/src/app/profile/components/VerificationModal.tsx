@@ -25,13 +25,27 @@ export default function VerificationModal({
     const [scrapedNickname, setScrapedNickname] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [cooldown, setCooldown] = useState(0);
 
     const handleRequestCode = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!standoff2Id) return;
+        if (!standoff2Id || cooldown > 0) return;
 
         setLoading(true);
         setError("");
+
+        // Start Cooldown
+        setCooldown(60);
+        const timer = setInterval(() => {
+            setCooldown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
         try {
             const token = getToken();
             const res = await verificationService.requestVerification(standoff2Id, token || "");
@@ -114,10 +128,11 @@ export default function VerificationModal({
                                 </div>
                                 <button
                                     type="submit"
-                                    disabled={loading || !standoff2Id}
+                                    disabled={loading || !standoff2Id || cooldown > 0}
                                     className="w-full py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 text-white font-bold rounded-xl transition-all"
                                 >
-                                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Generate Verification Code"}
+                                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> :
+                                        cooldown > 0 ? `Please wait ${cooldown}s` : "Generate Verification Request"}
                                 </button>
                             </form>
                         )}

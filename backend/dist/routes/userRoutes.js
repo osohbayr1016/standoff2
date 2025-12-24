@@ -58,11 +58,11 @@ const userRoutes = async (fastify) => {
                     message: "Name, email, password, and role are required",
                 });
             }
-            const validRoles = ["PLAYER", "COACH", "ORGANIZATION", "ADMIN"];
+            const validRoles = ["PLAYER", "COACH", "ORGANIZATION", "ADMIN", "MODERATOR"];
             if (!validRoles.includes(role)) {
                 return reply.status(400).send({
                     success: false,
-                    message: "Invalid role. Must be one of: PLAYER, COACH, ORGANIZATION, ADMIN",
+                    message: "Invalid role. Must be one of: PLAYER, COACH, ORGANIZATION, ADMIN, MODERATOR",
                 });
             }
             const existingUser = await User_1.default.findOne({ email: email.toLowerCase() });
@@ -124,7 +124,7 @@ const userRoutes = async (fastify) => {
             if (email)
                 existingUser.email = email.toLowerCase();
             if (role) {
-                const validRoles = ["PLAYER", "COACH", "ORGANIZATION", "ADMIN"];
+                const validRoles = ["PLAYER", "COACH", "ORGANIZATION", "ADMIN", "MODERATOR"];
                 if (!validRoles.includes(role)) {
                     return reply.status(400).send({
                         success: false,

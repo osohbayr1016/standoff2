@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requireCoach = exports.requireAdmin = exports.requireOrganization = exports.requirePlayer = exports.requireRole = exports.authenticateToken = void 0;
+exports.requireModerator = exports.requireCoach = exports.requireAdmin = exports.requireOrganization = exports.requirePlayer = exports.requireRole = exports.authenticateToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = __importDefault(require("../models/User"));
 const authenticateToken = async (request, reply) => {
@@ -70,3 +70,4 @@ exports.requirePlayer = (0, exports.requireRole)(["PLAYER"]);
 exports.requireOrganization = (0, exports.requireRole)(["ORGANIZATION"]);
 exports.requireAdmin = (0, exports.requireRole)(["ADMIN"]);
 exports.requireCoach = (0, exports.requireRole)(["COACH"]);
+exports.requireModerator = (0, exports.requireRole)(["MODERATOR", "ADMIN"]);
