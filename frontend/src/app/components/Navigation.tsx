@@ -64,6 +64,10 @@ export default function Navigation() {
     { name: "Friends", href: "/friends" },
     { name: "Leaderboard", href: "/leaderboard" },
     { name: "Rewards", href: "/rewards" },
+    // Show Moderator link only for MODERATOR and ADMIN users
+    ...(user && (user.role === "MODERATOR" || user.role === "ADMIN")
+      ? [{ name: "Moderator", href: "/moderators" }]
+      : []),
   ];
 
   return (

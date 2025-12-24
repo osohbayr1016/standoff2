@@ -278,6 +278,18 @@ export const API_ENDPOINTS = {
     LEADERS: (lobbyId: string) =>
       `${API_BASE_URL}/api/map-ban/${lobbyId}/leaders`,
   },
+  MODERATOR: {
+    MATCH_RESULTS: {
+      PENDING: `${API_BASE_URL}/api/moderator/match-results/pending`,
+      ALL: `${API_BASE_URL}/api/moderator/match-results`,
+      GET: (resultId: string) =>
+        `${API_BASE_URL}/api/moderator/match-results/${resultId}`,
+      APPROVE: (resultId: string) =>
+        `${API_BASE_URL}/api/moderator/match-results/${resultId}/approve`,
+      REJECT: (resultId: string) =>
+        `${API_BASE_URL}/api/moderator/match-results/${resultId}/reject`,
+    },
+  },
 
   HEALTH: `${API_BASE_URL}/health`,
 };

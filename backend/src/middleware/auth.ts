@@ -98,3 +98,4 @@ export const requirePlayer = requireRole(["PLAYER"]);
 export const requireOrganization = requireRole(["ORGANIZATION"]);
 export const requireAdmin = requireRole(["ADMIN"]);
 export const requireCoach = requireRole(["COACH"]);
+export const requireModerator = requireRole(["MODERATOR", "ADMIN"]);

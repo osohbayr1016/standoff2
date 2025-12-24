@@ -174,6 +174,9 @@ async function registerRoutes() {
     // Map ban routes
     const mapBanRoutes = await import("./routes/mapBanRoutes");
     fastify.register(mapBanRoutes.default, { prefix: "/api/map-ban" });
+    // Moderator routes
+    const moderatorRoutes = await import("./routes/moderatorRoutes");
+    fastify.register(moderatorRoutes.default, { prefix: "/api/moderator" });
   } catch (error) {
     console.error("❌ Error registering routes:", error);
     // Continue without routes for basic health check

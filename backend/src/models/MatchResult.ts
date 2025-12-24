@@ -15,6 +15,8 @@ export interface IMatchResult extends Document {
   reviewedBy?: mongoose.Types.ObjectId;
   reviewedAt?: Date;
   reviewNotes?: string;
+  winnerTeam?: "alpha" | "bravo";
+  moderatorNotes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -63,6 +65,14 @@ const matchResultSchema = new Schema<IMatchResult>(
     reviewNotes: {
       type: String,
       maxlength: 500,
+    },
+    winnerTeam: {
+      type: String,
+      enum: ["alpha", "bravo"],
+    },
+    moderatorNotes: {
+      type: String,
+      maxlength: 1000,
     },
   },
   {

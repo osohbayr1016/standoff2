@@ -71,12 +71,12 @@ const userRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
           });
         }
 
-        const validRoles = ["PLAYER", "COACH", "ORGANIZATION", "ADMIN"];
+        const validRoles = ["PLAYER", "COACH", "ORGANIZATION", "ADMIN", "MODERATOR"];
         if (!validRoles.includes(role)) {
           return reply.status(400).send({
             success: false,
             message:
-              "Invalid role. Must be one of: PLAYER, COACH, ORGANIZATION, ADMIN",
+              "Invalid role. Must be one of: PLAYER, COACH, ORGANIZATION, ADMIN, MODERATOR",
           });
         }
 
@@ -154,7 +154,7 @@ const userRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
         if (name) existingUser.name = name;
         if (email) existingUser.email = email.toLowerCase();
         if (role) {
-          const validRoles = ["PLAYER", "COACH", "ORGANIZATION", "ADMIN"];
+          const validRoles = ["PLAYER", "COACH", "ORGANIZATION", "ADMIN", "MODERATOR"];
           if (!validRoles.includes(role)) {
             return reply.status(400).send({
               success: false,

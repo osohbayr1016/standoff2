@@ -153,6 +153,12 @@ export default function MatchmakingLobbyPage() {
 
       socketRef.current = socket;
 
+      if (socket.connected) {
+        console.log("✅ Already connected to Socket.IO");
+        setSocketConnected(true);
+        socket.emit("join_lobby", { lobbyId });
+      }
+
       socket.on("connect", () => {
         console.log("✅ Connected to Socket.IO - Socket ID:", socket.id);
         setSocketConnected(true);

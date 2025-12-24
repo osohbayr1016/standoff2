@@ -13,7 +13,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: "PLAYER" | "ORGANIZATION" | "COACH" | "ADMIN";
+  role: "PLAYER" | "ORGANIZATION" | "COACH" | "ADMIN" | "MODERATOR";
   isVerified: boolean;
   avatar?: string;
 }

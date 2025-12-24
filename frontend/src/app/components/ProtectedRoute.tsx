@@ -10,6 +10,7 @@ interface ProtectedRouteProps {
   requireAuth?: boolean;
   requirePlayer?: boolean;
   requireOrganization?: boolean;
+  requireModerator?: boolean;
   requireProfile?: boolean;
   redirectTo?: string;
 }
@@ -19,6 +20,7 @@ export default function ProtectedRoute({
   requireAuth = true,
   requirePlayer = false,
   requireOrganization = false,
+  requireModerator = false,
   requireProfile = false,
   redirectTo,
 }: ProtectedRouteProps) {
@@ -43,6 +45,12 @@ export default function ProtectedRoute({
 
     // If organization role is required and user is not an organization
     if (requireOrganization && user?.role !== "ORGANIZATION") {
+      router.push(redirectTo || "/");
+      return;
+    }
+
+    // If moderator role is required and user is not a moderator or admin
+    if (requireModerator && user?.role !== "MODERATOR" && user?.role !== "ADMIN") {
       router.push(redirectTo || "/");
       return;
     }
@@ -83,6 +91,7 @@ export default function ProtectedRoute({
     requireAuth,
     requirePlayer,
     requireOrganization,
+    requireModerator,
     requireProfile,
     redirectTo,
     router,
@@ -104,6 +113,11 @@ export default function ProtectedRoute({
 
   // If organization role is required and user is not an organization, don't render children
   if (requireOrganization && user?.role !== "ORGANIZATION") {
+    return null;
+  }
+
+  // If moderator role is required and user is not a moderator or admin, don't render children
+  if (requireModerator && user?.role !== "MODERATOR" && user?.role !== "ADMIN") {
     return null;
   }
 

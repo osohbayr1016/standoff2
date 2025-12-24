@@ -13,6 +13,30 @@ interface LobbyChatProps {
 const LobbyChat: React.FC<LobbyChatProps> = ({ lobbyId, socket, currentUserId }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+
+  // Track socket connection status
+  useEffect(() => {
+    if (!socket) {
+      setIsConnected(false);
+      return;
+    }
+
+    const onConnect = () => setIsConnected(true);
+    const onDisconnect = () => setIsConnected(false);
+
+    if (socket.connected) {
+      setIsConnected(true);
+    }
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+    };
+  }, [socket]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -37,24 +61,31 @@ const LobbyChat: React.FC<LobbyChatProps> = ({ lobbyId, socket, currentUserId })
     if (!socket) return;
 
     const handleNewMessage = (data: ChatMessage) => {
+      console.log("📩 Received lobby chat:", data);
+      
       setMessages((prev) => {
-        // Don't add if we already have this message (e.g. from optimistic update)
-        // or if it belongs to a different lobby (though socket rooms should prevent this)
-        if (data.lobbyId !== lobbyId) return prev;
+        // Prevent duplicates by ID
         if (prev.some(m => m.id === data.id)) return prev;
         
-        // Also check if it's our own message being echoed back
-        // If we find an optimistic message with same content and timestamp close enough
-        // we might want to replace it, but using unique IDs is safer.
-        // The server-generated ID will be different from our local one, 
-        // so we check senderId and message content for recent messages.
-        const isOurMessage = data.senderId === currentUserId;
-        if (isOurMessage) {
-          // If it's ours, we already have it optimistically
-          // We can either replace the "Me" name with actual name or ignore
-          return prev.map(m => (m.senderId === currentUserId && m.message === data.message && m.senderName === "Me") ? data : m);
+        // If it's our own message, try to replace the optimistic "Me" version
+        if (data.senderId?.toString() === currentUserId?.toString()) {
+          const optimisticIndex = prev.findIndex(m => 
+            m.senderId?.toString() === currentUserId?.toString() && 
+            m.message === data.message && 
+            m.senderName === "Me"
+          );
+          
+          if (optimisticIndex !== -1) {
+            const newMessages = [...prev];
+            newMessages[optimisticIndex] = data;
+            return newMessages;
+          }
+          
+          // If no optimistic message found, just add it if not already there
+          return [...prev, data];
         }
 
+        // Someone else's message - add it!
         return [...prev, data];
       });
     };
@@ -63,7 +94,7 @@ const LobbyChat: React.FC<LobbyChatProps> = ({ lobbyId, socket, currentUserId })
     return () => {
       socket.off("new_lobby_chat", handleNewMessage);
     };
-  }, [socket, lobbyId]);
+  }, [socket, lobbyId, currentUserId]);
 
   const handleSendMessage = useCallback((message: string) => {
     if (socket && lobbyId && message.trim()) {
@@ -100,6 +131,7 @@ const LobbyChat: React.FC<LobbyChatProps> = ({ lobbyId, socket, currentUserId })
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-orange-500" />
           <span className="text-sm font-bold text-white">Lobby Chat</span>
+          <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`} />
         </div>
         {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronUp className="w-4 h-4 text-gray-400" />}
       </div>
@@ -107,7 +139,7 @@ const LobbyChat: React.FC<LobbyChatProps> = ({ lobbyId, socket, currentUserId })
       {isExpanded && (
         <>
           <MessageList messages={messages} currentUserId={currentUserId} />
-          <ChatInput onSendMessage={handleSendMessage} disabled={!socket} />
+          <ChatInput onSendMessage={handleSendMessage} disabled={!isConnected} />
         </>
       )}
     </div>

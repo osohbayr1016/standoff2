@@ -7,6 +7,7 @@ export enum UserRole {
   COACH = "COACH",
   ORGANIZATION = "ORGANIZATION",
   ADMIN = "ADMIN",
+  MODERATOR = "MODERATOR",
 }
 
 export interface IUser extends Document {
