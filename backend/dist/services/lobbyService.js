@@ -164,12 +164,12 @@ class LobbyService {
                 throw new Error("Player not in lobby");
             }
             console.log(`[selectTeam] Player found: ${player.inGameName}, current team: ${player.team}, switching to: ${team}`);
+            lobby.teamAlpha = lobby.teamAlpha.filter(id => id.toString() !== userId);
+            lobby.teamBravo = lobby.teamBravo.filter(id => id.toString() !== userId);
             if (team === "alpha" && lobby.teamAlpha.length >= 5)
                 throw new Error("Team Alpha full");
             if (team === "bravo" && lobby.teamBravo.length >= 5)
                 throw new Error("Team Bravo full");
-            lobby.teamAlpha = lobby.teamAlpha.filter(id => id.toString() !== userId);
-            lobby.teamBravo = lobby.teamBravo.filter(id => id.toString() !== userId);
             if (team === "alpha") {
                 lobby.teamAlpha.push(new mongoose_1.default.Types.ObjectId(userId));
             }

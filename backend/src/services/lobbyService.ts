@@ -154,13 +154,13 @@ export class LobbyService {
 
       console.log(`[selectTeam] Player found: ${player.inGameName}, current team: ${player.team}, switching to: ${team}`);
 
-      // Check team capacity
-      if (team === "alpha" && lobby.teamAlpha.length >= 5) throw new Error("Team Alpha full");
-      if (team === "bravo" && lobby.teamBravo.length >= 5) throw new Error("Team Bravo full");
-
-      // Remove from current team
+      // Remove from current team FIRST
       lobby.teamAlpha = lobby.teamAlpha.filter(id => id.toString() !== userId);
       lobby.teamBravo = lobby.teamBravo.filter(id => id.toString() !== userId);
+
+      // NOW check team capacity (after removing player from their old team)
+      if (team === "alpha" && lobby.teamAlpha.length >= 5) throw new Error("Team Alpha full");
+      if (team === "bravo" && lobby.teamBravo.length >= 5) throw new Error("Team Bravo full");
 
       // Add to new team
       if (team === "alpha") {

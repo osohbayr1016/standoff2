@@ -31,7 +31,12 @@ export default function MatchmakingLobbyPage() {
         headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
         body: JSON.stringify({ team }),
       });
-      if (response.ok) { socketRef.current?.emit("refresh_lobby", { lobbyId }); }
+      if (response.ok) {
+        // Refresh lobby data immediately
+        await fetchLobby();
+        // Also emit socket event for other players
+        socketRef.current?.emit("refresh_lobby", { lobbyId });
+      }
       else {
         const result = await response.json();
         setError(result.message || "Failed to join team");
