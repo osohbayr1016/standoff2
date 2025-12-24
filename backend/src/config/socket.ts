@@ -50,13 +50,13 @@ export class SocketManager {
         ) as JWTPayload;
         socket.data.userId = decoded.id;
         socket.data.userEmail = decoded.email;
-        
+
         // Fetch user name to store in socket data
         const user = await User.findById(decoded.id).select("name");
         if (user) {
           socket.data.userName = user.name;
         }
-        
+
         next();
       } catch (error) {
         // Allow connection even if token is invalid for connection status
@@ -102,10 +102,10 @@ export class SocketManager {
                 type: notif.type,
                 senderId: notif.senderId
                   ? {
-                      _id: notif.senderId._id.toString(),
-                      name: notif.senderId.name || "Unknown",
-                      avatar: notif.senderId.avatar,
-                    }
+                    _id: notif.senderId._id.toString(),
+                    name: notif.senderId.name || "Unknown",
+                    avatar: notif.senderId.avatar,
+                  }
                   : undefined,
                 createdAt: notif.createdAt,
               })
@@ -205,13 +205,13 @@ export class SocketManager {
             replyToId: (newMessage as any).replyToId?._id?.toString(),
             replyTo: (newMessage as any).replyToId
               ? {
-                  id: (newMessage as any).replyToId._id.toString(),
-                  content: (newMessage as any).replyToId.content,
-                  sender: {
-                    name:
-                      (newMessage as any).replyToId.senderId?.name || "Unknown",
-                  },
-                }
+                id: (newMessage as any).replyToId._id.toString(),
+                content: (newMessage as any).replyToId.content,
+                sender: {
+                  name:
+                    (newMessage as any).replyToId.senderId?.name || "Unknown",
+                },
+              }
               : undefined,
             sender: {
               id: senderId,
@@ -504,7 +504,7 @@ export class SocketManager {
         try {
           const { receiverId, senderData } = data;
           const receiverSocketId = this.connectedUsers.get(receiverId);
-          
+
           if (receiverSocketId) {
             this.io!.to(receiverSocketId).emit("friend_request_received", {
               sender: senderData,
@@ -520,7 +520,7 @@ export class SocketManager {
         try {
           const { senderId, acceptorData } = data;
           const senderSocketId = this.connectedUsers.get(senderId);
-          
+
           if (senderSocketId) {
             this.io!.to(senderSocketId).emit("friend_request_accepted_notification", {
               acceptor: acceptorData,
@@ -552,10 +552,10 @@ export class SocketManager {
           }
 
           const friendSocketId = this.connectedUsers.get(friendId);
-          
+
           if (friendSocketId) {
             const sender = await User.findById(senderId).select("name avatar");
-            
+
             this.io!.to(friendSocketId).emit("lobby_invite_received", {
               inviteId: `invite_${Date.now()}`,
               sender: {
@@ -594,10 +594,10 @@ export class SocketManager {
           }
 
           const senderSocketId = this.connectedUsers.get(senderId);
-          
+
           if (senderSocketId) {
             const responder = await User.findById(responderId).select("name avatar");
-            
+
             this.io!.to(senderSocketId).emit("lobby_invite_responded", {
               inviteId,
               accepted,
@@ -621,7 +621,7 @@ export class SocketManager {
         try {
           socket.join("matchmaking_queue");
           console.log(`👀 User ${socket.data.userId} joined matchmaking room for updates`);
-          
+
           // Send current queue count
           const totalInQueue = await QueueService.getTotalInQueue();
           socket.emit("queue_update", {
@@ -719,7 +719,7 @@ export class SocketManager {
       });
 
       // ===== LOBBY EVENTS =====
-      
+
       // Handle lobby chat
       socket.on("send_lobby_chat", async (data) => {
         try {
@@ -765,18 +765,18 @@ export class SocketManager {
           const roomName = `lobby_${lobbyId.toString()}`;
           socket.join(roomName);
           console.log(`👤 User ${socket.data.userId} joined room: ${roomName}`);
-          
+
           // Send current lobby state
           const lobby = await LobbyService.getLobby(lobbyId);
           if (lobby) {
             socket.emit("lobby_state", { lobby });
-            
+
             // Send recent chat history
             const chatHistory = await MatchChat.find({ lobbyId: new mongoose.Types.ObjectId(lobbyId) })
               .sort({ createdAt: -1 })
               .limit(50)
               .populate("senderId", "name avatar");
-            
+
             socket.emit("lobby_chat_history", chatHistory.reverse().map(msg => ({
               id: msg._id,
               lobbyId: msg.lobbyId,
@@ -799,7 +799,7 @@ export class SocketManager {
       socket.on("refresh_lobby", async (data) => {
         const { lobbyId } = data;
         if (!lobbyId) return;
-        
+
         const lobby = await LobbyService.getLobby(lobbyId);
         if (lobby) {
           this.io!.to(`lobby_${lobbyId}`).emit("lobby_update", { lobby });
@@ -973,7 +973,7 @@ export class SocketManager {
       // Handle disconnection
       socket.on("disconnect", async () => {
         const userId = socket.data.userId;
-        
+
         if (userId) {
           this.connectedUsers.delete(userId);
 
@@ -1004,7 +1004,7 @@ export class SocketManager {
       try {
         const PlayerProfile = (await import("../models/PlayerProfile")).default;
         const profile = await PlayerProfile.findOne({ userId });
-        
+
         if (profile && profile.friends && profile.friends.length > 0) {
           profile.friends.forEach((friendId) => {
             const friendSocketId = this.connectedUsers.get(friendId.toString());
@@ -1097,7 +1097,7 @@ export class SocketManager {
     if (this.io) {
       console.log(`📢 Attempting to notify ${userIds.length} players of lobby`);
       console.log(`🔌 Currently connected users: ${this.connectedUsers.size}`);
-      
+
       let notifiedCount = 0;
       userIds.forEach((userId) => {
         const socketId = this.connectedUsers.get(userId);
@@ -1110,7 +1110,7 @@ export class SocketManager {
           console.log(`   Connected user IDs: ${Array.from(this.connectedUsers.keys()).join(', ')}`);
         }
       });
-      
+
       console.log(`📊 Notified ${notifiedCount}/${userIds.length} players`);
     }
   }
@@ -1138,6 +1138,29 @@ export class SocketManager {
         console.error("Error broadcasting map ban started:", error);
       }
     }
+  }
+
+  /**
+   * End a lobby chat session
+   * 1. Broadcast "match_ended" to clients (so they can wipe local history)
+   * 2. Force disconnect all sockets in the lobby room
+   */
+  public endLobbyChatSession(lobbyId: string): void {
+    if (!this.io) return;
+
+    const roomName = `lobby_${lobbyId}`;
+    console.log(`🛑 Ending chat session for lobby ${lobbyId}`);
+
+    // 1. Notify clients to wipe history
+    this.io.to(roomName).emit("match_ended", {
+      lobbyId,
+      message: "Match finished. Chat history will be deleted for privacy.",
+      timestamp: new Date().toISOString(),
+    });
+
+    // 2. Force disconnect sockets in the room
+    this.io.in(roomName).disconnectSockets(true);
+    console.log(`✅ Chat room ${roomName} has been destroyed/disconnected.`);
   }
 
   public getIO(): SocketIOServer | null {

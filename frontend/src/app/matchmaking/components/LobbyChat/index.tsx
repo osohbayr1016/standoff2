@@ -62,25 +62,25 @@ const LobbyChat: React.FC<LobbyChatProps> = ({ lobbyId, socket, currentUserId })
 
     const handleNewMessage = (data: ChatMessage) => {
       console.log("📩 Received lobby chat:", data);
-      
+
       setMessages((prev) => {
         // Prevent duplicates by ID
         if (prev.some(m => m.id === data.id)) return prev;
-        
+
         // If it's our own message, try to replace the optimistic "Me" version
         if (data.senderId?.toString() === currentUserId?.toString()) {
-          const optimisticIndex = prev.findIndex(m => 
-            m.senderId?.toString() === currentUserId?.toString() && 
-            m.message === data.message && 
+          const optimisticIndex = prev.findIndex(m =>
+            m.senderId?.toString() === currentUserId?.toString() &&
+            m.message === data.message &&
             m.senderName === "Me"
           );
-          
+
           if (optimisticIndex !== -1) {
             const newMessages = [...prev];
             newMessages[optimisticIndex] = data;
             return newMessages;
           }
-          
+
           // If no optimistic message found, just add it if not already there
           return [...prev, data];
         }
@@ -96,9 +96,21 @@ const LobbyChat: React.FC<LobbyChatProps> = ({ lobbyId, socket, currentUserId })
       setMessages(history);
     });
 
+    // Listen for match end to wipe history
+    socket.on("match_ended", (data: any) => {
+      console.log("🛑 Match ended, wiping chat:", data.message);
+      // 1. Clear LocalStorage
+      localStorage.removeItem(`lobby_chat_${lobbyId}`);
+      // 2. Clear UI
+      setMessages([]);
+      // 3. User feedback
+      alert(data.message || "Match finished. Chat history has been deleted for privacy.");
+    });
+
     return () => {
       socket.off("new_lobby_chat", handleNewMessage);
       socket.off("lobby_chat_history");
+      socket.off("match_ended");
     };
   }, [socket, lobbyId, currentUserId]);
 
@@ -112,25 +124,24 @@ const LobbyChat: React.FC<LobbyChatProps> = ({ lobbyId, socket, currentUserId })
         message: message.trim(),
         timestamp: new Date().toISOString(),
       };
-      
+
       // Optimistically add to local state
       setMessages((prev) => {
         // Prevent duplicate messages if server broadcast arrives extremely fast
         if (prev.some(m => m.id === chatData.id)) return prev;
         return [...prev, chatData];
       });
-      
+
       // Emit to server
       socket.emit("send_lobby_chat", { lobbyId, message: message.trim() });
     }
   }, [socket, lobbyId, currentUserId]);
 
   return (
-    <div className={`fixed bottom-4 right-4 z-40 w-80 flex flex-col transition-all duration-300 ${
-      isExpanded ? "h-96" : "h-12"
-    } bg-gray-900/95 backdrop-blur-md rounded-xl border border-gray-700 shadow-2xl overflow-hidden`}>
+    <div className={`fixed bottom-4 right-4 z-40 w-80 flex flex-col transition-all duration-300 ${isExpanded ? "h-96" : "h-12"
+      } bg-gray-900/95 backdrop-blur-md rounded-xl border border-gray-700 shadow-2xl overflow-hidden`}>
       {/* Header */}
-      <div 
+      <div
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center justify-between p-3 cursor-pointer bg-gray-800/80 hover:bg-gray-800 border-b border-gray-700"
       >

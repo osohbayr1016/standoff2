@@ -39,6 +39,9 @@ export interface IMatchLobby extends Document {
   createdAt: Date;
   expiresAt: Date;
   allPlayersReady: boolean;
+  // Chat preservation for reports/investigations
+  hasReports?: boolean;
+  chatPreservedAt?: Date;
   // Map ban fields (kept for compatibility or future use if needed, but not primary for new flow)
   mapBanPhase: boolean;
   availableMaps: string[];

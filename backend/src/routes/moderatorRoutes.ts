@@ -3,6 +3,7 @@ import { authenticateToken, requireModerator, AuthenticatedRequest } from "../mi
 import MatchResult, { ResultStatus } from "../models/MatchResult";
 import MatchLobby from "../models/MatchLobby";
 import MatchResultService from "../services/matchResultService";
+import { MatchChatService } from "../services/matchChatService";
 
 const moderatorRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   // Get all pending match results
@@ -119,12 +120,12 @@ const moderatorRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => 
               ...result,
               lobby: lobby
                 ? {
-                    _id: lobby._id,
-                    teamAlpha: lobby.teamAlpha,
-                    teamBravo: lobby.teamBravo,
-                    selectedMap: lobby.selectedMap,
-                    players: lobby.players,
-                  }
+                  _id: lobby._id,
+                  teamAlpha: lobby.teamAlpha,
+                  teamBravo: lobby.teamBravo,
+                  selectedMap: lobby.selectedMap,
+                  players: lobby.players,
+                }
                 : null,
             };
           })
@@ -184,12 +185,12 @@ const moderatorRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => 
             ...result,
             lobby: lobby
               ? {
-                  _id: lobby._id,
-                  teamAlpha: lobby.teamAlpha,
-                  teamBravo: lobby.teamBravo,
-                  selectedMap: lobby.selectedMap,
-                  players: lobby.players,
-                }
+                _id: lobby._id,
+                teamAlpha: lobby.teamAlpha,
+                teamBravo: lobby.teamBravo,
+                selectedMap: lobby.selectedMap,
+                players: lobby.players,
+              }
               : null,
           },
         });
@@ -228,6 +229,18 @@ const moderatorRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => 
           request.user!.id,
           moderatorNotes
         );
+
+        // Get lobby ID from the result
+        const lobbyId = result.matchLobbyId.toString();
+
+        // 1. End chat session (notify clients + disconnect sockets)
+        const socketManager = (request.server as any).socketManager;
+        if (socketManager) {
+          socketManager.endLobbyChatSession(lobbyId);
+        }
+
+        // 2. Schedule database deletion (delayed)
+        await MatchChatService.scheduleMatchChatDeletion(lobbyId);
 
         return reply.send({
           success: true,
