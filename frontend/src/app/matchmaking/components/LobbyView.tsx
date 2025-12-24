@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import LobbyPlayerCard from "./LobbyPlayerCard";
+import TeamColumn from "./TeamColumn";
 import { X } from "lucide-react";
 
 interface LobbyPlayer {
@@ -45,6 +46,13 @@ export default function LobbyView({
     teamBravo.includes(p.userId.toString())
   );
 
+  // Determine team leaders (highest ELO from each team)
+  const alphaLeader = [...alphaPlayers].sort((a, b) => b.elo - a.elo)[0];
+  const bravoLeader = [...bravoPlayers].sort((a, b) => b.elo - a.elo)[0];
+
+  const alphaTeamName = alphaLeader ? `Team ${alphaLeader.inGameName}` : "Team Alpha";
+  const bravoTeamName = bravoLeader ? `Team ${bravoLeader.inGameName}` : "Team Bravo";
+
   const readyCount = players.filter((p) => p.isReady).length;
 
   return (
@@ -80,55 +88,22 @@ export default function LobbyView({
 
       {/* Teams Container */}
       <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-        {/* Team Alpha (Blue) */}
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-3 h-3 rounded-full bg-blue-500" />
-            <h2 className="text-xl font-bold text-blue-400">Team Alpha</h2>
-          </div>
-          <div className="space-y-2">
-            {alphaPlayers.map((player, index) => (
-              <LobbyPlayerCard
-                key={player.userId}
-                player={player}
-                isCurrentUser={player.userId === currentUserId}
-                allPlayersReady={allPlayersReady}
-                onReady={onPlayerReady}
-                teamColor="alpha"
-              />
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Team Bravo (Orange) */}
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-3 h-3 rounded-full bg-orange-500" />
-            <h2 className="text-xl font-bold text-orange-400">Team Bravo</h2>
-          </div>
-          <div className="space-y-2">
-            {bravoPlayers.map((player, index) => (
-              <LobbyPlayerCard
-                key={player.userId}
-                player={player}
-                isCurrentUser={player.userId === currentUserId}
-                allPlayersReady={allPlayersReady}
-                onReady={onPlayerReady}
-                teamColor="bravo"
-              />
-            ))}
-          </div>
-        </motion.div>
+        <TeamColumn
+          teamName={alphaTeamName}
+          teamPlayers={alphaPlayers}
+          currentUserId={currentUserId}
+          allPlayersReady={allPlayersReady}
+          onPlayerReady={onPlayerReady}
+          teamColor="alpha"
+        />
+        <TeamColumn
+          teamName={bravoTeamName}
+          teamPlayers={bravoPlayers}
+          currentUserId={currentUserId}
+          allPlayersReady={allPlayersReady}
+          onPlayerReady={onPlayerReady}
+          teamColor="bravo"
+        />
       </div>
 
       {/* Action Buttons */}

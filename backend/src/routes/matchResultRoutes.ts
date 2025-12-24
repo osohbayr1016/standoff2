@@ -5,7 +5,9 @@ import MatchResult, { ResultStatus } from "../models/MatchResult";
 import MatchLobby, { LobbyStatus } from "../models/MatchLobby";
 import { authenticateToken, AuthenticatedRequest } from "../middleware/auth";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+// Maximum file size: 10MB (kept for practical storage/upload time reasons, not quality requirements)
+// Image quality/resolution is reviewed by moderators on the moderators page, not enforced at upload
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 // Check if Cloudinary is properly configured
@@ -17,7 +19,12 @@ const isCloudinaryConfigured = () => {
   );
 };
 
-// Helper to upload to Cloudinary from buffer
+/**
+ * Helper to upload to Cloudinary from buffer
+ * Note: No transformations are applied during upload to avoid signature issues.
+ * Image quality/resolution is not validated here - moderators review and approve/reject
+ * based on image quality on the moderators page.
+ */
 const uploadToCloudinary = async (
   buffer: Buffer,
   mimetype: string,
@@ -29,16 +36,21 @@ const uploadToCloudinary = async (
     const dataURI = `data:${mimetype};base64,${base64Image}`;
 
     // Simple upload options without transformations to avoid signature issues
+    // Only essential parameters: folder, resource_type, and timeout
     const uploadOptions: any = {
       folder,
       resource_type: "image",
       timeout: 60000, // 60 seconds timeout
     };
 
+    // Log upload options to verify no transformations are being sent
+    console.log(`📤 Uploading to Cloudinary with options:`, JSON.stringify(uploadOptions));
+
     const uploadResult = await cloudinary.uploader.upload(dataURI, uploadOptions);
+    console.log(`✅ Successfully uploaded to Cloudinary: ${uploadResult.secure_url}`);
     return uploadResult.secure_url;
   } catch (error: any) {
-    console.error("Cloudinary upload error:", error);
+    console.error("❌ Cloudinary upload error:", error);
     throw new Error(error.message || "Failed to upload to Cloudinary");
   }
 };
@@ -52,7 +64,15 @@ const matchResultRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) =
     },
   });
 
-  // Upload images to Cloudinary
+  /**
+   * Upload match result images to Cloudinary
+   * 
+   * This endpoint accepts any image that meets basic format requirements (JPEG, PNG, WEBP)
+   * and size limits (max 10MB). Image quality/resolution is NOT validated here.
+   * 
+   * Moderators will review uploaded images on the moderators page and can approve/reject
+   * match results based on image quality and content.
+   */
   fastify.post(
     "/upload",
     { preHandler: authenticateToken },
@@ -101,11 +121,12 @@ const matchResultRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) =
               });
             }
 
-            // Check file size
+            // Check file size (limit for practical storage/upload time reasons, not quality requirements)
             if (buffer.length > MAX_FILE_SIZE) {
+              const maxSizeMB = MAX_FILE_SIZE / (1024 * 1024);
               return reply.status(400).send({
                 success: false,
-                message: "File too large. Maximum size is 5MB.",
+                message: `File too large. Maximum size is ${maxSizeMB}MB.`,
               });
             }
 
