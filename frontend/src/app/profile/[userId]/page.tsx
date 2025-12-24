@@ -226,11 +226,11 @@ export default function PlayerProfilePage() {
           });
         } else {
           console.log('[Profile] No profile data in response');
-          setError("Profile not found");
+          setError("profile-аа нээгээрэй Bro");
         }
       } else if (response && response.status === 404) {
         console.log('[Profile] All lookup attempts returned 404');
-        setError("Profile not found");
+        setError("profile-аа нээгээрэй Bro");
       } else {
         const errorData = response ? await response.json().catch(() => ({})) : {};
         console.log('[Profile] Error response:', errorData);

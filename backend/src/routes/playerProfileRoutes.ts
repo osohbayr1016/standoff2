@@ -177,7 +177,7 @@ const playerProfileRoutes: FastifyPluginAsync = async (
         console.log(`[My Profile] Profile not found for userId: ${decoded.id}`);
         return reply.status(404).send({
           success: false,
-          message: "Profile not found",
+          message: "profile-аа нээгээрэй Bro",
         });
       }
 
@@ -233,7 +233,7 @@ const playerProfileRoutes: FastifyPluginAsync = async (
       if (!profile) {
         return reply.status(404).send({
           success: false,
-          message: "Profile not found",
+          message: "profile-аа нээгээрэй Bro",
         });
       }
 
@@ -330,7 +330,7 @@ const playerProfileRoutes: FastifyPluginAsync = async (
         console.log(`[Profile Lookup] Profile not found for uniqueId: ${uniqueId}`);
         return reply.status(404).send({
           success: false,
-          message: "Profile not found",
+          message: "profile-аа нээгээрэй Bro",
         });
       }
 
@@ -402,7 +402,7 @@ const playerProfileRoutes: FastifyPluginAsync = async (
         console.log(`[Profile Lookup] FINAL RESULT: Profile not found for userId: ${userId}`);
         return reply.status(404).send({
           success: false,
-          message: "Profile not found for this user ID",
+          message: "profile-аа нээгээрэй Bro",
         });
       }
 
@@ -457,7 +457,7 @@ const playerProfileRoutes: FastifyPluginAsync = async (
       if (!profile) {
         return reply.status(404).send({
           success: false,
-          message: "Profile not found",
+          message: "profile-аа нээгээрэй Bro",
         });
       }
 

@@ -13,9 +13,9 @@ export class LobbyService {
     link: string
   ): Promise<any> {
     try {
-      const leaderProfile = await PlayerProfile.findOne({ userId: leaderId });
+      const leaderProfile = await PlayerProfile.findOne({ userId: new mongoose.Types.ObjectId(leaderId) });
       if (!leaderProfile) {
-        throw new Error("Leader profile not found");
+        throw new Error("profile-аа нээгээрэй Bro");
       }
 
       const player: ILobbyPlayer = {
@@ -77,8 +77,8 @@ export class LobbyService {
       const existingPlayer = lobby.players.find(p => p.userId.toString() === userId);
       if (existingPlayer) return lobby;
 
-      const profile = await PlayerProfile.findOne({ userId });
-      if (!profile) throw new Error("User profile not found");
+      const profile = await PlayerProfile.findOne({ userId: new mongoose.Types.ObjectId(userId) });
+      if (!profile) throw new Error("profile-аа нээгээрэй Bro");
 
       const newPlayer: ILobbyPlayer = {
         userId: new mongoose.Types.ObjectId(userId),
@@ -149,7 +149,11 @@ export class LobbyService {
       const player = lobby.players.find(p => p.userId.toString() === userId);
       if (!player) {
         console.error(`[selectTeam] Player not found! userId: "${userId}"`);
-        throw new Error("Player not in lobby");
+        const profile = await PlayerProfile.findOne({ userId: new mongoose.Types.ObjectId(userId) });
+        if (!profile) {
+          throw new Error("profile-аа нээгээрэй Bro");
+        }
+        throw new Error("profile-аа нээгээрэй Bro");
       }
 
       console.log(`[selectTeam] Player found: ${player.inGameName}, current team: ${player.team}, switching to: ${team}`);
@@ -215,7 +219,13 @@ export class LobbyService {
       if (lobby.status === LobbyStatus.CANCELLED) throw new Error("Lobby cancelled");
 
       const player = lobby.players.find((p) => p.userId.toString() === userId);
-      if (!player) throw new Error("Player not in this lobby");
+      if (!player) {
+        const profile = await PlayerProfile.findOne({ userId: new mongoose.Types.ObjectId(userId) });
+        if (!profile) {
+          throw new Error("profile-аа нээгээрэй Bro");
+        }
+        throw new Error("profile-аа нээгээрэй Bro");
+      }
 
       player.isReady = true;
 

@@ -11,7 +11,7 @@ export class VerificationService {
             const profile = await PlayerProfile.findOne({ userId });
 
             if (!profile) {
-                return { success: false, message: "Profile not found.", status: "error" };
+                return { success: false, message: "profile-аа нээгээрэй Bro", status: "error" };
             }
 
             // Check if already verified
@@ -44,7 +44,7 @@ export class VerificationService {
         try {
             const profile = await PlayerProfile.findOne({ userId });
 
-            if (!profile) return { success: false, message: "Profile not found." };
+            if (!profile) return { success: false, message: "profile-аа нээгээрэй Bro" };
 
             if (profile.verificationStatus !== "PENDING" && profile.verificationStatus !== "REJECTED" && profile.verificationStatus !== "UNVERIFIED") {
                 return { success: false, message: "User is already verified or in invalid state." };
@@ -68,7 +68,7 @@ export class VerificationService {
         try {
             const profile = await PlayerProfile.findOne({ userId });
 
-            if (!profile) return { success: false, message: "Profile not found." };
+            if (!profile) return { success: false, message: "profile-аа нээгээрэй Bro" };
 
             profile.verificationStatus = "REJECTED";
             profile.isIdVerified = false;

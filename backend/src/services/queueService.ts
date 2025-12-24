@@ -20,7 +20,7 @@ export class QueueService {
       });
 
       if (profiles.length !== allMembers.length) {
-        throw new Error("One or more party members don't have a profile");
+        throw new Error("profile-аа нээгээрэй Bro");
       }
 
       // Validate that all members have standoff2Id

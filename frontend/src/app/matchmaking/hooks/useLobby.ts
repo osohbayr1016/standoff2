@@ -87,6 +87,7 @@ export function useLobby(lobbyId: string, user: any, getToken: () => Promise<str
       } else {
         const result = await response.json();
         console.error("[useLobby] Failed to join lobby:", result.message);
+        setError(result.message || "Failed to join lobby");
       }
     } catch (err) {
       console.error("[useLobby] Error joining lobby:", err);
