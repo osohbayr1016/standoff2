@@ -41,7 +41,6 @@ var LobbyStatus;
     LobbyStatus["FULL"] = "full";
     LobbyStatus["PLAYING"] = "playing";
     LobbyStatus["ALL_READY"] = "all_ready";
-    LobbyStatus["RESULT_SUBMITTED"] = "result_submitted";
     LobbyStatus["CANCELLED"] = "cancelled";
     LobbyStatus["MAP_BAN_PHASE"] = "map_ban_phase";
     LobbyStatus["READY_PHASE"] = "ready_phase";

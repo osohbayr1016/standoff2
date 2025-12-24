@@ -71,6 +71,8 @@ const playerProfileRoutes = async (fastify) => {
                 });
             }
             const profileData = request.body;
+            console.log("[Create Profile] Received data:", JSON.stringify(profileData, null, 2));
+            console.log("[Create Profile] User ID from token:", decoded.id);
             const requiredFields = ["inGameName"];
             const missingFields = requiredFields.filter((field) => !profileData[field]);
             if (missingFields.length > 0) {
@@ -122,7 +124,7 @@ const playerProfileRoutes = async (fastify) => {
             });
         }
         catch (error) {
-            console.error("Create profile error:", error);
+            console.error("[Create Profile] EXCEPTION:", error);
             if (error.name === "ValidationError") {
                 const validationErrors = Object.values(error.errors).map((err) => err.message);
                 return reply.status(400).send({

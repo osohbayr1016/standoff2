@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import PlayerProfile from "../models/PlayerProfile";
 import MatchLobby from "../models/MatchLobby";
 import MatchResult, { IMatchResult, ResultStatus } from "../models/MatchResult";
-import MatchResult, { ResultStatus, IMatchResult } from "../models/MatchResult";
 
 const ELO_CHANGE = 25; // Fixed ELO change per match
 

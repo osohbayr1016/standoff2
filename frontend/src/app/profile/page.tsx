@@ -14,7 +14,6 @@ import ProfileHeader from "./components/ProfileHeader";
 import ProfileStats from "./components/ProfileStats";
 import MatchHistory from "./components/MatchHistory";
 import AchievementRewards from "./components/AchievementRewards";
-import VerificationModal from "./components/VerificationModal";
 
 interface PlayerProfile {
   id: string;
@@ -55,7 +54,6 @@ export default function ProfilePage() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -242,15 +240,9 @@ export default function ProfilePage() {
               uniqueId={profile.uniqueId}
               isIdVerified={profile.isIdVerified}
               onEditClick={() => router.push("/settings")}
-              onVerifyClick={() => setIsVerificationModalOpen(true)}
             />
 
-            <VerificationModal
-              isOpen={isVerificationModalOpen}
-              onClose={() => setIsVerificationModalOpen(false)}
-              onSuccess={fetchProfile}
-              currentStandoff2Id={profile.standoff2Id}
-            />
+
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">

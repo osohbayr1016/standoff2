@@ -12,7 +12,6 @@ import ProfileHeader from "../components/ProfileHeader";
 import ProfileStats from "../components/ProfileStats";
 import MatchHistory from "../components/MatchHistory";
 import AchievementRewards from "../components/AchievementRewards";
-import VerificationModal from "../components/VerificationModal";
 
 interface PlayerProfile {
   id: string;
@@ -63,7 +62,6 @@ export default function PlayerProfilePage() {
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
   const [sendingRequest, setSendingRequest] = useState(false);
   const [cancellingRequest, setCancellingRequest] = useState(false);
-  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -566,18 +564,10 @@ export default function PlayerProfilePage() {
             uniqueId={profile.uniqueId}
             isIdVerified={profile.isIdVerified}
             onEditClick={() => router.push("/settings")}
-            onVerifyClick={() => setIsVerificationModalOpen(true)}
             hideEditButton={!isOwnProfile}
           />
 
-          {isOwnProfile && (
-            <VerificationModal
-              isOpen={isVerificationModalOpen}
-              onClose={() => setIsVerificationModalOpen(false)}
-              onSuccess={fetchProfile}
-              currentStandoff2Id={profile.standoff2Id}
-            />
-          )}
+
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">

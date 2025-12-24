@@ -45,6 +45,8 @@ const playerProfileRoutes: FastifyPluginAsync = async (
       }
 
       const profileData = request.body as any;
+      console.log("[Create Profile] Received data:", JSON.stringify(profileData, null, 2));
+      console.log("[Create Profile] User ID from token:", decoded.id);
 
       // Validate required fields
       const requiredFields = ["inGameName"];
@@ -116,7 +118,7 @@ const playerProfileRoutes: FastifyPluginAsync = async (
         profile: newProfile,
       });
     } catch (error) {
-      console.error("Create profile error:", error);
+      console.error("[Create Profile] EXCEPTION:", error);
 
       // Check if it's a Mongoose validation error
       if (error.name === "ValidationError") {

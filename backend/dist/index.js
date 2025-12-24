@@ -173,8 +173,6 @@ async function registerRoutes() {
         fastify.register(mapBanRoutes.default, { prefix: "/api/map-ban" });
         const moderatorRoutes = await Promise.resolve().then(() => __importStar(require("./routes/moderatorRoutes")));
         fastify.register(moderatorRoutes.default, { prefix: "/api/moderator" });
-        const verificationRoutes = await Promise.resolve().then(() => __importStar(require("./routes/verificationRoutes")));
-        fastify.register(verificationRoutes.default, { prefix: "/api/verification" });
     }
     catch (error) {
         console.error("❌ Error registering routes:", error);

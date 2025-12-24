@@ -152,9 +152,18 @@ class LobbyService {
             const lobby = await MatchLobby_1.default.findById(lobbyId);
             if (!lobby)
                 throw new Error("Lobby not found");
+            console.log(`[selectTeam] Looking for userId: "${userId}"`);
+            console.log(`[selectTeam] Players in lobby:`, lobby.players.map(p => ({
+                userId: p.userId.toString(),
+                inGameName: p.inGameName,
+                team: p.team
+            })));
             const player = lobby.players.find(p => p.userId.toString() === userId);
-            if (!player)
+            if (!player) {
+                console.error(`[selectTeam] Player not found! userId: "${userId}"`);
                 throw new Error("Player not in lobby");
+            }
+            console.log(`[selectTeam] Player found: ${player.inGameName}, current team: ${player.team}, switching to: ${team}`);
             if (team === "alpha" && lobby.teamAlpha.length >= 5)
                 throw new Error("Team Alpha full");
             if (team === "bravo" && lobby.teamBravo.length >= 5)
@@ -169,9 +178,11 @@ class LobbyService {
             }
             player.team = team;
             await lobby.save();
+            console.log(`[selectTeam] Team selection successful. Alpha: ${lobby.teamAlpha.length}, Bravo: ${lobby.teamBravo.length}`);
             return lobby;
         }
         catch (error) {
+            console.error(`[selectTeam] Error:`, error.message);
             throw new Error(error.message || "Failed to select team");
         }
     }

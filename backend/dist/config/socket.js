@@ -638,23 +638,6 @@ class SocketManager {
                     const targetRoom = `lobby_${lobbyId.toString()}`;
                     this.io.to(targetRoom).emit("new_lobby_chat", chatData);
                     console.log(`💬 Lobby Chat [${targetRoom}]: ${userName}: ${message.trim()}`);
-                    let finalUserName = userName;
-                    if (finalUserName === "Unknown") {
-                        const user = await User_1.default.findById(userId).select("name");
-                        if (user)
-                            finalUserName = user.name;
-                    }
-                    const chatData = {
-                        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                        lobbyId,
-                        senderId: userId,
-                        senderName: finalUserName,
-                        message: message.trim(),
-                        timestamp: new Date().toISOString(),
-                    };
-                    const targetRoom = `lobby_${lobbyId.toString()}`;
-                    this.io.to(targetRoom).emit("new_lobby_chat", chatData);
-                    console.log(`💬 Lobby Chat [${targetRoom}]: ${finalUserName}: ${message.trim()}`);
                 }
                 catch (error) {
                     console.error("Lobby chat error:", error);
@@ -685,8 +668,6 @@ class SocketManager {
                             timestamp: msg.createdAt,
                         })));
                     }
-                    const lobby = await queueService_1.QueueService.getLobby(lobbyId);
-                    socket.emit("lobby_state", { lobby });
                 }
                 catch (error) {
                     console.error("Join lobby error:", error);
@@ -722,7 +703,6 @@ class SocketManager {
                     this.io.to(`lobby_${lobbyId}`).emit("lobby_update", {
                         lobby: {
                             ...result.lobby.toObject(),
-                            ...result.lobby,
                             players: result.lobby.players.map((p) => ({
                                 userId: p.userId.toString(),
                                 inGameName: p.inGameName,
@@ -737,7 +717,6 @@ class SocketManager {
                         this.io.to(`lobby_${lobbyId}`).emit("all_players_ready", {
                             lobby: {
                                 ...result.lobby.toObject(),
-                                ...result.lobby,
                                 players: result.lobby.players.map((p) => ({
                                     userId: p.userId.toString(),
                                     inGameName: p.inGameName,

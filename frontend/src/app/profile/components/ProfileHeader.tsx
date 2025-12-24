@@ -75,19 +75,11 @@ export default function ProfileHeader({
           </p>
 
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-            {isIdVerified ? (
+            {isIdVerified && (
               <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-full text-green-500 text-sm font-semibold">
                 <ShieldCheck className="w-4 h-4" />
                 <span>Verified Player</span>
               </div>
-            ) : (
-              <button
-                onClick={onVerifyClick}
-                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-full text-red-500 hover:bg-red-500/20 transition-colors text-sm font-semibold"
-              >
-                <ShieldAlert className="w-4 h-4" />
-                <span>Unverified - Verify Now</span>
-              </button>
             )}
           </div>
         </div>

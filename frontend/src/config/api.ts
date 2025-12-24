@@ -9,7 +9,7 @@ const getApiBaseUrl = () => {
   if (typeof window !== "undefined") {
     // In browser
     if (window.location.hostname === "localhost") {
-      return "http://localhost:5001";
+      return "http://localhost:8000";
     } else {
       // Production - use Render backend
       return "https://standoff2.onrender.com";
@@ -18,7 +18,7 @@ const getApiBaseUrl = () => {
     // On server (SSR)
     return process.env.NODE_ENV === "production"
       ? "https://standoff2.onrender.com"
-      : "http://localhost:5001";
+      : "http://localhost:8000";
   }
 };
 
@@ -28,7 +28,7 @@ const WS_BASE_URL =
   process.env.NEXT_PUBLIC_WS_URL ||
   (typeof window !== "undefined" && window.location.hostname !== "localhost"
     ? "https://standoff2.onrender.com"
-    : "http://localhost:5001");
+    : "http://localhost:8000");
 
 export const API_ENDPOINTS = {
   BASE_URL: API_BASE_URL,
