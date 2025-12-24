@@ -261,6 +261,7 @@ export const API_ENDPOINTS = {
   },
   LOBBY: {
     GET: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}`,
+    JOIN: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}/join`,
     READY: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}/ready`,
     LEAVE: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}/leave`,
     USER_ACTIVE: `${API_BASE_URL}/api/lobby/user/active`,

@@ -71,8 +71,34 @@ export function useLobby(lobbyId: string, user: any, getToken: () => Promise<str
     }
   };
 
+  const joinLobby = async () => {
+    if (!user || !lobbyId) return;
+    try {
+      const token = await getToken();
+      const response = await fetch(API_ENDPOINTS.LOBBY.JOIN(lobbyId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
+      });
+      if (response.ok) {
+        console.log("[useLobby] Successfully joined lobby");
+        // Refresh lobby data after joining
+        await fetchLobby();
+      } else {
+        const result = await response.json();
+        console.error("[useLobby] Failed to join lobby:", result.message);
+      }
+    } catch (err) {
+      console.error("[useLobby] Error joining lobby:", err);
+    }
+  };
+
   useEffect(() => {
-    fetchLobby();
+    const initLobby = async () => {
+      await fetchLobby();
+      // Join the lobby after fetching initial data
+      await joinLobby();
+    };
+    initLobby();
   }, [user, lobbyId]);
 
   useEffect(() => {
