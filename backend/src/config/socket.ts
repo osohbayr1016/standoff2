@@ -47,6 +47,13 @@ export class SocketManager {
         ) as JWTPayload;
         socket.data.userId = decoded.id;
         socket.data.userEmail = decoded.email;
+        
+        // Fetch user name to store in socket data
+        const user = await User.findById(decoded.id).select("name");
+        if (user) {
+          socket.data.userName = user.name;
+        }
+        
         next();
       } catch (error) {
         // Allow connection even if token is invalid for connection status
@@ -734,6 +741,42 @@ export class SocketManager {
       });
 
       // ===== LOBBY EVENTS =====
+      
+      // Handle lobby chat (transient, not saved to DB)
+      socket.on("send_lobby_chat", async (data) => {
+        try {
+          const { lobbyId, message } = data;
+          const userId = socket.data.userId;
+          const userName = socket.data.userName || "Unknown"; // We might need to fetch name if not in socket.data
+
+          if (!userId || !lobbyId || !message || !message.trim()) {
+            return;
+          }
+
+          // Get user name if not available
+          let finalUserName = userName;
+          if (finalUserName === "Unknown") {
+            const user = await User.findById(userId).select("name");
+            if (user) finalUserName = user.name;
+          }
+
+          const chatData = {
+            id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            lobbyId,
+            senderId: userId,
+            senderName: finalUserName,
+            message: message.trim(),
+            timestamp: new Date().toISOString(),
+          };
+
+          // Broadcast to everyone in the lobby room
+          const targetRoom = `lobby_${lobbyId.toString()}`;
+          this.io!.to(targetRoom).emit("new_lobby_chat", chatData);
+          console.log(`💬 Lobby Chat [${targetRoom}]: ${finalUserName}: ${message.trim()}`);
+        } catch (error) {
+          console.error("Lobby chat error:", error);
+        }
+      });
 
       // Join lobby room
       socket.on("join_lobby", async (data) => {
@@ -741,7 +784,9 @@ export class SocketManager {
           const { lobbyId } = data;
           if (!lobbyId) return;
 
-          socket.join(`lobby_${lobbyId}`);
+          const roomName = `lobby_${lobbyId.toString()}`;
+          socket.join(roomName);
+          console.log(`👤 User ${socket.data.userId} joined room: ${roomName}`);
           
           // Send current lobby state
           const lobby = await QueueService.getLobby(lobbyId);
@@ -769,16 +814,34 @@ export class SocketManager {
 
           const result = await QueueService.markPlayerReady(lobbyId, userId);
 
-          // Broadcast updated lobby state to all players in lobby
+          // Broadcast updated lobby state to all players in lobby IMMEDIATELY
           this.io!.to(`lobby_${lobbyId}`).emit("lobby_update", {
-            lobby: result.lobby,
+            lobby: {
+              ...result.lobby,
+              players: result.lobby.players.map((p: any) => ({
+                userId: p.userId.toString(),
+                inGameName: p.inGameName,
+                standoff2Id: p.standoff2Id,
+                elo: p.elo,
+                isReady: p.isReady,
+              })),
+            },
             allReady: result.allReady,
           });
 
           if (result.allReady) {
-            // All players ready - emit special event
+            // All players ready - emit special event IMMEDIATELY
             this.io!.to(`lobby_${lobbyId}`).emit("all_players_ready", {
-              lobby: result.lobby,
+              lobby: {
+                ...result.lobby,
+                players: result.lobby.players.map((p: any) => ({
+                  userId: p.userId.toString(),
+                  inGameName: p.inGameName,
+                  standoff2Id: p.standoff2Id,
+                  elo: p.elo,
+                  isReady: p.isReady,
+                })),
+              },
             });
           }
         } catch (error: any) {

@@ -10,6 +10,7 @@ import { io, Socket } from "socket.io-client";
 import LobbyView from "../components/LobbyView";
 import ResultUploadModal from "../components/ResultUploadModal";
 import MapBanView from "../components/MapBanView";
+import LobbyChat from "../components/LobbyChat";
 
 interface LobbyPlayer {
   userId: string;
@@ -304,7 +305,19 @@ export default function MatchmakingLobbyPage() {
   }, [user, lobbyId, getToken, router]);
 
   const handlePlayerReady = () => {
-    if (socketRef.current && lobbyData) {
+    if (socketRef.current && lobbyData && user) {
+      // Optimistic update for immediate visual feedback
+      setLobbyData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          players: prev.players.map((p) =>
+            p.userId === user.id ? { ...p, isReady: true } : p
+          ),
+        };
+      });
+
+      // Emit to server
       socketRef.current.emit("player_ready", { lobbyId: lobbyData.lobbyId });
     }
   };
@@ -313,6 +326,17 @@ export default function MatchmakingLobbyPage() {
     if (readyingAll || !lobbyData) return;
     
     setReadyingAll(true);
+    
+    // Optimistic update for admin
+    setLobbyData((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        players: prev.players.map((p) => ({ ...p, isReady: true })),
+        allPlayersReady: true,
+      };
+    });
+
     try {
       const token = await getToken();
       const response = await fetch(
@@ -376,6 +400,7 @@ export default function MatchmakingLobbyPage() {
         );
 
         if (response.ok) {
+          localStorage.removeItem(`lobby_chat_${lobbyId}`);
           router.push("/matchmaking");
         }
       } catch (err) {
@@ -386,6 +411,7 @@ export default function MatchmakingLobbyPage() {
 
   const handleResultSuccess = () => {
     setResultSubmitted(true);
+    localStorage.removeItem(`lobby_chat_${lobbyId}`);
     setError("Match result submitted successfully!");
     setTimeout(() => setError(null), 3000);
   };
@@ -516,7 +542,6 @@ export default function MatchmakingLobbyPage() {
           currentUserId={user?.id || ""}
           allPlayersReady={lobbyData.allPlayersReady || false}
           onPlayerReady={handlePlayerReady}
-          onLeaveLobby={handleLeaveLobby}
           adminReadyAllButton={
             user?.role === "ADMIN" && !lobbyData.allPlayersReady ? (
               <button
@@ -581,6 +606,13 @@ export default function MatchmakingLobbyPage() {
         onClose={() => setShowResultModal(false)}
         lobbyId={lobbyData.lobbyId}
         onSuccess={handleResultSuccess}
+      />
+
+      {/* Lobby Chat */}
+      <LobbyChat
+        lobbyId={lobbyId}
+        socket={socketRef.current}
+        currentUserId={user?.id || ""}
       />
     </div>
   );

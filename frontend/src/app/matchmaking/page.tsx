@@ -416,7 +416,7 @@ export default function MatchmakingPage() {
 
   const handleFillBots = async () => {
     if (fillingBots) return;
-    
+
     setFillingBots(true);
     try {
       const token = await getToken();
@@ -448,24 +448,24 @@ export default function MatchmakingPage() {
 
   const handleShowPlayers = async () => {
     console.log("👥 Show Players button clicked");
-    
+
     // Toggle the dropdown
     if (showPlayersModal) {
       console.log("Closing dropdown");
       setShowPlayersModal(false);
       return;
     }
-    
+
     setLoadingPlayers(true);
     console.log("Opening dropdown...");
-    
+
     try {
       const token = await getToken();
       console.log("🔑 Token obtained:", token ? "Yes" : "No");
-      
+
       const url = API_ENDPOINTS.QUEUE.PLAYERS;
       console.log("🌐 Fetching from:", url);
-      
+
       const response = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
@@ -478,11 +478,11 @@ export default function MatchmakingPage() {
       if (response.ok) {
         const data = await response.json();
         console.log("📊 Response data:", data);
-        
+
         const players = data.data || data.players || [];
         console.log("👥 Players array:", players);
         console.log("📝 Number of players:", players.length);
-        
+
         setQueuePlayers(players);
       } else {
         const errorText = await response.text();
@@ -510,7 +510,6 @@ export default function MatchmakingPage() {
   // Main matchmaking UI
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a1d29] via-[#2a3a4a] to-[#1a2a3a] pt-20 relative overflow-hidden">
-
       {/* Error Notification */}
       <AnimatePresence>
         {error && (
@@ -563,7 +562,9 @@ export default function MatchmakingPage() {
                   className="mb-8 max-w-4xl mx-auto"
                 >
                   <p className="text-3xl sm:text-4xl lg:text-6xl font-black text-orange-500 leading-tight mb-8 drop-shadow-[0_0_20px_rgba(249,115,22,0.4)]">
-                    Битгий matchmaking хайгаарай guys, discord server-тээ ороод шинэлэлтийн мэдээллүүд орохыг хүлээж байгаарай. 26-нд албан ёсны release хийгдэнэ шүү.
+                    Битгий matchmaking хайгаарай guys, discord server-тээ ороод
+                    шинэлэлтийн мэдээллүүд орохыг хүлээж байгаарай. 26-нд албан
+                    ёсны release хийгдэнэ шүү.
                   </p>
                 </motion.div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
@@ -591,7 +592,9 @@ export default function MatchmakingPage() {
                         isOpen={showPlayersModal}
                         onClose={() => setShowPlayersModal(false)}
                         players={queuePlayers}
-                        buttonRef={showPlayersButtonRef}
+                        buttonRef={
+                          showPlayersButtonRef as React.RefObject<HTMLButtonElement>
+                        }
                       />
                     </div>
                   )}
@@ -632,7 +635,9 @@ export default function MatchmakingPage() {
                   className="mb-8 max-w-4xl mx-auto"
                 >
                   <p className="text-xl sm:text-2xl lg:text-3xl font-black text-orange-500 leading-tight mb-4 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
-                    Битгий matchmaking хайгаарай guys, discord server-тээ ороод шинэлэлтийн мэдээллүүд орохыг хүлээж байгаарай. 26-нд албан ёсны release хийгдэнэ шүү.
+                    Битгий matchmaking хайгаарай guys, discord server-тээ ороод
+                    шинэлэлтийн мэдээллүүд орохыг хүлээж байгаарай. 26-нд албан
+                    ёсны release хийгдэнэ шүү.
                   </p>
                 </motion.div>
                 <motion.h1
@@ -803,7 +808,9 @@ export default function MatchmakingPage() {
                       disabled={fillingBots || !socketConnected}
                       className="px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm sm:text-base font-bold rounded-lg shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                     >
-                      {fillingBots ? "Filling..." : "🤖 Fill Bots (Admin Testing)"}
+                      {fillingBots
+                        ? "Filling..."
+                        : "🤖 Fill Bots (Admin Testing)"}
                     </button>
                   </motion.div>
                 )}

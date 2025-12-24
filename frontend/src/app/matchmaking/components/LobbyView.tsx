@@ -20,7 +20,6 @@ interface LobbyViewProps {
   currentUserId: string;
   allPlayersReady: boolean;
   onPlayerReady: () => void;
-  onLeaveLobby: () => void;
   adminReadyAllButton?: React.ReactNode;
   countdownElement?: React.ReactNode;
   addResultButton?: React.ReactNode;
@@ -34,7 +33,6 @@ export default function LobbyView({
   currentUserId,
   allPlayersReady,
   onPlayerReady,
-  onLeaveLobby,
   adminReadyAllButton,
   countdownElement,
   addResultButton,
@@ -134,20 +132,13 @@ export default function LobbyView({
       </div>
 
       {/* Action Buttons */}
-      {!allPlayersReady && (
+      {!allPlayersReady && adminReadyAllButton && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           className="mt-8 flex flex-wrap items-center justify-center gap-4"
         >
-          <button
-            onClick={onLeaveLobby}
-            className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <X className="w-5 h-5" />
-            Leave Lobby
-          </button>
           {adminReadyAllButton}
         </motion.div>
       )}
