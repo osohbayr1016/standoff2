@@ -78,6 +78,7 @@ export function useLobby(lobbyId: string, user: any, getToken: () => Promise<str
       const response = await fetch(API_ENDPOINTS.LOBBY.JOIN(lobbyId), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
+        body: JSON.stringify({}), // Empty body to satisfy Content-Type header
       });
       if (response.ok) {
         console.log("[useLobby] Successfully joined lobby");
