@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-export type NotificationType = "MESSAGE" | "SYSTEM" | "INVITATION" | "STREAM_STARTED" | "STREAM_ENDING" | "STREAM_INVITE";
+export type NotificationType = "MESSAGE" | "SYSTEM" | "INVITATION" | "STREAM_STARTED" | "STREAM_ENDING" | "STREAM_INVITE" | "FRIEND_REQUEST";
 export type NotificationStatus = "PENDING" | "SEEN" | "DELETED";
 
 export interface INotification extends Document {
@@ -44,7 +44,7 @@ const notificationSchema = new Schema<INotification>(
     },
     type: {
       type: String,
-      enum: ["MESSAGE", "SYSTEM", "INVITATION", "STREAM_STARTED", "STREAM_ENDING", "STREAM_INVITE"],
+      enum: ["MESSAGE", "SYSTEM", "INVITATION", "STREAM_STARTED", "STREAM_ENDING", "STREAM_INVITE", "FRIEND_REQUEST"],
       default: "SYSTEM",
       index: true,
     },

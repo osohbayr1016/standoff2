@@ -60,6 +60,9 @@ export default function FriendsPage() {
       if (response.ok) {
         const data = await response.json();
         setFriends(data.friends || []);
+      } else {
+        const data = await response.json();
+        console.error("Failed to fetch friends:", data.message);
       }
     } catch (error) {
       console.error("Error fetching friends:", error);

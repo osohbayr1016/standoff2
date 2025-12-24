@@ -249,32 +249,44 @@ const friendRoutes: FastifyPluginAsync = async (fastify) => {
         friendRequest.status = FriendRequestStatus.ACCEPTED;
         await friendRequest.save({ session });
 
+        // Ensure both users have each other in their friends list
+        const senderId = friendRequest.senderId;
+        const acceptorId = new mongoose.Types.ObjectId(userId);
+
         await PlayerProfile.findOneAndUpdate(
-          { userId },
-          { $addToSet: { friends: friendRequest.senderId } },
+          { userId: acceptorId },
+          { $addToSet: { friends: senderId } },
           { session }
         );
 
         await PlayerProfile.findOneAndUpdate(
-          { userId: friendRequest.senderId },
-          { $addToSet: { friends: userId } },
+          { userId: senderId },
+          { $addToSet: { friends: acceptorId } },
           { session }
         );
 
         await Notification.create(
           [
             {
-              userId: friendRequest.senderId,
+              userId: senderId,
               title: "Friend Request Accepted",
               content: `${userName} accepted your friend request`,
               type: "SYSTEM",
-              senderId: userId,
+              senderId: acceptorId,
             },
           ],
           { session }
         );
 
         await session.commitTransaction();
+
+        // Notify both users via socket
+        const socketManager = (fastify as any).socketManager;
+        if (socketManager) {
+          socketManager.sendToUser(userId, "friends_list_updated", {});
+          socketManager.sendToUser(senderId.toString(), "friends_list_updated", {});
+        }
+
         reply.send({ message: "Friend request accepted" });
       } catch (error) {
         await session.abortTransaction();
@@ -411,19 +423,24 @@ const friendRoutes: FastifyPluginAsync = async (fastify) => {
         userId: { $in: profile.friends },
       }).populate("userId", "name email avatar isOnline lastSeen");
 
-      const friends = friendProfiles.map((fp) => ({
-        id: fp._id,
-        userId: (fp.userId as any)._id,
-        name: (fp.userId as any).name,
-        inGameName: fp.inGameName,
-        standoff2Id: fp.standoff2Id,
-        avatar: fp.avatar || (fp.userId as any).avatar,
-        elo: fp.elo,
-        isOnline: fp.isOnline,
-        lastSeen: (fp.userId as any).lastSeen,
-        wins: fp.wins,
-        losses: fp.losses,
-      }));
+      const friends = friendProfiles
+        .filter((fp) => fp.userId) // Ensure userId exists
+        .map((fp) => {
+          const user = fp.userId as any;
+          return {
+            id: fp._id,
+            userId: user._id,
+            name: user.name || "Unknown",
+            inGameName: fp.inGameName,
+            standoff2Id: fp.standoff2Id,
+            avatar: fp.avatar || user.avatar || "/default-avatar.png",
+            elo: fp.elo,
+            isOnline: user.isOnline || false, // Use online status from User model
+            lastSeen: user.lastSeen,
+            wins: fp.wins,
+            losses: fp.losses,
+          };
+        });
 
       reply.send({ friends });
     } catch (error) {
@@ -444,19 +461,31 @@ const friendRoutes: FastifyPluginAsync = async (fastify) => {
         const { friendId } = req.params;
         const userId = (req as any).user.id;
 
+        // Ensure both users are removed from each other's friends list
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+        const friendUserObjectId = new mongoose.Types.ObjectId(friendId);
+
         await PlayerProfile.findOneAndUpdate(
-          { userId },
-          { $pull: { friends: friendId } },
+          { userId: userObjectId },
+          { $pull: { friends: friendUserObjectId } },
           { session }
         );
 
         await PlayerProfile.findOneAndUpdate(
-          { userId: friendId },
-          { $pull: { friends: userId } },
+          { userId: friendUserObjectId },
+          { $pull: { friends: userObjectId } },
           { session }
         );
 
         await session.commitTransaction();
+
+        // Notify both users via socket
+        const socketManager = (fastify as any).socketManager;
+        if (socketManager) {
+          socketManager.sendToUser(userId, "friends_list_updated", {});
+          socketManager.sendToUser(friendId, "friends_list_updated", {});
+        }
+
         reply.send({ message: "Friend removed successfully" });
       } catch (error) {
         await session.abortTransaction();
