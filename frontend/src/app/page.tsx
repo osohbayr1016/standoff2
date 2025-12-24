@@ -16,7 +16,7 @@ export default function Home() {
         <IntroOverlay />
 
         {/* Main Container */}
-        <div className="min-h-[calc(100vh-64px)] bg-[#0f1419] px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+        <div className="min-h-screen bg-[#0f1419] px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
           <div className="max-w-7xl mx-auto w-full py-8">
             {/* Maintenance Hero Section */}
             <MaintenanceHero />

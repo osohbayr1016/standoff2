@@ -11,12 +11,13 @@ export default function LayoutWrapper({
 }) {
   const pathname = usePathname();
 
-  // Check if current page is an auth page
+  // Check if current page is an auth page or the home page
   const isAuthPage = pathname?.startsWith("/auth");
+  const isHomePage = pathname === "/";
 
-  // Auth pages render without navigation and footer
-  if (isAuthPage) {
-    return <>{children}</>;
+  // Auth pages and home page render without navigation and footer
+  if (isAuthPage || isHomePage) {
+    return <main className="min-h-screen">{children}</main>;
   }
 
   return (
