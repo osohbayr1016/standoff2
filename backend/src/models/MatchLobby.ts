@@ -1,12 +1,15 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export enum LobbyStatus {
-  MAP_BAN_PHASE = "map_ban_phase",
-  WAITING = "waiting",
-  READY_PHASE = "ready_phase",
+  OPEN = "open",
+  FULL = "full",
+  PLAYING = "playing",
   ALL_READY = "all_ready",
-  RESULT_SUBMITTED = "result_submitted",
   CANCELLED = "cancelled",
+  // Backward compatibility
+  MAP_BAN_PHASE = "map_ban_phase",
+  READY_PHASE = "ready_phase",
+  RESULT_SUBMITTED = "result_submitted",
 }
 
 export interface ILobbyPlayer {
@@ -16,6 +19,7 @@ export interface ILobbyPlayer {
   inGameName: string;
   elo: number;
   avatar?: string;
+  team: "alpha" | "bravo" | null;
 }
 
 export interface IBanHistory {
@@ -25,6 +29,9 @@ export interface IBanHistory {
 }
 
 export interface IMatchLobby extends Document {
+  leader: mongoose.Types.ObjectId;
+  lobbyLink: string;
+  selectedMap: string;
   players: ILobbyPlayer[];
   teamAlpha: mongoose.Types.ObjectId[];
   teamBravo: mongoose.Types.ObjectId[];
@@ -32,11 +39,10 @@ export interface IMatchLobby extends Document {
   createdAt: Date;
   expiresAt: Date;
   allPlayersReady: boolean;
-  // Map ban fields
+  // Map ban fields (kept for compatibility or future use if needed, but not primary for new flow)
   mapBanPhase: boolean;
   availableMaps: string[];
   bannedMaps: string[];
-  selectedMap?: string;
   currentBanTeam?: "alpha" | "bravo";
   teamAlphaLeader?: mongoose.Types.ObjectId;
   teamBravoLeader?: mongoose.Types.ObjectId;
@@ -68,21 +74,33 @@ const lobbyPlayerSchema = new Schema<ILobbyPlayer>(
     avatar: {
       type: String,
     },
+    team: {
+      type: String,
+      enum: ["alpha", "bravo", null],
+      default: null,
+    },
   },
   { _id: false }
 );
 
 const matchLobbySchema = new Schema<IMatchLobby>(
   {
+    leader: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    lobbyLink: {
+      type: String,
+      required: true,
+    },
+    selectedMap: {
+      type: String,
+      required: true,
+    },
     players: {
       type: [lobbyPlayerSchema],
       required: true,
-      validate: {
-        validator: function (val: ILobbyPlayer[]) {
-          return val.length === 10;
-        },
-        message: "Lobby must have exactly 10 players",
-      },
     },
     teamAlpha: [
       {
@@ -99,7 +117,7 @@ const matchLobbySchema = new Schema<IMatchLobby>(
     status: {
       type: String,
       enum: Object.values(LobbyStatus),
-      default: LobbyStatus.READY_PHASE,
+      default: LobbyStatus.OPEN,
     },
     createdAt: {
       type: Date,
@@ -126,9 +144,6 @@ const matchLobbySchema = new Schema<IMatchLobby>(
     bannedMaps: {
       type: [String],
       default: [],
-    },
-    selectedMap: {
-      type: String,
     },
     currentBanTeam: {
       type: String,

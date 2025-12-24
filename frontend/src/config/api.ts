@@ -264,6 +264,9 @@ export const API_ENDPOINTS = {
     READY: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}/ready`,
     LEAVE: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}/leave`,
     USER_ACTIVE: `${API_BASE_URL}/api/lobby/user/active`,
+    ACTIVE: `${API_BASE_URL}/api/lobby/active`,
+    CREATE: `${API_BASE_URL}/api/lobby/create`,
+    BASE: `${API_BASE_URL}/api/lobby`,
   },
   MATCH_RESULTS: {
     UPLOAD: `${API_BASE_URL}/api/match-results/upload`,

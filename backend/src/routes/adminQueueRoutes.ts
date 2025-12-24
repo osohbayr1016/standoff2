@@ -56,34 +56,6 @@ const adminQueueRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) =>
           socketManager.broadcastQueueUpdate(newQueueCount);
         }
         
-        // If we hit 10 players, try to create a match immediately
-        if (newQueueCount >= 10) {
-          console.log("🎯 Queue full! Attempting to create match...");
-          // Wait a bit for all database operations to complete
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          try {
-            const lobbyId = await QueueService.findMatch();
-            if (lobbyId) {
-              console.log(`🎮 Match created: ${lobbyId}`);
-              const lobby = await QueueService.getLobby(lobbyId);
-              const playerIds = lobby.players.map((p: any) => p.userId.toString());
-              
-              if (socketManager) {
-                socketManager.notifyLobbyFound(playerIds, {
-                  lobbyId,
-                  players: lobby.players,
-                  teamAlpha: lobby.teamAlpha,
-                  teamBravo: lobby.teamBravo,
-                });
-                socketManager.broadcastQueueUpdate(await QueueService.getTotalInQueue());
-              }
-            }
-          } catch (error) {
-            console.error("Error creating match:", error);
-          }
-        }
-        
         return reply.send({
           success: true,
           message: `Added ${addedBots.length} bots to queue`,

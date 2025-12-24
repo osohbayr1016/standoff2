@@ -1,6 +1,7 @@
 import { Server as SocketIOServer } from "socket.io";
 import { Server as HTTPServer } from "http";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import { JWTPayload } from "../middleware/auth";
 import Message from "../models/Message";
 import User from "../models/User";
@@ -8,8 +9,10 @@ import Notification from "../models/Notification";
 import StreamSession from "../models/StreamSession";
 import StreamChat from "../models/StreamChat";
 import StreamViewer from "../models/StreamViewer";
+import MatchChat from "../models/MatchChat";
 import { StreamService } from "../services/streamService";
 import { QueueService } from "../services/queueService";
+import { LobbyService } from "../services/lobbyService";
 
 export class SocketManager {
   private io: SocketIOServer | null = null;
@@ -656,31 +659,6 @@ export class SocketManager {
           this.io!.to("matchmaking_queue").emit("queue_update", {
             totalPlayers: totalInQueue,
           });
-
-          // IMMEDIATELY check if we have enough players for a match
-          console.log(`🎯 Player joined queue. Total in queue: ${totalInQueue}`);
-          if (totalInQueue >= 10) {
-            console.log(`🚀 10+ players in queue! Triggering immediate match check...`);
-            try {
-              const lobbyId = await QueueService.findMatch();
-              if (lobbyId) {
-                console.log(`🎮 Match found! Creating lobby ${lobbyId}`);
-                const lobby = await QueueService.getLobby(lobbyId);
-                const playerIds = lobby.players.map((p: any) => p.userId.toString());
-                console.log(`📢 Notifying ${playerIds.length} players of lobby`);
-                this.notifyLobbyFound(playerIds, {
-                  lobbyId,
-                  players: lobby.players,
-                  teamAlpha: lobby.teamAlpha,
-                  teamBravo: lobby.teamBravo,
-                });
-                this.broadcastQueueUpdate(await QueueService.getTotalInQueue());
-                console.log(`✅ Lobby ${lobbyId} created successfully`);
-              }
-            } catch (matchError: any) {
-              console.error("❌ Error creating match immediately:", matchError);
-            }
-          }
         } catch (error: any) {
           console.error("Join queue error:", error);
           socket.emit("queue_error", {
@@ -742,37 +720,37 @@ export class SocketManager {
 
       // ===== LOBBY EVENTS =====
       
-      // Handle lobby chat (transient, not saved to DB)
+      // Handle lobby chat
       socket.on("send_lobby_chat", async (data) => {
         try {
           const { lobbyId, message } = data;
           const userId = socket.data.userId;
-          const userName = socket.data.userName || "Unknown"; // We might need to fetch name if not in socket.data
+          const userName = socket.data.userName || "Unknown";
 
           if (!userId || !lobbyId || !message || !message.trim()) {
             return;
           }
 
-          // Get user name if not available
-          let finalUserName = userName;
-          if (finalUserName === "Unknown") {
-            const user = await User.findById(userId).select("name");
-            if (user) finalUserName = user.name;
-          }
+          // Save to database
+          const chatMessage = await MatchChat.create({
+            lobbyId: new mongoose.Types.ObjectId(lobbyId),
+            senderId: new mongoose.Types.ObjectId(userId),
+            message: message.trim(),
+          });
 
           const chatData = {
-            id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            id: chatMessage._id.toString(),
             lobbyId,
             senderId: userId,
-            senderName: finalUserName,
+            senderName: userName,
             message: message.trim(),
-            timestamp: new Date().toISOString(),
+            timestamp: chatMessage.createdAt.toISOString(),
           };
 
           // Broadcast to everyone in the lobby room
           const targetRoom = `lobby_${lobbyId.toString()}`;
           this.io!.to(targetRoom).emit("new_lobby_chat", chatData);
-          console.log(`💬 Lobby Chat [${targetRoom}]: ${finalUserName}: ${message.trim()}`);
+          console.log(`💬 Lobby Chat [${targetRoom}]: ${userName}: ${message.trim()}`);
         } catch (error) {
           console.error("Lobby chat error:", error);
         }
@@ -789,14 +767,49 @@ export class SocketManager {
           console.log(`👤 User ${socket.data.userId} joined room: ${roomName}`);
           
           // Send current lobby state
-          const lobby = await QueueService.getLobby(lobbyId);
-          socket.emit("lobby_state", { lobby });
+          const lobby = await LobbyService.getLobby(lobbyId);
+          if (lobby) {
+            socket.emit("lobby_state", { lobby });
+            
+            // Send recent chat history
+            const chatHistory = await MatchChat.find({ lobbyId: new mongoose.Types.ObjectId(lobbyId) })
+              .sort({ createdAt: -1 })
+              .limit(50)
+              .populate("senderId", "name avatar");
+            
+            socket.emit("lobby_chat_history", chatHistory.reverse().map(msg => ({
+              id: msg._id,
+              lobbyId: msg.lobbyId,
+              senderId: msg.senderId._id,
+              senderName: (msg.senderId as any).name,
+              senderAvatar: (msg.senderId as any).avatar,
+              message: msg.message,
+              timestamp: msg.createdAt,
+            })));
+          }
         } catch (error: any) {
           console.error("Join lobby error:", error);
           socket.emit("lobby_error", {
             error: error.message || "Failed to join lobby",
           });
         }
+      });
+
+      // Broad lobby update event
+      socket.on("refresh_lobby", async (data) => {
+        const { lobbyId } = data;
+        if (!lobbyId) return;
+        
+        const lobby = await LobbyService.getLobby(lobbyId);
+        if (lobby) {
+          this.io!.to(`lobby_${lobbyId}`).emit("lobby_update", { lobby });
+        }
+      });
+
+      // Handle kick notification via socket
+      socket.on("player_kicked_notify", (data) => {
+        const { lobbyId, targetUserId } = data;
+        this.io!.to(`lobby_${lobbyId}`).emit("player_kicked", { targetUserId });
       });
 
       // Player clicks ready
@@ -812,12 +825,12 @@ export class SocketManager {
             return;
           }
 
-          const result = await QueueService.markPlayerReady(lobbyId, userId);
+          const result = await LobbyService.markPlayerReady(lobbyId, userId);
 
           // Broadcast updated lobby state to all players in lobby IMMEDIATELY
           this.io!.to(`lobby_${lobbyId}`).emit("lobby_update", {
             lobby: {
-              ...result.lobby,
+              ...result.lobby.toObject(),
               players: result.lobby.players.map((p: any) => ({
                 userId: p.userId.toString(),
                 inGameName: p.inGameName,
@@ -833,7 +846,7 @@ export class SocketManager {
             // All players ready - emit special event IMMEDIATELY
             this.io!.to(`lobby_${lobbyId}`).emit("all_players_ready", {
               lobby: {
-                ...result.lobby,
+                ...result.lobby.toObject(),
                 players: result.lobby.players.map((p: any) => ({
                   userId: p.userId.toString(),
                   inGameName: p.inGameName,

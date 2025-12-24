@@ -57,6 +57,36 @@ const playerProfileSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false,
     },
+    lastSeen: {
+        type: Date,
+        default: Date.now,
+    },
+    region: {
+        type: String,
+        default: "Global",
+    },
+    friends: {
+        type: [mongoose_1.Schema.Types.ObjectId],
+        ref: "User",
+        default: [],
+    },
+    uniqueId: {
+        type: String,
+        unique: true,
+        sparse: true,
+        trim: true,
+    },
+    verificationCode: {
+        type: String,
+        trim: true,
+    },
+    verificationCodeExpiresAt: {
+        type: Date,
+    },
+    isIdVerified: {
+        type: Boolean,
+        default: false,
+    },
 }, {
     timestamps: true,
 });
@@ -82,7 +112,7 @@ const generateUniqueId = async (inGameName, excludeId) => {
         uniqueId = `${baseId}-${randomSuffix}-${counter}`;
         counter++;
     }
-    return uniqueId;
+    return uniqueId;https://github.com/osohbayr1016/standoff2/pull/1/conflict?name=backend%252Fdist%252Fconfig%252Fsocket.js&ancestor_oid=ad9f4b8dcb6e1e9d20dddc56a7701866e5b51a2c&base_oid=6d7810ebffaa55aaf947ff16401fcecd49d97913&head_oid=5439e2b7e39489c4420e6aa1737d00944a0dd72d
 };
 playerProfileSchema.pre("save", async function (next) {
     if (!this.uniqueId || this.uniqueId.trim() === "") {
