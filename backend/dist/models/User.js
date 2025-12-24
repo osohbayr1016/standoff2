@@ -41,9 +41,7 @@ const mongoose_1 = __importStar(require("mongoose"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 var UserRole;
 (function (UserRole) {
-    UserRole["PLAYER"] = "PLAYER";
-    UserRole["COACH"] = "COACH";
-    UserRole["ORGANIZATION"] = "ORGANIZATION";
+    UserRole["USER"] = "USER";
     UserRole["ADMIN"] = "ADMIN";
 })(UserRole || (exports.UserRole = UserRole = {}));
 const userSchema = new mongoose_1.Schema({
@@ -110,7 +108,7 @@ const userSchema = new mongoose_1.Schema({
     role: {
         type: String,
         enum: Object.values(UserRole),
-        default: UserRole.PLAYER,
+        default: UserRole.USER,
     },
 }, {
     timestamps: true,

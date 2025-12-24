@@ -21,6 +21,9 @@ interface LobbyViewProps {
   allPlayersReady: boolean;
   onPlayerReady: () => void;
   onLeaveLobby: () => void;
+  adminReadyAllButton?: React.ReactNode;
+  countdownElement?: React.ReactNode;
+  addResultButton?: React.ReactNode;
 }
 
 export default function LobbyView({
@@ -32,6 +35,9 @@ export default function LobbyView({
   allPlayersReady,
   onPlayerReady,
   onLeaveLobby,
+  adminReadyAllButton,
+  countdownElement,
+  addResultButton,
 }: LobbyViewProps) {
   // Split players into teams
   const alphaPlayers = players.filter((p) =>
@@ -123,34 +129,50 @@ export default function LobbyView({
         </motion.div>
       </div>
 
-      {/* Leave Button */}
+      {/* Action Buttons */}
       {!allPlayersReady && (
-        <motion.button
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          onClick={onLeaveLobby}
-          className="mt-8 flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+          className="mt-8 flex flex-wrap items-center justify-center gap-4"
         >
-          <X className="w-5 h-5" />
-          Leave Lobby
-        </motion.button>
+          <button
+            onClick={onLeaveLobby}
+            className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+          >
+            <X className="w-5 h-5" />
+            Leave Lobby
+          </button>
+          {adminReadyAllButton}
+        </motion.div>
       )}
 
-      {/* All Ready Message */}
+      {/* All Ready Message with Countdown and Result Button */}
       {allPlayersReady && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-8 p-6 bg-green-900/30 border-2 border-green-500 rounded-xl text-center"
+          className="mt-8 flex flex-col items-center"
         >
-          <h3 className="text-2xl font-bold text-green-400 mb-2">
-            All Players Ready!
-          </h3>
-          <p className="text-gray-300 text-sm">
-            Copy the Standoff2 IDs above and join the game manually
-          </p>
+          {/* Countdown Timer */}
+          {countdownElement}
+
+          {/* All Players Ready Message */}
+          <div className="p-6 bg-green-900/30 border-2 border-green-500 rounded-xl text-center">
+            <h3 className="text-2xl font-bold text-green-400 mb-2">
+              All Players Ready!
+            </h3>
+            <p className="text-gray-300 text-sm">
+              Copy the Standoff2 IDs above and join the game manually
+            </p>
+          </div>
+
+          {/* Add Result Button */}
+          {addResultButton && (
+            <div className="mt-6">{addResultButton}</div>
+          )}
         </motion.div>
       )}
     </motion.div>

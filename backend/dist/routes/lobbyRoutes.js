@@ -7,6 +7,23 @@ const auth_1 = require("../middleware/auth");
 const queueService_1 = require("../services/queueService");
 const mongoose_1 = __importDefault(require("mongoose"));
 const lobbyRoutes = async (fastify) => {
+    fastify.get("/user/active", { preHandler: auth_1.authenticateToken }, async (request, reply) => {
+        try {
+            const userId = request.user.id;
+            const activeLobby = await queueService_1.QueueService.getUserActiveLobby(userId);
+            return reply.send({
+                success: true,
+                data: activeLobby,
+            });
+        }
+        catch (error) {
+            console.error("Get user active lobby error:", error);
+            return reply.status(500).send({
+                success: false,
+                message: error.message || "Failed to get active lobby",
+            });
+        }
+    });
     fastify.get("/:id", { preHandler: auth_1.authenticateToken }, async (request, reply) => {
         try {
             const { id } = request.params;

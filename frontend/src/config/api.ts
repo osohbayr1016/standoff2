@@ -233,6 +233,12 @@ export const API_ENDPOINTS = {
     AWARD_BADGE: `${API_BASE_URL}/api/admin/award-badge`,
     STATS: `${API_BASE_URL}/api/admin/achievement-stats`,
   },
+  ADMIN_QUEUE: {
+    FILL_BOTS: `${API_BASE_URL}/api/admin/queue/fill-bots`,
+    CLEAR_BOTS: `${API_BASE_URL}/api/admin/queue/clear-bots`,
+    READY_ALL: (lobbyId: string) =>
+      `${API_BASE_URL}/api/admin/queue/lobby/${lobbyId}/ready-all`,
+  },
   FRIENDS: {
     SEARCH: `${API_BASE_URL}/api/friends/search`,
     REQUEST: `${API_BASE_URL}/api/friends/request`,
@@ -257,6 +263,20 @@ export const API_ENDPOINTS = {
     GET: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}`,
     READY: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}/ready`,
     LEAVE: (lobbyId: string) => `${API_BASE_URL}/api/lobby/${lobbyId}/leave`,
+    USER_ACTIVE: `${API_BASE_URL}/api/lobby/user/active`,
+  },
+  MATCH_RESULTS: {
+    UPLOAD: `${API_BASE_URL}/api/match-results/upload`,
+    SUBMIT: (lobbyId: string) =>
+      `${API_BASE_URL}/api/match-results/${lobbyId}/submit`,
+    GET: (lobbyId: string) => `${API_BASE_URL}/api/match-results/${lobbyId}`,
+  },
+  MAP_BAN: {
+    STATUS: (lobbyId: string) =>
+      `${API_BASE_URL}/api/map-ban/${lobbyId}/status`,
+    BAN: (lobbyId: string) => `${API_BASE_URL}/api/map-ban/${lobbyId}/ban`,
+    LEADERS: (lobbyId: string) =>
+      `${API_BASE_URL}/api/map-ban/${lobbyId}/leaders`,
   },
 
   HEALTH: `${API_BASE_URL}/health`,

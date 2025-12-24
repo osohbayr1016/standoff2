@@ -4,6 +4,29 @@ import { QueueService } from "../services/queueService";
 import mongoose from "mongoose";
 
 const lobbyRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
+  // Get user's active lobby
+  fastify.get(
+    "/user/active",
+    { preHandler: authenticateToken },
+    async (request, reply) => {
+      try {
+        const userId = (request as AuthenticatedRequest).user.id;
+        const activeLobby = await QueueService.getUserActiveLobby(userId);
+
+        return reply.send({
+          success: true,
+          data: activeLobby,
+        });
+      } catch (error: any) {
+        console.error("Get user active lobby error:", error);
+        return reply.status(500).send({
+          success: false,
+          message: error.message || "Failed to get active lobby",
+        });
+      }
+    }
+  );
+
   // Get lobby details
   fastify.get<{ Params: { id: string } }>(
     "/:id",

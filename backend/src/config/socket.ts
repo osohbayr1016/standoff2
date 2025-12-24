@@ -649,6 +649,31 @@ export class SocketManager {
           this.io!.to("matchmaking_queue").emit("queue_update", {
             totalPlayers: totalInQueue,
           });
+
+          // IMMEDIATELY check if we have enough players for a match
+          console.log(`🎯 Player joined queue. Total in queue: ${totalInQueue}`);
+          if (totalInQueue >= 10) {
+            console.log(`🚀 10+ players in queue! Triggering immediate match check...`);
+            try {
+              const lobbyId = await QueueService.findMatch();
+              if (lobbyId) {
+                console.log(`🎮 Match found! Creating lobby ${lobbyId}`);
+                const lobby = await QueueService.getLobby(lobbyId);
+                const playerIds = lobby.players.map((p: any) => p.userId.toString());
+                console.log(`📢 Notifying ${playerIds.length} players of lobby`);
+                this.notifyLobbyFound(playerIds, {
+                  lobbyId,
+                  players: lobby.players,
+                  teamAlpha: lobby.teamAlpha,
+                  teamBravo: lobby.teamBravo,
+                });
+                this.broadcastQueueUpdate(await QueueService.getTotalInQueue());
+                console.log(`✅ Lobby ${lobbyId} created successfully`);
+              }
+            } catch (matchError: any) {
+              console.error("❌ Error creating match immediately:", matchError);
+            }
+          }
         } catch (error: any) {
           console.error("Join queue error:", error);
           socket.emit("queue_error", {
@@ -760,6 +785,73 @@ export class SocketManager {
           console.error("Player ready error:", error);
           socket.emit("lobby_error", {
             error: error.message || "Failed to mark ready",
+          });
+        }
+      });
+
+      // Map ban events
+      socket.on("ban_map", async (data) => {
+        try {
+          const { lobbyId, mapName } = data;
+          const userId = socket.data.userId;
+
+          if (!userId || !lobbyId || !mapName) {
+            socket.emit("map_ban_error", {
+              error: "Invalid request",
+            });
+            return;
+          }
+
+          const { MapBanService } = await import("../services/mapBanService");
+          const lobby = await MapBanService.banMap(lobbyId, userId, mapName);
+
+          // Broadcast map ban update to all players in lobby
+          const banStatus = await MapBanService.getMapBanStatus(lobbyId);
+          this.io!.to(`lobby_${lobbyId}`).emit("map_ban_update", {
+            availableMaps: banStatus.availableMaps,
+            bannedMaps: banStatus.bannedMaps,
+            selectedMap: banStatus.selectedMap,
+            currentBanTeam: banStatus.currentBanTeam,
+            mapBanPhase: banStatus.mapBanPhase,
+            banHistory: banStatus.banHistory,
+          });
+
+          // If ban phase is complete, emit completion event
+          if (!banStatus.mapBanPhase && banStatus.selectedMap) {
+            this.io!.to(`lobby_${lobbyId}`).emit("map_ban_complete", {
+              selectedMap: banStatus.selectedMap,
+              lobby: await QueueService.getLobby(lobbyId),
+            });
+          } else {
+            // Check if next team leader is a bot and auto-ban
+            const { MapBanService } = await import("../services/mapBanService");
+            setTimeout(async () => {
+              const botBannedLobby = await MapBanService.autoBanForBots(lobbyId);
+              if (botBannedLobby) {
+                const updatedBanStatus = await MapBanService.getMapBanStatus(lobbyId);
+                this.io!.to(`lobby_${lobbyId}`).emit("map_ban_update", {
+                  availableMaps: updatedBanStatus.availableMaps,
+                  bannedMaps: updatedBanStatus.bannedMaps,
+                  selectedMap: updatedBanStatus.selectedMap,
+                  currentBanTeam: updatedBanStatus.currentBanTeam,
+                  mapBanPhase: updatedBanStatus.mapBanPhase,
+                  banHistory: updatedBanStatus.banHistory,
+                });
+
+                // If ban phase is complete after bot ban
+                if (!updatedBanStatus.mapBanPhase && updatedBanStatus.selectedMap) {
+                  this.io!.to(`lobby_${lobbyId}`).emit("map_ban_complete", {
+                    selectedMap: updatedBanStatus.selectedMap,
+                    lobby: await QueueService.getLobby(lobbyId),
+                  });
+                }
+              }
+            }, 1000);
+          }
+        } catch (error: any) {
+          console.error("Ban map error:", error);
+          socket.emit("map_ban_error", {
+            error: error.message || "Failed to ban map",
           });
         }
       });
@@ -923,12 +1015,23 @@ export class SocketManager {
   // Matchmaking-specific methods
   public notifyLobbyFound(userIds: string[], lobbyData: any): void {
     if (this.io) {
+      console.log(`📢 Attempting to notify ${userIds.length} players of lobby`);
+      console.log(`🔌 Currently connected users: ${this.connectedUsers.size}`);
+      
+      let notifiedCount = 0;
       userIds.forEach((userId) => {
         const socketId = this.connectedUsers.get(userId);
         if (socketId) {
+          console.log(`✅ Notifying player ${userId} via socket ${socketId}`);
           this.io!.to(socketId).emit("lobby_found", lobbyData);
+          notifiedCount++;
+        } else {
+          console.log(`❌ Player ${userId} not found in connected users`);
+          console.log(`   Connected user IDs: ${Array.from(this.connectedUsers.keys()).join(', ')}`);
         }
       });
+      
+      console.log(`📊 Notified ${notifiedCount}/${userIds.length} players`);
     }
   }
 
@@ -937,6 +1040,23 @@ export class SocketManager {
       this.io.to("matchmaking_queue").emit("queue_update", {
         totalPlayers,
       });
+    }
+  }
+
+  public async broadcastMapBanStarted(lobbyId: string): Promise<void> {
+    if (this.io) {
+      try {
+        const { MapBanService } = await import("../services/mapBanService");
+        const status = await MapBanService.getMapBanStatus(lobbyId);
+        this.io.to(`lobby_${lobbyId}`).emit("map_ban_started", {
+          availableMaps: status.availableMaps,
+          currentBanTeam: status.currentBanTeam,
+          teamAlphaLeader: status.teamAlphaLeader,
+          teamBravoLeader: status.teamBravoLeader,
+        });
+      } catch (error) {
+        console.error("Error broadcasting map ban started:", error);
+      }
     }
   }
 

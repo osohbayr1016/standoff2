@@ -375,22 +375,14 @@ const userRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
         joinedDate: user.createdAt,
         isOnline: user.isOnline || false,
         lastSeen: user.lastSeen,
-        ...(user.role === "PLAYER" && {
-          game: "Mobile Legends: Bang Bang", // Default game
+        ...(user.role === "USER" && {
+          game: "Standoff 2", // Default game
           playerRole: "Player",
           rank: "Unranked",
           experience: "New Player",
           description: `${
             user.name || "Player"
           } is looking for competitive opportunities.`,
-        }),
-        ...(user.role === "ORGANIZATION" && {
-          games: ["Mobile Legends: Bang Bang"], // Default game
-          founded: 2024,
-          achievements: 0,
-          description: `${
-            user.name || "Organization"
-          } is a professional esports organization.`,
         }),
       };
 

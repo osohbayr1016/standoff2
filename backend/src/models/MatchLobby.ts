@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export enum LobbyStatus {
+  MAP_BAN_PHASE = "map_ban_phase",
   WAITING = "waiting",
   READY_PHASE = "ready_phase",
   ALL_READY = "all_ready",
@@ -16,6 +17,12 @@ export interface ILobbyPlayer {
   avatar?: string;
 }
 
+export interface IBanHistory {
+  team: "alpha" | "bravo";
+  map: string;
+  timestamp: Date;
+}
+
 export interface IMatchLobby extends Document {
   players: ILobbyPlayer[];
   teamAlpha: mongoose.Types.ObjectId[];
@@ -24,6 +31,15 @@ export interface IMatchLobby extends Document {
   createdAt: Date;
   expiresAt: Date;
   allPlayersReady: boolean;
+  // Map ban fields
+  mapBanPhase: boolean;
+  availableMaps: string[];
+  bannedMaps: string[];
+  selectedMap?: string;
+  currentBanTeam?: "alpha" | "bravo";
+  teamAlphaLeader?: mongoose.Types.ObjectId;
+  teamBravoLeader?: mongoose.Types.ObjectId;
+  banHistory: IBanHistory[];
 }
 
 const lobbyPlayerSchema = new Schema<ILobbyPlayer>(
@@ -96,6 +112,54 @@ const matchLobbySchema = new Schema<IMatchLobby>(
     allPlayersReady: {
       type: Boolean,
       default: false,
+    },
+    // Map ban fields
+    mapBanPhase: {
+      type: Boolean,
+      default: false,
+    },
+    availableMaps: {
+      type: [String],
+      default: [],
+    },
+    bannedMaps: {
+      type: [String],
+      default: [],
+    },
+    selectedMap: {
+      type: String,
+    },
+    currentBanTeam: {
+      type: String,
+      enum: ["alpha", "bravo"],
+    },
+    teamAlphaLeader: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    teamBravoLeader: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    banHistory: {
+      type: [
+        {
+          team: {
+            type: String,
+            enum: ["alpha", "bravo"],
+            required: true,
+          },
+          map: {
+            type: String,
+            required: true,
+          },
+          timestamp: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      default: [],
     },
   },
   {

@@ -37,6 +37,7 @@ exports.LobbyStatus = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 var LobbyStatus;
 (function (LobbyStatus) {
+    LobbyStatus["MAP_BAN_PHASE"] = "map_ban_phase";
     LobbyStatus["WAITING"] = "waiting";
     LobbyStatus["READY_PHASE"] = "ready_phase";
     LobbyStatus["ALL_READY"] = "all_ready";
@@ -107,6 +108,53 @@ const matchLobbySchema = new mongoose_1.Schema({
     allPlayersReady: {
         type: Boolean,
         default: false,
+    },
+    mapBanPhase: {
+        type: Boolean,
+        default: false,
+    },
+    availableMaps: {
+        type: [String],
+        default: [],
+    },
+    bannedMaps: {
+        type: [String],
+        default: [],
+    },
+    selectedMap: {
+        type: String,
+    },
+    currentBanTeam: {
+        type: String,
+        enum: ["alpha", "bravo"],
+    },
+    teamAlphaLeader: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "User",
+    },
+    teamBravoLeader: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "User",
+    },
+    banHistory: {
+        type: [
+            {
+                team: {
+                    type: String,
+                    enum: ["alpha", "bravo"],
+                    required: true,
+                },
+                map: {
+                    type: String,
+                    required: true,
+                },
+                timestamp: {
+                    type: Date,
+                    default: Date.now,
+                },
+            },
+        ],
+        default: [],
     },
 }, {
     timestamps: true,

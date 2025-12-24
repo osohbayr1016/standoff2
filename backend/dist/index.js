@@ -48,7 +48,7 @@ dotenv_1.default.config();
 const fastify = (0, fastify_1.default)({
     logger: false,
     requestTimeout: 30000,
-    bodyLimit: 524288,
+    bodyLimit: 10485760,
     maxParamLength: 100,
     disableRequestLogging: true,
     ignoreTrailingSlash: true,
@@ -161,6 +161,12 @@ async function registerRoutes() {
         fastify.register(queueRoutes.default, { prefix: "/api/queue" });
         const lobbyRoutes = await Promise.resolve().then(() => __importStar(require("./routes/lobbyRoutes")));
         fastify.register(lobbyRoutes.default, { prefix: "/api/lobby" });
+        const adminQueueRoutes = await Promise.resolve().then(() => __importStar(require("./routes/adminQueueRoutes")));
+        fastify.register(adminQueueRoutes.default, { prefix: "/api/admin/queue" });
+        const matchResultRoutes = await Promise.resolve().then(() => __importStar(require("./routes/matchResultRoutes")));
+        fastify.register(matchResultRoutes.default, { prefix: "/api/match-results" });
+        const mapBanRoutes = await Promise.resolve().then(() => __importStar(require("./routes/mapBanRoutes")));
+        fastify.register(mapBanRoutes.default, { prefix: "/api/map-ban" });
     }
     catch (error) {
         console.error("❌ Error registering routes:", error);
@@ -198,24 +204,61 @@ const startServer = async () => {
             host: "0.0.0.0",
         });
         socketManager.initialize(fastify.server);
+        fastify.socketManager = socketManager;
         setInterval(async () => {
             try {
                 const lobbyId = await queueService_1.QueueService.findMatch();
                 if (lobbyId) {
+                    console.log(`🎮 Match found! Creating lobby ${lobbyId}`);
                     const lobby = await queueService_1.QueueService.getLobby(lobbyId);
                     const playerIds = lobby.players.map((p) => p.userId.toString());
+                    console.log(`📢 Notifying ${playerIds.length} players of lobby`);
                     socketManager.notifyLobbyFound(playerIds, {
                         lobbyId,
                         players: lobby.players,
                         teamAlpha: lobby.teamAlpha,
                         teamBravo: lobby.teamBravo,
                     });
+                    if (lobby.status === "map_ban_phase" || lobby.mapBanPhase) {
+                        const { MapBanService } = await Promise.resolve().then(() => __importStar(require("./services/mapBanService")));
+                        const banStatus = await MapBanService.getMapBanStatus(lobbyId);
+                        playerIds.forEach((userId) => {
+                            socketManager.sendToUser(userId, "map_ban_started", banStatus);
+                        });
+                        setTimeout(async () => {
+                            const botBannedLobby = await MapBanService.autoBanForBots(lobbyId);
+                            if (botBannedLobby) {
+                                const updatedBanStatus = await MapBanService.getMapBanStatus(lobbyId);
+                                const io = socketManager.getIO();
+                                if (io) {
+                                    io.to(`lobby_${lobbyId}`).emit("map_ban_update", {
+                                        availableMaps: updatedBanStatus.availableMaps,
+                                        bannedMaps: updatedBanStatus.bannedMaps,
+                                        selectedMap: updatedBanStatus.selectedMap,
+                                        currentBanTeam: updatedBanStatus.currentBanTeam,
+                                        mapBanPhase: updatedBanStatus.mapBanPhase,
+                                        banHistory: updatedBanStatus.banHistory,
+                                        teamAlphaLeader: updatedBanStatus.teamAlphaLeader,
+                                        teamBravoLeader: updatedBanStatus.teamBravoLeader,
+                                    });
+                                    if (!updatedBanStatus.mapBanPhase && updatedBanStatus.selectedMap) {
+                                        io.to(`lobby_${lobbyId}`).emit("map_ban_complete", {
+                                            selectedMap: updatedBanStatus.selectedMap,
+                                            lobby: await queueService_1.QueueService.getLobby(lobbyId),
+                                        });
+                                    }
+                                }
+                            }
+                        }, 1000);
+                    }
                     socketManager.broadcastQueueUpdate(await queueService_1.QueueService.getTotalInQueue());
+                    console.log(`✅ Lobby ${lobbyId} created successfully`);
                 }
             }
             catch (error) {
+                console.error("❌ Error in matchmaking:", error);
             }
-        }, 10000);
+        }, 2000);
         setInterval(async () => {
             try {
                 await queueService_1.QueueService.cleanupExpiredLobbies();

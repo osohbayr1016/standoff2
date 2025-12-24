@@ -2,9 +2,7 @@ import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 
 export enum UserRole {
-  PLAYER = "PLAYER",
-  COACH = "COACH",
-  ORGANIZATION = "ORGANIZATION",
+  USER = "USER",
   ADMIN = "ADMIN",
 }
 
@@ -94,7 +92,7 @@ const userSchema = new Schema<IUser>(
     role: {
       type: String,
       enum: Object.values(UserRole),
-      default: UserRole.PLAYER,
+      default: UserRole.USER,
     },
   },
   {

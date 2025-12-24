@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, AlertCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { API_ENDPOINTS, WS_BASE_URL } from "../../config/api";
 import { io, Socket } from "socket.io-client";
-import LobbyView from "./components/LobbyView";
 import QueuePlayersModal from "./components/QueuePlayersModal";
 
 interface LobbyPlayer {
@@ -27,6 +27,7 @@ interface LobbyData {
 
 export default function MatchmakingPage() {
   const { user, getToken } = useAuth();
+  const router = useRouter();
   const [isSearching, setIsSearching] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [playersInQueue, setPlayersInQueue] = useState(0);
@@ -39,6 +40,39 @@ export default function MatchmakingPage() {
   const [queuePlayers, setQueuePlayers] = useState<any[]>([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
   const showPlayersButtonRef = useRef<HTMLButtonElement>(null);
+  const [fillingBots, setFillingBots] = useState(false);
+
+  // Check for active lobby on mount
+  useEffect(() => {
+    const checkActiveLobby = async () => {
+      if (!user) {
+        return;
+      }
+
+      try {
+        const token = await getToken();
+        const response = await fetch(API_ENDPOINTS.LOBBY.USER_ACTIVE, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data && result.data.lobbyId) {
+            // User has an active lobby, redirect to it
+            router.push(`/matchmaking/${result.data.lobbyId}`);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking active lobby:", err);
+        // Continue normally if check fails
+      }
+    };
+
+    checkActiveLobby();
+  }, [user, getToken, router]);
 
   // Debug: Log when playersInQueue changes
   useEffect(() => {
@@ -93,6 +127,32 @@ export default function MatchmakingPage() {
             socket.emit("get_queue_status");
           }
         }, 1000);
+
+        // Fallback: Check for active lobby every 3 seconds in case socket event missed
+        const lobbyCheckInterval = setInterval(async () => {
+          if (socket.connected) {
+            try {
+              const token = await getToken();
+              const response = await fetch(API_ENDPOINTS.LOBBY.USER_ACTIVE, {
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(token && { Authorization: `Bearer ${token}` }),
+                },
+              });
+              if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data && result.data.lobbyId) {
+                  console.log("🔄 Fallback: Found active lobby, navigating...");
+                  setIsSearching(false);
+                  router.push(`/matchmaking/${result.data.lobbyId}`);
+                  clearInterval(lobbyCheckInterval);
+                }
+              }
+            } catch (err) {
+              // Silent fail
+            }
+          }
+        }, 3000);
       });
 
       socket.on("connect_error", (error) => {
@@ -130,17 +190,14 @@ export default function MatchmakingPage() {
       });
 
       socket.on("lobby_found", (data) => {
-        console.log("Lobby found:", data);
+        console.log("✅ Lobby found:", data);
         setIsSearching(false);
-        setLobbyData({
-          lobbyId: data.lobbyId,
-          players: data.players,
-          teamAlpha: data.teamAlpha,
-          teamBravo: data.teamBravo,
-          allPlayersReady: false,
-        });
-        // Join the lobby room
-        socket.emit("join_lobby", { lobbyId: data.lobbyId });
+        setError(null);
+        // Navigate to the dynamic lobby page immediately
+        if (data.lobbyId) {
+          console.log(`🚀 Navigating to lobby: /matchmaking/${data.lobbyId}`);
+          router.push(`/matchmaking/${data.lobbyId}`);
+        }
       });
 
       socket.on("lobby_update", (data) => {
@@ -209,6 +266,12 @@ export default function MatchmakingPage() {
           clearInterval(queueInterval);
         }
       });
+
+      return () => {
+        if (queueInterval) {
+          clearInterval(queueInterval);
+        }
+      };
     };
 
     initSocket();
@@ -351,6 +414,38 @@ export default function MatchmakingPage() {
     }
   };
 
+  const handleFillBots = async () => {
+    if (fillingBots) return;
+    
+    setFillingBots(true);
+    try {
+      const token = await getToken();
+      const response = await fetch(API_ENDPOINTS.ADMIN_QUEUE.FILL_BOTS, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || "Failed to fill bots");
+        setTimeout(() => setError(null), 3000);
+      } else {
+        const data = await response.json();
+        console.log("✅ Bots filled:", data);
+      }
+    } catch (err) {
+      console.error("Error filling bots:", err);
+      setError("Failed to fill bots");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setFillingBots(false);
+    }
+  };
+
   const handleShowPlayers = async () => {
     console.log("👥 Show Players button clicked");
     
@@ -411,37 +506,6 @@ export default function MatchmakingPage() {
       console.log("✅ Dropdown opened, players:", queuePlayers.length);
     }
   };
-
-  // If in lobby, show lobby view
-  if (lobbyData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1d29] via-[#2a3a4a] to-[#1a2a3a] pt-20 relative overflow-hidden">
-        {/* Background Image with Blur */}
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: "url(/sand-yards-map.png)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            filter: "blur(8px) brightness(0.3)",
-          }}
-        />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
-          <LobbyView
-            lobbyId={lobbyData.lobbyId}
-            players={lobbyData.players}
-            teamAlpha={lobbyData.teamAlpha}
-            teamBravo={lobbyData.teamBravo}
-            currentUserId={user?.id || ""}
-            allPlayersReady={lobbyData.allPlayersReady || false}
-            onPlayerReady={handlePlayerReady}
-            onLeaveLobby={handleLeaveLobby}
-          />
-        </div>
-      </div>
-    );
-  }
 
   // Main matchmaking UI
   return (
@@ -704,6 +768,27 @@ export default function MatchmakingPage() {
                 >
                   Cancel Matchmaking
                 </motion.button>
+
+                {/* Admin Testing Controls */}
+                {user?.role === "ADMIN" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="mt-6 flex flex-col items-center gap-3"
+                  >
+                    <p className="text-gray-400 text-sm font-medium">
+                      Admin Testing Controls
+                    </p>
+                    <button
+                      onClick={handleFillBots}
+                      disabled={fillingBots || !socketConnected}
+                      className="px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm sm:text-base font-bold rounded-lg shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+                    >
+                      {fillingBots ? "Filling..." : "🤖 Fill Bots (Admin Testing)"}
+                    </button>
+                  </motion.div>
+                )}
               </div>
             </motion.div>
           )}
