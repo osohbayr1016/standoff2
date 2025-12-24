@@ -25,14 +25,30 @@ export default function MatchResultCard({
   const teamAlpha = lobby?.teamAlpha || [];
   const teamBravo = lobby?.teamBravo || [];
 
-  const getTeamName = (team: any[]) => {
-    if (!team || team.length === 0) return "Unknown Team";
-    const firstPlayer = team[0];
-    return firstPlayer?.inGameName || firstPlayer?.name || "Unknown";
+  const getTeamName = (team: any[], teamKey: "alpha" | "bravo") => {
+    if (team && team.length > 0) {
+      const firstPlayer = team[0];
+      return firstPlayer?.inGameName || firstPlayer?.name || "Unknown";
+    }
+    
+    // Fallback to players array
+    const playersInTeam = lobby?.players?.filter((p: any) => p.team === teamKey) || [];
+    if (playersInTeam.length > 0) {
+      const firstPlayer = playersInTeam[0];
+      // In enriched result, userId is populated with User object
+      return (
+        firstPlayer?.inGameName || 
+        firstPlayer?.userId?.inGameName || 
+        firstPlayer?.userId?.name || 
+        "Unknown"
+      );
+    }
+    
+    return "Unknown Team";
   };
 
-  const teamAlphaName = getTeamName(teamAlpha);
-  const teamBravoName = getTeamName(teamBravo);
+  const teamAlphaName = getTeamName(teamAlpha, "alpha");
+  const teamBravoName = getTeamName(teamBravo, "bravo");
 
   const handleDownloadProof = () => {
     result.screenshots.forEach((url: string, index: number) => {

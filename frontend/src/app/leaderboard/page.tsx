@@ -11,6 +11,7 @@ interface LeaderboardPlayer {
   elo: number;
   wins: number;
   losses: number;
+  totalMatches: number;
   winRate: number;
   region?: string;
 }
@@ -21,16 +22,17 @@ export default function LeaderboardPage() {
     []
   );
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<"elo" | "matches" | "winrate">("elo");
 
   useEffect(() => {
     fetchLeaderboard();
-  }, []);
+  }, [sortBy]);
 
   const fetchLeaderboard = async () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${API_ENDPOINTS.PLAYER_PROFILES.ALL}?limit=100`,
+        `${API_ENDPOINTS.PLAYER_PROFILES.ALL}?limit=50&sortBy=${sortBy}`,
         { credentials: "include" }
       );
       const data = await response.json();
@@ -49,7 +51,7 @@ export default function LeaderboardPage() {
           return undefined;
         };
 
-        const players = data.profiles
+        const players = (data.profiles || [])
           .map((profile: any) => {
             // Prioritize uniqueId for navigation, fall back to userId or _id
             const profileId =
@@ -64,21 +66,24 @@ export default function LeaderboardPage() {
               elo: profile.elo || profile.rankStars || 1000,
               wins: profile.wins || 0,
               losses: profile.losses || 0,
-              winRate: 0,
+              totalMatches: profile.totalMatches || 0,
+              winRate: profile.winRate ? Math.round(profile.winRate * 100) : 0,
               region: profile.region || "Global",
             };
           })
           .map((player: LeaderboardPlayer) => ({
             ...player,
             winRate:
-              player.wins + player.losses > 0
+              player.winRate || (player.wins + player.losses > 0
                 ? Math.round(
                     (player.wins / (player.wins + player.losses)) * 100
                   )
-                : 0,
+                : 0),
           }))
-          .sort((a: LeaderboardPlayer, b: LeaderboardPlayer) => b.elo - a.elo);
+          .slice(0, 50);
 
+        // Only sort if backend didn't (fallback) or if we want extra safety
+        // But backend should handle it now
         setLeaderboardData(players);
       } else {
         setLeaderboardData([]);
@@ -119,9 +124,45 @@ export default function LeaderboardPage() {
               Leaderboard
             </h1>
             <p className="text-xs sm:text-sm text-gray-400">
-              Top players ranked by ELO
+              Top 50 players ranked by {sortBy === "elo" ? "ELO" : sortBy === "matches" ? "Matches Played" : "Win Rate"}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Filter Section */}
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 mt-6 sm:mt-8">
+        <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+          <button
+            onClick={() => setSortBy("elo")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              sortBy === "elo"
+                ? "bg-orange-500 text-white"
+                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+            }`}
+          >
+            Highest Elo
+          </button>
+          <button
+            onClick={() => setSortBy("matches")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              sortBy === "matches"
+                ? "bg-orange-500 text-white"
+                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+            }`}
+          >
+            Highest Match
+          </button>
+          <button
+            onClick={() => setSortBy("winrate")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              sortBy === "winrate"
+                ? "bg-orange-500 text-white"
+                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+            }`}
+          >
+            Highest Winrate
+          </button>
         </div>
       </div>
 
@@ -131,15 +172,20 @@ export default function LeaderboardPage() {
           {/* Desktop Table Header */}
           <div className="hidden md:grid md:grid-cols-12 gap-2 md:gap-4 px-4 md:px-6 py-3 md:py-4 bg-gray-900/50 border-b border-gray-700 text-xs md:text-sm font-semibold text-gray-400">
             <div className="col-span-1">Rank</div>
-            <div className="col-span-8">Player</div>
-            <div className="col-span-3 text-center">ELO</div>
+            <div className="col-span-7">Player</div>
+            <div className="col-span-2 text-center">Matches</div>
+            <div className="col-span-2 text-center">
+              {sortBy === "elo" ? "ELO" : sortBy === "matches" ? "ELO" : "Win Rate"}
+            </div>
           </div>
 
           {/* Mobile Table Header */}
-          <div className="md:hidden grid grid-cols-3 gap-2 px-3 py-3 bg-gray-900/50 border-b border-gray-700 text-xs font-semibold text-gray-400">
+          <div className="md:hidden grid grid-cols-4 gap-2 px-3 py-3 bg-gray-900/50 border-b border-gray-700 text-xs font-semibold text-gray-400">
             <div>Rank</div>
-            <div>Player</div>
-            <div className="text-center">ELO</div>
+            <div className="col-span-2">Player</div>
+            <div className="text-center">
+              {sortBy === "elo" ? "ELO" : sortBy === "matches" ? "Matches" : "Win %"}
+            </div>
           </div>
 
           {/* Empty State */}
@@ -153,17 +199,19 @@ export default function LeaderboardPage() {
           )}
 
           {/* Table Rows */}
-          {leaderboardData.map((player, index) => {
-            const rankBadge = getRankBadge(index);
-            return (
-              <div key={player._id}>
-                {/* Desktop Layout */}
-                <div
-                  onClick={() => router.push(`/profile/${player.userId}`)}
-                  className={`hidden md:grid md:grid-cols-12 gap-2 md:gap-4 px-4 md:px-6 py-3 md:py-4 border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors cursor-pointer ${
-                    index < 3 ? rankBadge.color : ""
-                  }`}
-                >
+          <div className="max-h-[3000px] overflow-y-auto">
+            {leaderboardData.map((player, index) => {
+              const rankBadge = getRankBadge(index);
+              const uniqueKey = `${player._id}-${index}`;
+              return (
+                <div key={uniqueKey}>
+                  {/* Desktop Layout */}
+                  <div
+                    onClick={() => router.push(`/profile/${player.userId}`)}
+                    className={`hidden md:grid md:grid-cols-12 gap-2 md:gap-4 px-4 md:px-6 py-3 md:py-4 border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors cursor-pointer ${
+                      index < 3 ? rankBadge.color : ""
+                    }`}
+                  >
                   <div className="col-span-1 flex items-center">
                     <div
                       className={`w-8 h-8 md:w-10 md:h-10 rounded-full ${rankBadge.color} border-2 flex items-center justify-center font-bold text-white text-xs md:text-sm`}
@@ -171,14 +219,19 @@ export default function LeaderboardPage() {
                       {rankBadge.icon}
                     </div>
                   </div>
-                  <div className="col-span-8 flex items-center">
+                  <div className="col-span-7 flex items-center">
                     <span className="text-white font-medium text-sm md:text-base truncate">
                       {player.name}
                     </span>
                   </div>
-                  <div className="col-span-3 flex items-center justify-center">
+                  <div className="col-span-2 flex items-center justify-center">
+                    <span className="text-gray-400 text-sm md:text-base">
+                      {player.totalMatches}
+                    </span>
+                  </div>
+                  <div className="col-span-2 flex items-center justify-center">
                     <span className="text-orange-500 font-bold text-sm md:text-base">
-                      {player.elo}
+                      {sortBy === "winrate" ? `${player.winRate}%` : player.elo}
                     </span>
                   </div>
                 </div>
@@ -186,7 +239,7 @@ export default function LeaderboardPage() {
                 {/* Mobile Layout */}
                 <div
                   onClick={() => router.push(`/profile/${player.userId}`)}
-                  className={`md:hidden grid grid-cols-3 gap-2 px-3 py-3 border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors cursor-pointer ${
+                  className={`md:hidden grid grid-cols-4 gap-2 px-3 py-3 border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors cursor-pointer ${
                     index < 3 ? rankBadge.color : ""
                   }`}
                 >
@@ -197,20 +250,21 @@ export default function LeaderboardPage() {
                       {rankBadge.icon}
                     </div>
                   </div>
-                  <div className="flex items-center min-w-0">
+                  <div className="flex items-center min-w-0 col-span-2">
                     <span className="text-white font-medium text-sm truncate">
                       {player.name}
                     </span>
                   </div>
                   <div className="flex items-center justify-center">
                     <span className="text-orange-500 font-bold text-sm">
-                      {player.elo}
+                      {sortBy === "elo" ? player.elo : sortBy === "matches" ? player.totalMatches : `${player.winRate}%`}
                     </span>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
