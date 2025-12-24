@@ -814,6 +814,8 @@ export class SocketManager {
             currentBanTeam: banStatus.currentBanTeam,
             mapBanPhase: banStatus.mapBanPhase,
             banHistory: banStatus.banHistory,
+            teamAlphaLeader: banStatus.teamAlphaLeader,
+            teamBravoLeader: banStatus.teamBravoLeader,
           });
 
           // If ban phase is complete, emit completion event
@@ -836,6 +838,8 @@ export class SocketManager {
                   currentBanTeam: updatedBanStatus.currentBanTeam,
                   mapBanPhase: updatedBanStatus.mapBanPhase,
                   banHistory: updatedBanStatus.banHistory,
+                  teamAlphaLeader: updatedBanStatus.teamAlphaLeader,
+                  teamBravoLeader: updatedBanStatus.teamBravoLeader,
                 });
 
                 // If ban phase is complete after bot ban

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Clock, Ban } from "lucide-react";
 import { API_ENDPOINTS } from "../../../config/api";
@@ -31,8 +31,18 @@ const MapBanView: React.FC<MapBanViewProps> = ({
   isTeamLeader,
   userTeam,
 }) => {
-  const [optimisticallyBanned, setOptimisticallyBanned] = useState<string[]>([]);
   const [isBanning, setIsBanning] = useState<string | null>(null);
+
+  // Clear isBanning state when bannedMaps changes (realtime update received)
+  useEffect(() => {
+    if (isBanning && mapBanData.bannedMaps.includes(isBanning)) {
+      // The map we were banning is now officially banned, clear the state
+      const timer = setTimeout(() => {
+        setIsBanning(null);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [mapBanData.bannedMaps, isBanning]);
 
   const allMaps = [
     "Hanami",
@@ -59,27 +69,15 @@ const MapBanView: React.FC<MapBanViewProps> = ({
     isTeamLeader && mapBanData.currentBanTeam === userTeam;
   const canBan = isMyTurn && mapBanData.mapBanPhase;
 
-  // Combine real banned maps with optimistic ones
-  const allBannedMaps = [
-    ...mapBanData.bannedMaps,
-    ...optimisticallyBanned.filter((m) => !mapBanData.bannedMaps.includes(m)),
-  ];
-
   const handleMapClick = async (mapName: string) => {
-    if (canBan && !allBannedMaps.includes(mapName) && !isBanning) {
-      // Optimistic update - immediately show animation
+    if (canBan && !mapBanData.bannedMaps.includes(mapName) && !isBanning) {
+      // Set banning state for immediate visual feedback
       setIsBanning(mapName);
-      setOptimisticallyBanned((prev) => [...prev, mapName]);
       
-      // Call the ban function
+      // Call the ban function - server will broadcast update to all players
       onBanMap(mapName);
       
-      // Clear optimistic state after animation completes (will be replaced by real update)
-      setTimeout(() => {
-        setIsBanning(null);
-        // Remove from optimistic list once real update comes through
-        setOptimisticallyBanned((prev) => prev.filter((m) => m !== mapName));
-      }, 600);
+      // isBanning will be cleared by useEffect when server update arrives
     }
   };
 
@@ -94,24 +92,27 @@ const MapBanView: React.FC<MapBanViewProps> = ({
         >
           Map Ban Phase
         </motion.h1>
-        <motion.p
-          key={mapBanData.currentBanTeam || "none"}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="text-gray-400 text-sm sm:text-base"
-        >
-          {mapBanData.mapBanPhase
-            ? `Team ${mapBanData.currentBanTeam === "alpha" ? "Alpha" : mapBanData.currentBanTeam === "bravo" ? "Bravo" : "Alpha"}'s turn to ban`
-            : `Selected Map: ${mapBanData.selectedMap}`}
-        </motion.p>
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={mapBanData.currentBanTeam || "none"}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="text-gray-400 text-sm sm:text-base"
+          >
+            {mapBanData.mapBanPhase
+              ? `Team ${mapBanData.currentBanTeam === "alpha" ? "Alpha" : mapBanData.currentBanTeam === "bravo" ? "Bravo" : "Alpha"}'s turn to ban`
+              : `Selected Map: ${mapBanData.selectedMap}`}
+          </motion.p>
+        </AnimatePresence>
       </div>
 
       {/* Team Leaders Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 w-full max-w-4xl">
         <motion.div
           key={`alpha-${mapBanData.currentBanTeam}`}
-          initial={{ opacity: 0, x: -50 }}
+          initial={false}
           animate={{
             opacity: 1,
             x: 0,
@@ -124,7 +125,7 @@ const MapBanView: React.FC<MapBanViewProps> = ({
                 ? "rgba(59, 130, 246, 0.2)"
                 : "rgba(31, 41, 55, 0.5)",
           }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.4 }}
           className={`p-4 rounded-lg border-2 ${
             mapBanData.currentBanTeam === "alpha"
               ? "border-blue-500 bg-blue-500/20"
@@ -153,7 +154,7 @@ const MapBanView: React.FC<MapBanViewProps> = ({
 
         <motion.div
           key={`bravo-${mapBanData.currentBanTeam}`}
-          initial={{ opacity: 0, x: 50 }}
+          initial={false}
           animate={{
             opacity: 1,
             x: 0,
@@ -166,7 +167,7 @@ const MapBanView: React.FC<MapBanViewProps> = ({
                 ? "rgba(249, 115, 22, 0.2)"
                 : "rgba(31, 41, 55, 0.5)",
           }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.4 }}
           className={`p-4 rounded-lg border-2 ${
             mapBanData.currentBanTeam === "bravo"
               ? "border-orange-500 bg-orange-500/20"
@@ -197,7 +198,7 @@ const MapBanView: React.FC<MapBanViewProps> = ({
       {/* Maps Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-4xl mb-6">
         {allMaps.map((mapName) => {
-          const isBanned = allBannedMaps.includes(mapName);
+          const isBanned = mapBanData.bannedMaps.includes(mapName);
           const isBanningNow = isBanning === mapName;
           const isSelected = mapBanData.selectedMap === mapName;
           const isAvailable = !isBanned && !isSelected;
@@ -218,7 +219,7 @@ const MapBanView: React.FC<MapBanViewProps> = ({
                   : { opacity: 1, scale: 1 }
               }
               transition={{
-                duration: 0.4,
+                duration: 0.3,
                 ease: "easeOut",
               }}
               whileHover={
@@ -292,6 +293,7 @@ const MapBanView: React.FC<MapBanViewProps> = ({
               {/* Banned Overlay */}
               {(isBanned || isBanningNow) && (
                 <motion.div
+                  key={`banned-${mapName}-${isBanned}`}
                   initial={{ opacity: 0, scale: 1.2 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
@@ -300,7 +302,7 @@ const MapBanView: React.FC<MapBanViewProps> = ({
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.1, duration: 0.3 }}
+                    transition={{ delay: 0.05, duration: 0.25 }}
                     className="text-center"
                   >
                     <Ban className="w-8 h-8 text-red-300 mx-auto mb-2 drop-shadow-lg" />

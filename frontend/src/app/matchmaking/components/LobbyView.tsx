@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import LobbyPlayerCard from "./LobbyPlayerCard";
 import { X } from "lucide-react";
 
@@ -64,16 +64,20 @@ export default function LobbyView({
         >
           Match Found!
         </motion.h1>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-gray-400 text-sm sm:text-base"
-        >
-          {allPlayersReady
-            ? "All players ready! Copy IDs to join the game"
-            : `Waiting for players to ready up (${readyCount}/10)`}
-        </motion.p>
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={`ready-${readyCount}-${allPlayersReady}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="text-gray-400 text-sm sm:text-base"
+          >
+            {allPlayersReady
+              ? "All players ready! Copy IDs to join the game"
+              : `Waiting for players to ready up (${readyCount}/10)`}
+          </motion.p>
+        </AnimatePresence>
       </div>
 
       {/* Teams Container */}

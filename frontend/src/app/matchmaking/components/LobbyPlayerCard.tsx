@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 
@@ -45,6 +45,7 @@ export default function LobbyPlayerCard({
 
   return (
     <motion.div
+      key={`${player.userId}-${player.isReady}`}
       initial={{ opacity: 0, x: teamColor === "alpha" ? -20 : 20 }}
       animate={{ opacity: 1, x: 0 }}
       className={`bg-gradient-to-br ${bgColor} rounded-lg p-3 border ${borderColor} transition-all`}
@@ -80,26 +81,55 @@ export default function LobbyPlayerCard({
             </div>
           ) : (
             // Show ready button/status
-            <button
+            <motion.button
+              key={`ready-btn-${player.userId}-${player.isReady}`}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ 
+                scale: 1, 
+                opacity: 1,
+                backgroundColor: player.isReady 
+                  ? "rgb(22, 163, 74)" // green-600
+                  : isCurrentUser 
+                  ? "rgb(234, 88, 12)" // orange-600
+                  : "rgb(55, 65, 81)" // gray-700
+              }}
+              transition={{ duration: 0.3 }}
               onClick={onReady}
               disabled={!isCurrentUser || player.isReady}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded text-xs font-medium ${
                 player.isReady
-                  ? "bg-green-600 text-white cursor-default"
+                  ? "text-white cursor-default"
                   : isCurrentUser
-                  ? "bg-orange-600 hover:bg-orange-700 text-white"
-                  : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  ? "text-white hover:bg-orange-700"
+                  : "text-gray-400 cursor-not-allowed"
               }`}
             >
-              {player.isReady ? (
-                <span className="flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" />
-                  Ready
-                </span>
-              ) : (
-                "Ready"
-              )}
-            </button>
+              <AnimatePresence mode="wait">
+                {player.isReady ? (
+                  <motion.span
+                    key="ready"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center gap-1"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    Ready
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="not-ready"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    Ready
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
           )}
         </div>
       </div>

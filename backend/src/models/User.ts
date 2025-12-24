@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 
 export enum UserRole {
   USER = "USER",
+  PLAYER = "PLAYER",
+  COACH = "COACH",
+  ORGANIZATION = "ORGANIZATION",
   ADMIN = "ADMIN",
 }
 
@@ -92,7 +95,7 @@ const userSchema = new Schema<IUser>(
     role: {
       type: String,
       enum: Object.values(UserRole),
-      default: UserRole.USER,
+      default: UserRole.PLAYER,
     },
   },
   {
