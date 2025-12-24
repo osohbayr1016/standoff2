@@ -95,7 +95,7 @@ const userSchema = new Schema<IUser>(
     role: {
       type: String,
       enum: Object.values(UserRole),
-      default: UserRole.PLAYER,
+      default: UserRole.USER,
     },
   },
   {

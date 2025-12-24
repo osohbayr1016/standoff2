@@ -695,6 +695,8 @@ class SocketManager {
                         currentBanTeam: banStatus.currentBanTeam,
                         mapBanPhase: banStatus.mapBanPhase,
                         banHistory: banStatus.banHistory,
+                        teamAlphaLeader: banStatus.teamAlphaLeader,
+                        teamBravoLeader: banStatus.teamBravoLeader,
                     });
                     if (!banStatus.mapBanPhase && banStatus.selectedMap) {
                         this.io.to(`lobby_${lobbyId}`).emit("map_ban_complete", {
@@ -715,6 +717,8 @@ class SocketManager {
                                     currentBanTeam: updatedBanStatus.currentBanTeam,
                                     mapBanPhase: updatedBanStatus.mapBanPhase,
                                     banHistory: updatedBanStatus.banHistory,
+                                    teamAlphaLeader: updatedBanStatus.teamAlphaLeader,
+                                    teamBravoLeader: updatedBanStatus.teamBravoLeader,
                                 });
                                 if (!updatedBanStatus.mapBanPhase && updatedBanStatus.selectedMap) {
                                     this.io.to(`lobby_${lobbyId}`).emit("map_ban_complete", {

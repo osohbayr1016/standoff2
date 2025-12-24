@@ -42,6 +42,9 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 var UserRole;
 (function (UserRole) {
     UserRole["USER"] = "USER";
+    UserRole["PLAYER"] = "PLAYER";
+    UserRole["COACH"] = "COACH";
+    UserRole["ORGANIZATION"] = "ORGANIZATION";
     UserRole["ADMIN"] = "ADMIN";
 })(UserRole || (exports.UserRole = UserRole = {}));
 const userSchema = new mongoose_1.Schema({
