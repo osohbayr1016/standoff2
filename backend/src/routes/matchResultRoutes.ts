@@ -24,33 +24,16 @@ const uploadToCloudinary = async (
   folder: string
 ): Promise<string> => {
   try {
-    // Convert buffer to base64 data URI (same approach as uploadRoutes.ts)
+    // Convert buffer to base64 data URI
     const base64Image = buffer.toString("base64");
     const dataURI = `data:${mimetype};base64,${base64Image}`;
 
-    const actualFileSize = buffer.length;
-    const isLargeFile = actualFileSize > 2 * 1024 * 1024; // > 2MB
-
+    // Simple upload options without transformations to avoid signature issues
     const uploadOptions: any = {
       folder,
       resource_type: "image",
       timeout: 60000, // 60 seconds timeout
-      chunk_size: 6000000, // 6MB chunks for large files
-      eager_async: true, // Process transformations asynchronously for large files
     };
-
-    // Add transformations only for smaller files to avoid processing issues
-    if (!isLargeFile) {
-      uploadOptions.transformation = [
-        { width: 1920, height: 1080, crop: "limit" },
-        { quality: "auto:good" },
-      ];
-    } else {
-      // For large files, use simpler transformations
-      uploadOptions.transformation = [
-        { quality: "auto", fetch_format: "auto" },
-      ];
-    }
 
     const uploadResult = await cloudinary.uploader.upload(dataURI, uploadOptions);
     return uploadResult.secure_url;
