@@ -104,13 +104,28 @@ export function useLobby(lobbyId: string, user: any, getToken: () => Promise<str
 
   useEffect(() => {
     if (!user || !lobbyId) return;
-    const socket = io(WS_BASE_URL, { auth: { token: "" }, transports: ["websocket", "polling"] });
+
+    // Initialize socket with autoConnect: false to wait for token
+    const socket = io(WS_BASE_URL, {
+      auth: { token: "" },
+      transports: ["websocket", "polling"],
+      autoConnect: false
+    });
+
     const initSocket = async () => {
-      const token = await getToken();
-      if (!token) return;
-      socket.auth = { token };
-      socket.connect();
+      try {
+        const token = await getToken();
+        if (!token) {
+          console.error("No token available for socket connection");
+          return;
+        }
+        socket.auth = { token };
+        socket.connect();
+      } catch (err) {
+        console.error("Error initializing socket:", err);
+      }
     };
+
     initSocket();
     socketRef.current = socket;
     socket.on("connect", () => {

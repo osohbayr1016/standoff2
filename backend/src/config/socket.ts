@@ -756,11 +756,76 @@ export class SocketManager {
         }
       });
 
+      // Kick player
+      socket.on("kick_player", async (data) => {
+        try {
+          const { lobbyId, targetUserId } = data;
+          const requesterId = socket.data.userId;
+
+          if (!lobbyId || !targetUserId || !requesterId) return;
+
+          // verify host
+          const lobby = await LobbyService.getLobby(lobbyId);
+          if (!lobby || lobby.leader._id.toString() !== requesterId) {
+            socket.emit("error", "Only the host can kick players!");
+            return;
+          }
+
+          console.log(`👢 User ${requesterId} kicking ${targetUserId} from lobby ${lobbyId}`);
+
+          // 1. Perform DB kick FIRST to ensure consistency
+          let updatedLobby;
+          try {
+            updatedLobby = await LobbyService.kickPlayer(lobbyId, requesterId, targetUserId);
+          } catch (e) {
+            console.error("DB kick error", e);
+            socket.emit("error", "Failed to kick player.");
+            return; // Stop if DB fails
+          }
+
+          // 2. Block the user
+          const { BlocklistService } = await import("../services/blocklistService");
+          BlocklistService.blockUser(lobbyId, targetUserId);
+
+          // 3. Find target socket and notify/eject
+          const targetSocketId = this.connectedUsers.get(targetUserId);
+          if (targetSocketId) {
+            const targetSocket = this.io?.sockets.sockets.get(targetSocketId);
+            if (targetSocket) {
+              targetSocket.leave(`lobby_${lobbyId}`);
+              targetSocket.emit("kicked", { message: "You have been kicked from the lobby." });
+              // Also redirect them
+              targetSocket.emit("player_kicked", { targetUserId, lobbyId });
+            }
+          }
+
+          // 4. Notify remaining players with FRESH data
+          const roomName = `lobby_${lobbyId}`;
+
+          // Emit full update so they don't have to fetch
+          this.io?.to(roomName).emit("lobby_update", { lobby: updatedLobby });
+
+          // Also emit specific event for UI notifications
+          this.io?.to(roomName).emit("player_kicked", { targetUserId, lobbyId });
+
+        } catch (error) {
+          console.error("Kick player error:", error);
+        }
+      });
+
       // Join lobby room
       socket.on("join_lobby", async (data) => {
         try {
           const { lobbyId } = data;
           if (!lobbyId) return;
+
+          // Check blocklist
+          const { BlocklistService } = await import("../services/blocklistService");
+          if (socket.data.userId && BlocklistService.isBlocked(lobbyId, socket.data.userId)) {
+            const remaining = BlocklistService.getRemainingTime(lobbyId, socket.data.userId);
+            socket.emit("lobby_error", { error: `You are banned from this lobby. Try again in ${remaining}s.` });
+            return;
+          }
 
           const roomName = `lobby_${lobbyId.toString()}`;
           socket.join(roomName);
@@ -794,350 +859,381 @@ export class SocketManager {
           });
         }
       });
+      socket.join(roomName);
+      console.log(`👤 User ${socket.data.userId} joined room: ${roomName}`);
+
+      // Send current lobby state
+      const lobby = await LobbyService.getLobby(lobbyId);
+      if (lobby) {
+        socket.emit("lobby_state", { lobby });
+
+        // Send recent chat history
+        const chatHistory = await MatchChat.find({ lobbyId: new mongoose.Types.ObjectId(lobbyId) })
+          .sort({ createdAt: -1 })
+          .limit(50)
+          .populate("senderId", "name avatar");
+
+        socket.emit("lobby_chat_history", chatHistory.reverse().map(msg => ({
+          id: msg._id,
+          lobbyId: msg.lobbyId,
+          senderId: msg.senderId._id,
+          senderName: (msg.senderId as any).name,
+          senderAvatar: (msg.senderId as any).avatar,
+          message: msg.message,
+          timestamp: msg.createdAt,
+        })));
+      }
+    } catch (error: any) {
+      console.error("Join lobby error:", error);
+      socket.emit("lobby_error", {
+        error: error.message || "Failed to join lobby",
+      });
+    }
+  });
 
       // Broad lobby update event
       socket.on("refresh_lobby", async (data) => {
-        const { lobbyId } = data;
-        if (!lobbyId) return;
+  const { lobbyId } = data;
+  if (!lobbyId) return;
 
-        const lobby = await LobbyService.getLobby(lobbyId);
-        if (lobby) {
-          this.io!.to(`lobby_${lobbyId}`).emit("lobby_update", { lobby });
-        }
+  const lobby = await LobbyService.getLobby(lobbyId);
+  if (lobby) {
+    this.io!.to(`lobby_${lobbyId}`).emit("lobby_update", { lobby });
+  }
+});
+
+// Handle kick notification via socket
+socket.on("player_kicked_notify", (data) => {
+  const { lobbyId, targetUserId } = data;
+  this.io!.to(`lobby_${lobbyId}`).emit("player_kicked", { targetUserId });
+});
+
+// Player clicks ready
+socket.on("player_ready", async (data) => {
+  try {
+    const { lobbyId } = data;
+    const userId = socket.data.userId;
+
+    if (!userId || !lobbyId) {
+      socket.emit("lobby_error", {
+        error: "Invalid request",
       });
+      return;
+    }
 
-      // Handle kick notification via socket
-      socket.on("player_kicked_notify", (data) => {
-        const { lobbyId, targetUserId } = data;
-        this.io!.to(`lobby_${lobbyId}`).emit("player_kicked", { targetUserId });
+    const result = await LobbyService.markPlayerReady(lobbyId, userId);
+
+    // Broadcast updated lobby state to all players in lobby IMMEDIATELY
+    this.io!.to(`lobby_${lobbyId}`).emit("lobby_update", {
+      lobby: {
+        ...result.lobby.toObject(),
+        players: result.lobby.players.map((p: any) => ({
+          userId: p.userId.toString(),
+          inGameName: p.inGameName,
+          standoff2Id: p.standoff2Id,
+          elo: p.elo,
+          isReady: p.isReady,
+        })),
+      },
+      allReady: result.allReady,
+    });
+
+    if (result.allReady) {
+      // All players ready - emit special event IMMEDIATELY
+      this.io!.to(`lobby_${lobbyId}`).emit("all_players_ready", {
+        lobby: {
+          ...result.lobby.toObject(),
+          players: result.lobby.players.map((p: any) => ({
+            userId: p.userId.toString(),
+            inGameName: p.inGameName,
+            standoff2Id: p.standoff2Id,
+            elo: p.elo,
+            isReady: p.isReady,
+          })),
+        },
       });
+    }
+  } catch (error: any) {
+    console.error("Player ready error:", error);
+    socket.emit("lobby_error", {
+      error: error.message || "Failed to mark ready",
+    });
+  }
+});
 
-      // Player clicks ready
-      socket.on("player_ready", async (data) => {
-        try {
-          const { lobbyId } = data;
-          const userId = socket.data.userId;
+// Map ban events
+socket.on("ban_map", async (data) => {
+  try {
+    const { lobbyId, mapName } = data;
+    const userId = socket.data.userId;
 
-          if (!userId || !lobbyId) {
-            socket.emit("lobby_error", {
-              error: "Invalid request",
-            });
-            return;
-          }
-
-          const result = await LobbyService.markPlayerReady(lobbyId, userId);
-
-          // Broadcast updated lobby state to all players in lobby IMMEDIATELY
-          this.io!.to(`lobby_${lobbyId}`).emit("lobby_update", {
-            lobby: {
-              ...result.lobby.toObject(),
-              players: result.lobby.players.map((p: any) => ({
-                userId: p.userId.toString(),
-                inGameName: p.inGameName,
-                standoff2Id: p.standoff2Id,
-                elo: p.elo,
-                isReady: p.isReady,
-              })),
-            },
-            allReady: result.allReady,
-          });
-
-          if (result.allReady) {
-            // All players ready - emit special event IMMEDIATELY
-            this.io!.to(`lobby_${lobbyId}`).emit("all_players_ready", {
-              lobby: {
-                ...result.lobby.toObject(),
-                players: result.lobby.players.map((p: any) => ({
-                  userId: p.userId.toString(),
-                  inGameName: p.inGameName,
-                  standoff2Id: p.standoff2Id,
-                  elo: p.elo,
-                  isReady: p.isReady,
-                })),
-              },
-            });
-          }
-        } catch (error: any) {
-          console.error("Player ready error:", error);
-          socket.emit("lobby_error", {
-            error: error.message || "Failed to mark ready",
-          });
-        }
+    if (!userId || !lobbyId || !mapName) {
+      socket.emit("map_ban_error", {
+        error: "Invalid request",
       });
+      return;
+    }
 
-      // Map ban events
-      socket.on("ban_map", async (data) => {
-        try {
-          const { lobbyId, mapName } = data;
-          const userId = socket.data.userId;
+    const { MapBanService } = await import("../services/mapBanService");
+    const lobby = await MapBanService.banMap(lobbyId, userId, mapName);
 
-          if (!userId || !lobbyId || !mapName) {
-            socket.emit("map_ban_error", {
-              error: "Invalid request",
-            });
-            return;
-          }
+    // Broadcast map ban update to all players in lobby
+    const banStatus = await MapBanService.getMapBanStatus(lobbyId);
+    this.io!.to(`lobby_${lobbyId}`).emit("map_ban_update", {
+      availableMaps: banStatus.availableMaps,
+      bannedMaps: banStatus.bannedMaps,
+      selectedMap: banStatus.selectedMap,
+      currentBanTeam: banStatus.currentBanTeam,
+      mapBanPhase: banStatus.mapBanPhase,
+      banHistory: banStatus.banHistory,
+      teamAlphaLeader: banStatus.teamAlphaLeader,
+      teamBravoLeader: banStatus.teamBravoLeader,
+    });
 
-          const { MapBanService } = await import("../services/mapBanService");
-          const lobby = await MapBanService.banMap(lobbyId, userId, mapName);
-
-          // Broadcast map ban update to all players in lobby
-          const banStatus = await MapBanService.getMapBanStatus(lobbyId);
+    // If ban phase is complete, emit completion event
+    if (!banStatus.mapBanPhase && banStatus.selectedMap) {
+      this.io!.to(`lobby_${lobbyId}`).emit("map_ban_complete", {
+        selectedMap: banStatus.selectedMap,
+        lobby: await QueueService.getLobby(lobbyId),
+      });
+    } else {
+      // Check if next team leader is a bot and auto-ban
+      const { MapBanService } = await import("../services/mapBanService");
+      setTimeout(async () => {
+        const botBannedLobby = await MapBanService.autoBanForBots(lobbyId);
+        if (botBannedLobby) {
+          const updatedBanStatus = await MapBanService.getMapBanStatus(lobbyId);
           this.io!.to(`lobby_${lobbyId}`).emit("map_ban_update", {
-            availableMaps: banStatus.availableMaps,
-            bannedMaps: banStatus.bannedMaps,
-            selectedMap: banStatus.selectedMap,
-            currentBanTeam: banStatus.currentBanTeam,
-            mapBanPhase: banStatus.mapBanPhase,
-            banHistory: banStatus.banHistory,
-            teamAlphaLeader: banStatus.teamAlphaLeader,
-            teamBravoLeader: banStatus.teamBravoLeader,
+            availableMaps: updatedBanStatus.availableMaps,
+            bannedMaps: updatedBanStatus.bannedMaps,
+            selectedMap: updatedBanStatus.selectedMap,
+            currentBanTeam: updatedBanStatus.currentBanTeam,
+            mapBanPhase: updatedBanStatus.mapBanPhase,
+            banHistory: updatedBanStatus.banHistory,
+            teamAlphaLeader: updatedBanStatus.teamAlphaLeader,
+            teamBravoLeader: updatedBanStatus.teamBravoLeader,
           });
 
-          // If ban phase is complete, emit completion event
-          if (!banStatus.mapBanPhase && banStatus.selectedMap) {
+          // If ban phase is complete after bot ban
+          if (!updatedBanStatus.mapBanPhase && updatedBanStatus.selectedMap) {
             this.io!.to(`lobby_${lobbyId}`).emit("map_ban_complete", {
-              selectedMap: banStatus.selectedMap,
+              selectedMap: updatedBanStatus.selectedMap,
               lobby: await QueueService.getLobby(lobbyId),
             });
-          } else {
-            // Check if next team leader is a bot and auto-ban
-            const { MapBanService } = await import("../services/mapBanService");
-            setTimeout(async () => {
-              const botBannedLobby = await MapBanService.autoBanForBots(lobbyId);
-              if (botBannedLobby) {
-                const updatedBanStatus = await MapBanService.getMapBanStatus(lobbyId);
-                this.io!.to(`lobby_${lobbyId}`).emit("map_ban_update", {
-                  availableMaps: updatedBanStatus.availableMaps,
-                  bannedMaps: updatedBanStatus.bannedMaps,
-                  selectedMap: updatedBanStatus.selectedMap,
-                  currentBanTeam: updatedBanStatus.currentBanTeam,
-                  mapBanPhase: updatedBanStatus.mapBanPhase,
-                  banHistory: updatedBanStatus.banHistory,
-                  teamAlphaLeader: updatedBanStatus.teamAlphaLeader,
-                  teamBravoLeader: updatedBanStatus.teamBravoLeader,
-                });
-
-                // If ban phase is complete after bot ban
-                if (!updatedBanStatus.mapBanPhase && updatedBanStatus.selectedMap) {
-                  this.io!.to(`lobby_${lobbyId}`).emit("map_ban_complete", {
-                    selectedMap: updatedBanStatus.selectedMap,
-                    lobby: await QueueService.getLobby(lobbyId),
-                  });
-                }
-              }
-            }, 1000);
           }
-        } catch (error: any) {
-          console.error("Ban map error:", error);
-          socket.emit("map_ban_error", {
-            error: error.message || "Failed to ban map",
-          });
         }
+      }, 1000);
+    }
+  } catch (error: any) {
+    console.error("Ban map error:", error);
+    socket.emit("map_ban_error", {
+      error: error.message || "Failed to ban map",
+    });
+  }
+});
+
+// Leave lobby (cancels for everyone)
+socket.on("leave_lobby", async (data) => {
+  try {
+    const { lobbyId } = data;
+    const userId = socket.data.userId;
+
+    if (!userId || !lobbyId) return;
+
+    const cancelled = await QueueService.cancelLobby(lobbyId);
+
+    if (cancelled) {
+      // Notify all players that lobby was cancelled
+      this.io!.to(`lobby_${lobbyId}`).emit("lobby_cancelled", {
+        reason: "A player left the lobby",
       });
 
-      // Leave lobby (cancels for everyone)
-      socket.on("leave_lobby", async (data) => {
-        try {
-          const { lobbyId } = data;
-          const userId = socket.data.userId;
-
-          if (!userId || !lobbyId) return;
-
-          const cancelled = await QueueService.cancelLobby(lobbyId);
-
-          if (cancelled) {
-            // Notify all players that lobby was cancelled
-            this.io!.to(`lobby_${lobbyId}`).emit("lobby_cancelled", {
-              reason: "A player left the lobby",
-            });
-
-            // Remove all players from lobby room
-            const socketsInRoom = await this.io!.in(`lobby_${lobbyId}`).fetchSockets();
-            socketsInRoom.forEach((s) => {
-              s.leave(`lobby_${lobbyId}`);
-            });
-          }
-
-          socket.emit("lobby_left", {
-            success: true,
-          });
-        } catch (error: any) {
-          console.error("Leave lobby error:", error);
-          socket.emit("lobby_error", {
-            error: error.message || "Failed to leave lobby",
-          });
-        }
+      // Remove all players from lobby room
+      const socketsInRoom = await this.io!.in(`lobby_${lobbyId}`).fetchSockets();
+      socketsInRoom.forEach((s) => {
+        s.leave(`lobby_${lobbyId}`);
       });
+    }
 
-      // Handle disconnection
-      socket.on("disconnect", async () => {
-        const userId = socket.data.userId;
+    socket.emit("lobby_left", {
+      success: true,
+    });
+  } catch (error: any) {
+    console.error("Leave lobby error:", error);
+    socket.emit("lobby_error", {
+      error: error.message || "Failed to leave lobby",
+    });
+  }
+});
 
-        if (userId) {
-          this.connectedUsers.delete(userId);
+// Handle disconnection
+socket.on("disconnect", async () => {
+  const userId = socket.data.userId;
 
-          // Remove from queue if in queue
-          await QueueService.removeFromQueue(userId);
+  if (userId) {
+    this.connectedUsers.delete(userId);
 
-          // Update user offline status in database
-          await User.findByIdAndUpdate(userId, {
-            isOnline: false,
-            lastSeen: new Date(),
-          });
+    // Remove from queue if in queue
+    await QueueService.removeFromQueue(userId);
 
-          this.broadcastUserStatus(userId, "offline");
-        }
-      });
+    // Update user offline status in database
+    await User.findByIdAndUpdate(userId, {
+      isOnline: false,
+      lastSeen: new Date(),
+    });
+
+    this.broadcastUserStatus(userId, "offline");
+  }
+});
     });
   }
 
-  private async broadcastUserStatus(userId: string, status: string): Promise<void> {
-    if (this.io) {
-      this.io.emit("user_status_changed", {
-        userId,
-        status,
-        timestamp: new Date().toISOString(),
-      });
+  private async broadcastUserStatus(userId: string, status: string): Promise < void> {
+  if(this.io) {
+  this.io.emit("user_status_changed", {
+    userId,
+    status,
+    timestamp: new Date().toISOString(),
+  });
 
-      // Also notify friends specifically
-      try {
-        const PlayerProfile = (await import("../models/PlayerProfile")).default;
-        const profile = await PlayerProfile.findOne({ userId });
+  // Also notify friends specifically
+  try {
+    const PlayerProfile = (await import("../models/PlayerProfile")).default;
+    const profile = await PlayerProfile.findOne({ userId });
 
-        if (profile && profile.friends && profile.friends.length > 0) {
-          profile.friends.forEach((friendId) => {
-            const friendSocketId = this.connectedUsers.get(friendId.toString());
-            if (friendSocketId) {
-              this.io!.to(friendSocketId).emit("friend_status_changed", {
-                friendId: userId,
-                status,
-                timestamp: new Date().toISOString(),
-              });
-            }
+    if (profile && profile.friends && profile.friends.length > 0) {
+      profile.friends.forEach((friendId) => {
+        const friendSocketId = this.connectedUsers.get(friendId.toString());
+        if (friendSocketId) {
+          this.io!.to(friendSocketId).emit("friend_status_changed", {
+            friendId: userId,
+            status,
+            timestamp: new Date().toISOString(),
           });
         }
-      } catch (error) {
-        console.error("Error notifying friends of status change:", error);
-      }
+      });
     }
+  } catch (error) {
+    console.error("Error notifying friends of status change:", error);
+  }
+}
   }
 
   public broadcast(event: string, data: any): void {
-    if (this.io) {
-      this.io.emit(event, data);
-    }
+  if(this.io) {
+  this.io.emit(event, data);
+}
   }
 
   public getConnectedUsersCount(): number {
-    return this.connectedUsers.size;
-  }
+  return this.connectedUsers.size;
+}
 
   public isUserOnline(userId: string): boolean {
-    return this.connectedUsers.has(userId);
-  }
+  return this.connectedUsers.has(userId);
+}
 
   public getOnlineUsers(): string[] {
-    return Array.from(this.connectedUsers.keys());
-  }
+  return Array.from(this.connectedUsers.keys());
+}
 
   public sendToUser(userId: string, event: string, data: any): void {
-    const socketId = this.connectedUsers.get(userId);
-    if (socketId && this.io) {
-      this.io.to(socketId).emit(event, data);
-    }
+  const socketId = this.connectedUsers.get(userId);
+  if(socketId && this.io) {
+  this.io.to(socketId).emit(event, data);
+}
   }
 
   // Stream-specific methods
   public broadcastStreamEvent(
-    streamId: string,
-    event: string,
-    data: any
-  ): void {
-    if (this.io) {
-      this.io.to(`stream_${streamId}`).emit(event, data);
-    }
+  streamId: string,
+  event: string,
+  data: any
+): void {
+  if(this.io) {
+  this.io.to(`stream_${streamId}`).emit(event, data);
+}
   }
 
   public broadcastStreamStarted(streamSession: any): void {
-    if (this.io) {
-      this.io.emit("stream_started", {
-        streamId: streamSession._id,
-        title: streamSession.title,
-        organizer: streamSession.organizerId,
-        platforms: streamSession.platforms,
-        timestamp: new Date().toISOString(),
-      });
-    }
+  if(this.io) {
+  this.io.emit("stream_started", {
+    streamId: streamSession._id,
+    title: streamSession.title,
+    organizer: streamSession.organizerId,
+    platforms: streamSession.platforms,
+    timestamp: new Date().toISOString(),
+  });
+}
   }
 
   public broadcastStreamEnded(streamSession: any): void {
-    if (this.io) {
-      this.io.emit("stream_ended", {
-        streamId: streamSession._id,
-        title: streamSession.title,
-        duration: streamSession.duration,
-        timestamp: new Date().toISOString(),
-      });
-    }
+  if(this.io) {
+  this.io.emit("stream_ended", {
+    streamId: streamSession._id,
+    title: streamSession.title,
+    duration: streamSession.duration,
+    timestamp: new Date().toISOString(),
+  });
+}
   }
 
   public updateStreamViewerCount(streamId: string, count: number): void {
-    if (this.io) {
-      this.io.to(`stream_${streamId}`).emit("stream_viewer_count", {
-        streamId,
-        viewerCount: count,
-        timestamp: new Date().toISOString(),
-      });
-    }
+  if(this.io) {
+  this.io.to(`stream_${streamId}`).emit("stream_viewer_count", {
+    streamId,
+    viewerCount: count,
+    timestamp: new Date().toISOString(),
+  });
+}
   }
 
   // Matchmaking-specific methods
   public notifyLobbyFound(userIds: string[], lobbyData: any): void {
-    if (this.io) {
-      console.log(`📢 Attempting to notify ${userIds.length} players of lobby`);
-      console.log(`🔌 Currently connected users: ${this.connectedUsers.size}`);
+  if(this.io) {
+  console.log(`📢 Attempting to notify ${userIds.length} players of lobby`);
+  console.log(`🔌 Currently connected users: ${this.connectedUsers.size}`);
 
-      let notifiedCount = 0;
-      userIds.forEach((userId) => {
-        const socketId = this.connectedUsers.get(userId);
-        if (socketId) {
-          console.log(`✅ Notifying player ${userId} via socket ${socketId}`);
-          this.io!.to(socketId).emit("lobby_found", lobbyData);
-          notifiedCount++;
-        } else {
-          console.log(`❌ Player ${userId} not found in connected users`);
-          console.log(`   Connected user IDs: ${Array.from(this.connectedUsers.keys()).join(', ')}`);
-        }
-      });
-
-      console.log(`📊 Notified ${notifiedCount}/${userIds.length} players`);
+  let notifiedCount = 0;
+  userIds.forEach((userId) => {
+    const socketId = this.connectedUsers.get(userId);
+    if (socketId) {
+      console.log(`✅ Notifying player ${userId} via socket ${socketId}`);
+      this.io!.to(socketId).emit("lobby_found", lobbyData);
+      notifiedCount++;
+    } else {
+      console.log(`❌ Player ${userId} not found in connected users`);
+      console.log(`   Connected user IDs: ${Array.from(this.connectedUsers.keys()).join(', ')}`);
     }
+  });
+
+  console.log(`📊 Notified ${notifiedCount}/${userIds.length} players`);
+}
   }
 
   public broadcastQueueUpdate(totalPlayers: number): void {
-    if (this.io) {
-      this.io.to("matchmaking_queue").emit("queue_update", {
-        totalPlayers,
-      });
-    }
+  if(this.io) {
+  this.io.to("matchmaking_queue").emit("queue_update", {
+    totalPlayers,
+  });
+}
   }
 
-  public async broadcastMapBanStarted(lobbyId: string): Promise<void> {
-    if (this.io) {
-      try {
-        const { MapBanService } = await import("../services/mapBanService");
-        const status = await MapBanService.getMapBanStatus(lobbyId);
-        this.io.to(`lobby_${lobbyId}`).emit("map_ban_started", {
-          availableMaps: status.availableMaps,
-          currentBanTeam: status.currentBanTeam,
-          teamAlphaLeader: status.teamAlphaLeader,
-          teamBravoLeader: status.teamBravoLeader,
-        });
-      } catch (error) {
-        console.error("Error broadcasting map ban started:", error);
-      }
-    }
+  public async broadcastMapBanStarted(lobbyId: string): Promise < void> {
+  if(this.io) {
+  try {
+    const { MapBanService } = await import("../services/mapBanService");
+    const status = await MapBanService.getMapBanStatus(lobbyId);
+    this.io.to(`lobby_${lobbyId}`).emit("map_ban_started", {
+      availableMaps: status.availableMaps,
+      currentBanTeam: status.currentBanTeam,
+      teamAlphaLeader: status.teamAlphaLeader,
+      teamBravoLeader: status.teamBravoLeader,
+    });
+  } catch (error) {
+    console.error("Error broadcasting map ban started:", error);
+  }
+}
   }
 
   /**
@@ -1146,26 +1242,26 @@ export class SocketManager {
    * 2. Force disconnect all sockets in the lobby room
    */
   public endLobbyChatSession(lobbyId: string): void {
-    if (!this.io) return;
+  if(!this.io) return;
 
-    const roomName = `lobby_${lobbyId}`;
-    console.log(`🛑 Ending chat session for lobby ${lobbyId}`);
+  const roomName = `lobby_${lobbyId}`;
+  console.log(`🛑 Ending chat session for lobby ${lobbyId}`);
 
-    // 1. Notify clients to wipe history
-    this.io.to(roomName).emit("match_ended", {
-      lobbyId,
-      message: "Match finished. Chat history will be deleted for privacy.",
-      timestamp: new Date().toISOString(),
-    });
+  // 1. Notify clients to wipe history
+  this.io.to(roomName).emit("match_ended", {
+    lobbyId,
+    message: "Match finished. Chat history will be deleted for privacy.",
+    timestamp: new Date().toISOString(),
+  });
 
-    // 2. Force disconnect sockets in the room
-    this.io.in(roomName).disconnectSockets(true);
-    console.log(`✅ Chat room ${roomName} has been destroyed/disconnected.`);
-  }
+  // 2. Force disconnect sockets in the room
+  this.io.in(roomName).disconnectSockets(true);
+  console.log(`✅ Chat room ${roomName} has been destroyed/disconnected.`);
+}
 
   public getIO(): SocketIOServer | null {
-    return this.io;
-  }
+  return this.io;
+}
 }
 
 export default SocketManager;
