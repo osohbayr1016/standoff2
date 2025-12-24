@@ -12,26 +12,40 @@ export class MatchResultService {
    */
   static async updateTeamElo(
     lobbyId: string,
-    winnerTeam: "alpha" | "bravo"
+    winnerTeam: "alpha" | "bravo",
+    session: mongoose.ClientSession
   ): Promise<void> {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
+      console.log(`[ELO Update] Starting ELO update for lobby ${lobbyId}, winner: ${winnerTeam}`);
+      
       // Get the lobby with team information
       const lobby = await MatchLobby.findById(lobbyId).session(session);
       if (!lobby) {
         throw new Error("Lobby not found");
       }
 
-      const winnerTeamIds =
+      let winnerTeamIds: mongoose.Types.ObjectId[] = 
         winnerTeam === "alpha" ? lobby.teamAlpha : lobby.teamBravo;
-      const loserTeamIds =
+      let loserTeamIds: mongoose.Types.ObjectId[] = 
         winnerTeam === "alpha" ? lobby.teamBravo : lobby.teamAlpha;
+
+      // Fallback: If specialized team arrays are empty, use the players array
+      if (winnerTeamIds.length === 0 || loserTeamIds.length === 0) {
+        console.log(`[ELO Update] Specialized team arrays are empty. Falling back to players array.`);
+        winnerTeamIds = lobby.players
+          .filter(p => p.team === winnerTeam)
+          .map(p => p.userId);
+        
+        loserTeamIds = lobby.players
+          .filter(p => p.team === (winnerTeam === "alpha" ? "bravo" : "alpha"))
+          .map(p => p.userId);
+      }
+
+      console.log(`[ELO Update] Winner IDs: ${winnerTeamIds.length}, Loser IDs: ${loserTeamIds.length}`);
 
       // Update ELO for winners (+25 ELO, +1 win, +1 total match)
       if (winnerTeamIds.length > 0) {
-        await PlayerProfile.updateMany(
+        const result = await PlayerProfile.updateMany(
           { userId: { $in: winnerTeamIds } },
           {
             $inc: {
@@ -42,6 +56,7 @@ export class MatchResultService {
           },
           { session }
         );
+        console.log(`[ELO Update] Updated ${result.modifiedCount} winner profiles`);
       }
 
       // Update ELO for losers (-25 ELO, +1 loss, +1 total match)
@@ -50,6 +65,8 @@ export class MatchResultService {
         const loserProfiles = await PlayerProfile.find({
           userId: { $in: loserTeamIds },
         }).session(session);
+
+        console.log(`[ELO Update] Found ${loserProfiles.length} loser profiles to update`);
 
         const bulkOps = loserProfiles.map((profile) => ({
           updateOne: {
@@ -67,16 +84,13 @@ export class MatchResultService {
         }));
 
         if (bulkOps.length > 0) {
-          await PlayerProfile.bulkWrite(bulkOps, { session });
+          const bulkResult = await PlayerProfile.bulkWrite(bulkOps, { session });
+          console.log(`[ELO Update] Bulk updated ${bulkResult.modifiedCount} loser profiles`);
         }
       }
-
-      await session.commitTransaction();
     } catch (error) {
-      await session.abortTransaction();
+      console.error("[ELO Update] Error during ELO update:", error);
       throw error;
-    } finally {
-      session.endSession();
     }
   }
 
@@ -103,10 +117,11 @@ export class MatchResultService {
         throw new Error("Match result is not pending");
       }
 
-      // Update ELO for teams
+      // Update ELO for teams - PASS THE SESSION
       await this.updateTeamElo(
         matchResult.matchLobbyId.toString(),
-        winnerTeam
+        winnerTeam,
+        session
       );
 
       // Update match result status
@@ -120,12 +135,10 @@ export class MatchResultService {
 
       await matchResult.save({ session });
 
-      // Update lobby status to completed (we keep the same status structure)
-      // The lobby status is already RESULT_SUBMITTED, so we leave it as is
-
       await session.commitTransaction();
       return matchResult;
     } catch (error) {
+      console.error("[Approve Result] Error:", error);
       await session.abortTransaction();
       throw error;
     } finally {

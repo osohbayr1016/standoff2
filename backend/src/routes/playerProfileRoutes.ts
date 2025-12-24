@@ -289,9 +289,70 @@ const playerProfileRoutes: FastifyPluginAsync = async (
   // Get all profiles (for browsing, public)
   fastify.get("/profiles", async (request, reply) => {
     try {
+      const { sortBy = "elo" } = request.query as {
+        sortBy?: string;
+      };
+
+      const limitNum = 50; // Strictly limit to top 50 for leaderboard
+
+      let sortField: any = { elo: -1 };
+      
+      if (sortBy === "matches") {
+        sortField = { totalMatches: -1 };
+      } else if (sortBy === "winrate") {
+        // For winrate we'll use aggregation since it's calculated
+        const profiles = await PlayerProfile.aggregate([
+          {
+            $addFields: {
+              winRate: {
+                $cond: [
+                  { $gt: [{ $add: ["$wins", "$losses"] }, 0] },
+                  { $divide: ["$wins", { $add: ["$wins", "$losses"] }] },
+                  0
+                ]
+              }
+            }
+          },
+          { $sort: { winRate: -1, elo: -1 } },
+          { $limit: 50 },
+          {
+            $lookup: {
+              from: "users",
+              localField: "userId",
+              foreignField: "_id",
+              as: "userDetails"
+            }
+          },
+          { $unwind: { path: "$userDetails", preserveNullAndEmptyArrays: true } }
+        ]);
+
+        // Transform to match populate behavior
+        const formattedProfiles = profiles.map(profile => {
+          const p = { ...profile };
+          if (p.userDetails) {
+            p.userId = {
+              _id: p.userDetails._id,
+              name: p.userDetails.name,
+              email: p.userDetails.email,
+              avatar: p.userDetails.avatar,
+              isOnline: p.userDetails.isOnline
+            };
+            delete p.userDetails;
+          }
+          return p;
+        });
+
+        return reply.status(200).send({
+          success: true,
+          profiles: formattedProfiles,
+        });
+      }
+
       const profiles = await PlayerProfile.find({})
+        .sort(sortField)
+        .limit(50)
         .populate("userId", "name email avatar isOnline")
-        .select("-friends"); // Don't expose friends list publicly
+        .select("-friends");
 
       return reply.status(200).send({
         success: true,
