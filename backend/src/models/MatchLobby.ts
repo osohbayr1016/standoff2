@@ -5,6 +5,7 @@ export enum LobbyStatus {
   WAITING = "waiting",
   READY_PHASE = "ready_phase",
   ALL_READY = "all_ready",
+  RESULT_SUBMITTED = "result_submitted",
   CANCELLED = "cancelled",
 }
 

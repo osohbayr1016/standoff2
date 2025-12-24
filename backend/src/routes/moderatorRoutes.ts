@@ -11,6 +11,7 @@ const moderatorRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => 
     { preHandler: [authenticateToken, requireModerator] },
     async (request: AuthenticatedRequest, reply) => {
       try {
+        console.log("🔍 Fetching pending match results...");
         const pendingResults = await MatchResult.find({
           status: ResultStatus.PENDING,
         })
@@ -19,25 +20,52 @@ const moderatorRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => 
           .sort({ submittedAt: -1 })
           .lean();
 
+        console.log(`📊 Found ${pendingResults.length} pending match results`);
+
         // Enrich with lobby details (team info, map, etc.)
         const enrichedResults = await Promise.all(
           pendingResults.map(async (result: any) => {
-            const lobby = await MatchLobby.findById(result.matchLobbyId._id || result.matchLobbyId)
-              .populate("teamAlpha", "name inGameName")
-              .populate("teamBravo", "name inGameName")
+            const lobbyId = result.matchLobbyId?._id || result.matchLobbyId;
+            if (!lobbyId) {
+              console.log(`⚠️ Match result ${result._id} has no lobby ID`);
+              return {
+                ...result,
+                lobby: null,
+              };
+            }
+
+            const lobby = await MatchLobby.findById(lobbyId)
+              .populate({
+                path: "teamAlpha",
+                select: "name inGameName avatar",
+              })
+              .populate({
+                path: "teamBravo",
+                select: "name inGameName avatar",
+              })
+              .populate({
+                path: "players.userId",
+                select: "name inGameName avatar",
+              })
               .lean();
+
+            if (!lobby) {
+              console.log(`⚠️ Lobby ${lobbyId} not found for match result ${result._id}`);
+              return {
+                ...result,
+                lobby: null,
+              };
+            }
 
             return {
               ...result,
-              lobby: lobby
-                ? {
-                    _id: lobby._id,
-                    teamAlpha: lobby.teamAlpha,
-                    teamBravo: lobby.teamBravo,
-                    selectedMap: lobby.selectedMap,
-                    players: lobby.players,
-                  }
-                : null,
+              lobby: {
+                _id: lobby._id,
+                teamAlpha: lobby.teamAlpha || [],
+                teamBravo: lobby.teamBravo || [],
+                selectedMap: lobby.selectedMap,
+                players: lobby.players || [],
+              },
             };
           })
         );
