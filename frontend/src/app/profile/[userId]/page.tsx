@@ -12,6 +12,7 @@ import ProfileHeader from "../components/ProfileHeader";
 import ProfileStats from "../components/ProfileStats";
 import MatchHistory from "../components/MatchHistory";
 import AchievementRewards from "../components/AchievementRewards";
+import VerificationModal from "../components/VerificationModal";
 
 interface PlayerProfile {
   id: string;
@@ -26,6 +27,8 @@ interface PlayerProfile {
   kills?: number;
   deaths?: number;
   totalMatches?: number;
+  isIdVerified?: boolean;
+  standoff2Id?: string;
   updatedAt?: string;
 }
 
@@ -60,6 +63,7 @@ export default function PlayerProfilePage() {
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
   const [sendingRequest, setSendingRequest] = useState(false);
   const [cancellingRequest, setCancellingRequest] = useState(false);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -136,7 +140,7 @@ export default function PlayerProfilePage() {
       // Determine ID type and prioritize lookup order
       const isMongoId = userId.length === 24 && /^[0-9a-fA-F]{24}$/.test(userId);
       const looksLikeUniqueId = userId.includes('-') && userId.length > 10;
-      
+
       console.log(`[Profile] ID Analysis - isMongoId: ${isMongoId}, looksLikeUniqueId: ${looksLikeUniqueId}`);
 
       let response;
@@ -173,7 +177,7 @@ export default function PlayerProfilePage() {
       for (const attempt of attempts) {
         console.log(`[Profile] Attempting ${attempt.name} lookup: ${attempt.url}`);
         response = await fetch(attempt.url, { credentials: "include" });
-        
+
         if (response.ok) {
           console.log(`[Profile] SUCCESS: Found profile via ${attempt.name}`);
           break;
@@ -192,7 +196,7 @@ export default function PlayerProfilePage() {
           if (userProfile.userId) {
             if (typeof userProfile.userId === 'object') {
               // If populated, get _id from the object
-              extractedUserId = userProfile.userId._id 
+              extractedUserId = userProfile.userId._id
                 ? String(userProfile.userId._id)
                 : String(userProfile.userId);
             } else {
@@ -218,6 +222,8 @@ export default function PlayerProfilePage() {
             kills: userProfile.kills || 0,
             deaths: userProfile.deaths || 0,
             totalMatches: userProfile.totalMatches || (userProfile.wins || 0) + (userProfile.losses || 0),
+            isIdVerified: userProfile.isIdVerified,
+            standoff2Id: userProfile.standoff2Id,
             updatedAt: userProfile.updatedAt,
           });
         } else {
@@ -265,8 +271,8 @@ export default function PlayerProfilePage() {
         const friendsData = await friendsRes.json();
         const isFriend = friendsData.friends?.some(
           (f: any) => {
-            const friendUserId = typeof f.userId === 'object' 
-              ? f.userId.toString() 
+            const friendUserId = typeof f.userId === 'object'
+              ? f.userId.toString()
               : String(f.userId);
             return friendUserId === String(profileUserId);
           }
@@ -327,7 +333,7 @@ export default function PlayerProfilePage() {
       console.log('[Friend Request] No profile loaded');
       return;
     }
-    
+
     setSendingRequest(true);
     try {
       const token = getToken();
@@ -339,7 +345,7 @@ export default function PlayerProfilePage() {
 
       // Ensure receiverId is a valid MongoDB ObjectId string
       const receiverId = String(profile.userId).trim();
-      
+
       // Validate it looks like a MongoDB ObjectId (24 hex characters)
       if (!/^[0-9a-fA-F]{24}$/.test(receiverId)) {
         console.error('[Friend Request] Invalid receiverId format:', receiverId);
@@ -347,9 +353,9 @@ export default function PlayerProfilePage() {
         setSendingRequest(false);
         return;
       }
-      
+
       console.log(`[Friend Request] Sending request to userId: ${receiverId}`);
-      
+
       const response = await fetch(API_ENDPOINTS.FRIENDS.REQUEST, {
         method: "POST",
         headers: {
@@ -386,7 +392,7 @@ export default function PlayerProfilePage() {
       console.log('[Cancel Request] No pending request ID');
       return;
     }
-    
+
     setCancellingRequest(true);
     try {
       const token = getToken();
@@ -395,9 +401,9 @@ export default function PlayerProfilePage() {
         setCancellingRequest(false);
         return;
       }
-      
+
       console.log(`[Cancel Request] Cancelling request ID: ${pendingRequestId}`);
-      
+
       const response = await fetch(API_ENDPOINTS.FRIENDS.CANCEL(pendingRequestId), {
         method: "POST",
         headers: {
@@ -497,7 +503,7 @@ export default function PlayerProfilePage() {
   }
 
   // Check if this is the user's own profile
-  const isOwnProfile = profile 
+  const isOwnProfile = profile
     ? (user?.id === profile.userId || String(user?.id) === String(profile.userId))
     : false;
 
@@ -558,9 +564,20 @@ export default function PlayerProfilePage() {
             lastEdited={isOwnProfile ? formatLastEdited(profile.updatedAt) : "Public Profile"}
             elo={elo}
             uniqueId={profile.uniqueId}
+            isIdVerified={profile.isIdVerified}
             onEditClick={() => router.push("/settings")}
+            onVerifyClick={() => setIsVerificationModalOpen(true)}
             hideEditButton={!isOwnProfile}
           />
+
+          {isOwnProfile && (
+            <VerificationModal
+              isOpen={isVerificationModalOpen}
+              onClose={() => setIsVerificationModalOpen(false)}
+              onSuccess={fetchProfile}
+              currentStandoff2Id={profile.standoff2Id}
+            />
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">

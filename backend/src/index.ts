@@ -43,7 +43,7 @@ const connectDB = async (): Promise<void> => {
       serverSelectionTimeoutMS: 5000,
       maxIdleTimeMS: 30000,
     });
-    
+
     // Optimize mongoose for memory
     mongoose.set('bufferCommands', false);
     mongoose.set('autoIndex', false);
@@ -177,6 +177,9 @@ async function registerRoutes() {
     // Moderator routes
     const moderatorRoutes = await import("./routes/moderatorRoutes");
     fastify.register(moderatorRoutes.default, { prefix: "/api/moderator" });
+    // Verification routes
+    const verificationRoutes = await import("./routes/verificationRoutes");
+    fastify.register(verificationRoutes.default, { prefix: "/api/verification" });
   } catch (error) {
     console.error("❌ Error registering routes:", error);
     // Continue without routes for basic health check
@@ -230,7 +233,7 @@ const startServer = async () => {
 
     // Initialize Socket.IO after Fastify starts
     socketManager.initialize(fastify.server);
-    
+
     // Attach socketManager to fastify instance for use in routes
     (fastify as any).socketManager = socketManager;
 
@@ -249,17 +252,17 @@ const startServer = async () => {
             teamAlpha: lobby.teamAlpha,
             teamBravo: lobby.teamBravo,
           });
-          
+
           // Emit map_ban_started event if in map ban phase
           if (lobby.status === "map_ban_phase" || lobby.mapBanPhase) {
             const { MapBanService } = await import("./services/mapBanService");
             const banStatus = await MapBanService.getMapBanStatus(lobbyId);
-            
+
             // Send map_ban_started to each player
             playerIds.forEach((userId) => {
               socketManager.sendToUser(userId, "map_ban_started", banStatus);
             });
-            
+
             // Start bot auto-banning if needed
             setTimeout(async () => {
               const botBannedLobby = await MapBanService.autoBanForBots(lobbyId);
@@ -277,7 +280,7 @@ const startServer = async () => {
                     teamAlphaLeader: updatedBanStatus.teamAlphaLeader,
                     teamBravoLeader: updatedBanStatus.teamBravoLeader,
                   });
-                  
+
                   if (!updatedBanStatus.mapBanPhase && updatedBanStatus.selectedMap) {
                     io.to(`lobby_${lobbyId}`).emit("map_ban_complete", {
                       selectedMap: updatedBanStatus.selectedMap,
@@ -288,7 +291,7 @@ const startServer = async () => {
               }
             }, 1000);
           }
-          
+
           socketManager.broadcastQueueUpdate(await QueueService.getTotalInQueue());
           console.log(`✅ Lobby ${lobbyId} created successfully`);
         }

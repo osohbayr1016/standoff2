@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Edit, User } from "lucide-react";
+import { Edit, User, ShieldCheck, ShieldAlert } from "lucide-react";
 
 interface ProfileHeaderProps {
   avatar?: string;
@@ -11,7 +11,9 @@ interface ProfileHeaderProps {
   lastEdited?: string;
   elo: number;
   uniqueId?: string;
+  isIdVerified?: boolean;
   onEditClick?: () => void;
+  onVerifyClick?: () => void;
   hideEditButton?: boolean;
 }
 
@@ -21,7 +23,9 @@ export default function ProfileHeader({
   lastEdited,
   elo,
   uniqueId,
+  isIdVerified,
   onEditClick,
+  onVerifyClick,
   hideEditButton = false,
 }: ProfileHeaderProps) {
   return (
@@ -66,9 +70,26 @@ export default function ProfileHeader({
               </button>
             )}
           </div>
-          <p className="text-gray-500 text-sm mb-2">
+          <p className="text-gray-500 text-sm mb-4">
             Last edited: {lastEdited || "Never"}
           </p>
+
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+            {isIdVerified ? (
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-full text-green-500 text-sm font-semibold">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Verified Player</span>
+              </div>
+            ) : (
+              <button
+                onClick={onVerifyClick}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-full text-red-500 hover:bg-red-500/20 transition-colors text-sm font-semibold"
+              >
+                <ShieldAlert className="w-4 h-4" />
+                <span>Unverified - Verify Now</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* ELO Section */}

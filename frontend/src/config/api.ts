@@ -290,7 +290,10 @@ export const API_ENDPOINTS = {
         `${API_BASE_URL}/api/moderator/match-results/${resultId}/reject`,
     },
   },
-
+  VERIFICATION: {
+    REQUEST: `${API_BASE_URL}/api/verification/request`,
+    VERIFY: `${API_BASE_URL}/api/verification/verify`,
+  },
   HEALTH: `${API_BASE_URL}/health`,
 };
 

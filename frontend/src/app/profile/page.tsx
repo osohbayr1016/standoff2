@@ -14,6 +14,7 @@ import ProfileHeader from "./components/ProfileHeader";
 import ProfileStats from "./components/ProfileStats";
 import MatchHistory from "./components/MatchHistory";
 import AchievementRewards from "./components/AchievementRewards";
+import VerificationModal from "./components/VerificationModal";
 
 interface PlayerProfile {
   id: string;
@@ -27,6 +28,8 @@ interface PlayerProfile {
   kills?: number;
   deaths?: number;
   totalMatches?: number;
+  isIdVerified?: boolean;
+  standoff2Id?: string;
   updatedAt?: string;
 }
 
@@ -52,6 +55,7 @@ export default function ProfilePage() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -78,20 +82,20 @@ export default function ProfilePage() {
       if (profileRes.ok) {
         const data = await profileRes.json();
         const profileData = data.profile;
-        
+
         // Redirect to dynamic route using uniqueId or userId as fallback
         if (profileData) {
-          const profileId = profileData.uniqueId || 
-                           (profileData.userId ? (typeof profileData.userId === 'object' ? profileData.userId._id || profileData.userId.toString() : String(profileData.userId)) : null) ||
-                           profileData._id || 
-                           profileData.id;
-          
+          const profileId = profileData.uniqueId ||
+            (profileData.userId ? (typeof profileData.userId === 'object' ? profileData.userId._id || profileData.userId.toString() : String(profileData.userId)) : null) ||
+            profileData._id ||
+            profileData.id;
+
           if (profileId) {
             router.push(`/profile/${profileId}`);
             return;
           }
         }
-        
+
         setProfile(profileData);
       } else if (profileRes.status === 404) {
         router.push("/create-profile");
@@ -236,7 +240,16 @@ export default function ProfilePage() {
               lastEdited={formatLastEdited(profile.updatedAt)}
               elo={elo}
               uniqueId={profile.uniqueId}
+              isIdVerified={profile.isIdVerified}
               onEditClick={() => router.push("/settings")}
+              onVerifyClick={() => setIsVerificationModalOpen(true)}
+            />
+
+            <VerificationModal
+              isOpen={isVerificationModalOpen}
+              onClose={() => setIsVerificationModalOpen(false)}
+              onSuccess={fetchProfile}
+              currentStandoff2Id={profile.standoff2Id}
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -45,6 +45,10 @@ export interface IPlayerProfile extends Document {
   region?: string;
   friends: mongoose.Types.ObjectId[];
   uniqueId: string;
+  // Verification fields
+  verificationCode?: string;
+  verificationCodeExpiresAt?: Date;
+  isIdVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -201,6 +205,17 @@ const playerProfileSchema = new Schema<IPlayerProfile>(
       unique: true,
       sparse: true,
       trim: true,
+    },
+    verificationCode: {
+      type: String,
+      trim: true,
+    },
+    verificationCodeExpiresAt: {
+      type: Date,
+    },
+    isIdVerified: {
+      type: Boolean,
+      default: false,
     },
   },
   {
