@@ -557,6 +557,15 @@ export default function MatchmakingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center"
               >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="mb-8 max-w-4xl mx-auto"
+                >
+                  <p className="text-3xl sm:text-4xl lg:text-6xl font-black text-orange-500 leading-tight mb-8 drop-shadow-[0_0_20px_rgba(249,115,22,0.4)]">
+                    Битгий matchmaking хайгаарай guys, discord server-тээ ороод шинэлэлтийн мэдээллүүд орохыг хүлээж байгаарай. 26-нд албан ёсны release хийгдэнэ шүү.
+                  </p>
+                </motion.div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
                   Find a Match
                 </h1>
@@ -617,6 +626,15 @@ export default function MatchmakingPage() {
             >
               {/* Main Search Area */}
               <div className="text-center px-4">
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="mb-8 max-w-4xl mx-auto"
+                >
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-black text-orange-500 leading-tight mb-4 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                    Битгий matchmaking хайгаарай guys, discord server-тээ ороод шинэлэлтийн мэдээллүүд орохыг хүлээж байгаарай. 26-нд албан ёсны release хийгдэнэ шүү.
+                  </p>
+                </motion.div>
                 <motion.h1
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
