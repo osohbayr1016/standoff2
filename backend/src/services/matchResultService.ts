@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import PlayerProfile from "../models/PlayerProfile";
 import MatchLobby from "../models/MatchLobby";
-import MatchResult, { ResultStatus } from "../models/MatchResult";
+import MatchResult, { ResultStatus, IMatchResult } from "../models/MatchResult";
 
 const ELO_CHANGE = 25; // Fixed ELO change per match
 
@@ -88,7 +88,7 @@ export class MatchResultService {
     winnerTeam: "alpha" | "bravo",
     moderatorId: string,
     moderatorNotes?: string
-  ): Promise<MatchResult> {
+  ): Promise<IMatchResult> {
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -140,7 +140,7 @@ export class MatchResultService {
     resultId: string,
     moderatorId: string,
     reviewNotes?: string
-  ): Promise<MatchResult> {
+  ): Promise<IMatchResult> {
     const matchResult = await MatchResult.findById(resultId);
     if (!matchResult) {
       throw new Error("Match result not found");

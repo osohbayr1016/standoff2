@@ -8,6 +8,7 @@ import { createServer } from "http";
 import SocketManager from "./config/socket";
 import { MatchDeadlineChecker } from "./services/matchDeadlineChecker";
 import { QueueService } from "./services/queueService";
+import verificationRoutes from "./routes/verificationRoutes";
 
 // Load environment variables
 dotenv.config();
@@ -121,6 +122,9 @@ async function registerRoutes() {
     // Register rate limiting first
     const { setupRateLimiting } = await import("./config/rateLimit");
     await setupRateLimiting(fastify);
+
+    // Verification routes (static import for maximum reliability)
+    fastify.register(verificationRoutes, { prefix: "/api/verification" });
     // Auth routes
     const authRoutes = await import("./routes/authRoutes");
     fastify.register(authRoutes.default, { prefix: "/api/auth" });
@@ -177,9 +181,6 @@ async function registerRoutes() {
     // Moderator routes
     const moderatorRoutes = await import("./routes/moderatorRoutes");
     fastify.register(moderatorRoutes.default, { prefix: "/api/moderator" });
-    // Verification routes
-    const verificationRoutes = await import("./routes/verificationRoutes");
-    fastify.register(verificationRoutes.default, { prefix: "/api/verification" });
   } catch (error) {
     console.error("❌ Error registering routes:", error);
     // Continue without routes for basic health check
