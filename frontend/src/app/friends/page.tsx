@@ -195,7 +195,7 @@ export default function FriendsPage() {
             <div className="max-w-7xl mx-auto px-4">
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto" />
-                <p className="mt-4 text-gray-300">Loading friends...</p>
+                <p className="mt-4 text-gray-300">Loading friends..</p>
               </div>
             </div>
           </main>
