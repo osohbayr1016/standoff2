@@ -164,8 +164,8 @@ const playerProfileRoutes: FastifyPluginAsync = async (
 
       console.log(`[My Profile] Looking for profile with userId: ${decoded.id}`);
 
-      const profile = await PlayerProfile.findOne({ 
-        userId: decoded.id 
+      const profile = await PlayerProfile.findOne({
+        userId: decoded.id
       }).populate(
         "userId",
         "name email avatar isOnline"
@@ -216,6 +216,11 @@ const playerProfileRoutes: FastifyPluginAsync = async (
       }
 
       const updateData = request.body as any;
+
+      // If sensitive fields are updated, reset verification status
+      if (updateData.inGameName || updateData.standoff2Id) {
+        updateData.isIdVerified = false;
+      }
 
       const profile = await PlayerProfile.findOneAndUpdate(
         { userId: decoded.id },
@@ -363,18 +368,18 @@ const playerProfileRoutes: FastifyPluginAsync = async (
       let profile;
       const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
       console.log(`[Profile Lookup] Is valid ObjectId: ${isValidObjectId}`);
-      
+
       if (isValidObjectId) {
         const objectId = new mongoose.Types.ObjectId(userId);
         console.log(`[Profile Lookup] Searching for profile with userId ObjectId: ${objectId}`);
-        
-        profile = await PlayerProfile.findOne({ 
-          userId: objectId 
+
+        profile = await PlayerProfile.findOne({
+          userId: objectId
         }).populate(
           "userId",
           "name email avatar isOnline"
         ).lean();
-        
+
         console.log(`[Profile Lookup] Result from ObjectId query: ${profile ? 'FOUND' : 'NOT FOUND'}`);
         if (profile) {
           console.log(`[Profile Lookup] Found profile: ${(profile as any).inGameName} (profileId: ${(profile as any)._id})`);

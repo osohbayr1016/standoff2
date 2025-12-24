@@ -7,6 +7,17 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const PlayerProfile_1 = __importDefault(require("../models/PlayerProfile"));
 const verificationService_1 = require("../services/verificationService");
 const verificationRoutes = async (fastify) => {
+const rate_limit_1 = __importDefault(require("@fastify/rate-limit"));
+const verificationService_1 = require("../services/verificationService");
+const verificationRoutes = async (fastify) => {
+    await fastify.register(rate_limit_1.default, {
+        max: 3,
+        timeWindow: '5 minute',
+        errorResponseBuilder: (request, context) => ({
+            success: false,
+            message: "Too many verification requests. Please wait a few minutes."
+        })
+    });
     fastify.post("/request", async (request, reply) => {
         try {
             const token = request.headers.authorization?.replace("Bearer ", "");
@@ -33,6 +44,21 @@ const verificationRoutes = async (fastify) => {
         catch (error) {
             console.error("Verification Request Error:", error);
             return reply.status(500).send({ success: false, message: "Failed to register Standoff 2 ID" });
+            const result = await verificationService_1.VerificationService.requestVerification(decoded.id, standoff2Id);
+            if (result.success) {
+                return reply.send({
+                    success: true,
+                    message: result.message,
+                    status: result.status
+                });
+            }
+            else {
+                return reply.status(400).send({ success: false, message: result.message });
+            }
+        }
+        catch (error) {
+            console.error("Verification Request Error:", error);
+            return reply.status(500).send({ success: false, message: "Failed to submit verification request" });
         }
     });
     fastify.post("/verify", async (request, reply) => {
@@ -64,12 +90,27 @@ const verificationRoutes = async (fastify) => {
                 return reply.status(400).send({
                     success: false,
                     message: result.error || "Verification failed. Make sure your website nickname matches your in-game nickname.",
+            const statusData = await verificationService_1.VerificationService.getVerificationStatus(decoded.id);
+            if (statusData.status === "VERIFIED") {
+                return reply.send({
+                    success: true,
+                    message: "Account is verified.",
+                    isVerified: true
+                });
+            }
+            else {
+                return reply.send({
+                    success: false,
+                    message: `Verification status: ${statusData.status}. Please wait for admin approval.`,
+                    status: statusData.status
                 });
             }
         }
         catch (error) {
             console.error("Verification Execution Error:", error);
             return reply.status(500).send({ success: false, message: "An error occurred during verification" });
+            console.error("Verification Status Check Error:", error);
+            return reply.status(500).send({ success: false, message: "An error occurred checking status" });
         }
     });
 };

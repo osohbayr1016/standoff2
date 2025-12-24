@@ -200,6 +200,9 @@ const playerProfileRoutes = async (fastify) => {
                 });
             }
             const updateData = request.body;
+            if (updateData.inGameName || updateData.standoff2Id) {
+                updateData.isIdVerified = false;
+            }
             const profile = await PlayerProfile_1.default.findOneAndUpdate({ userId: decoded.id }, updateData, { new: true, runValidators: true });
             if (!profile) {
                 return reply.status(404).send({

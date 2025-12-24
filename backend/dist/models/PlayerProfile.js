@@ -41,128 +41,19 @@ const playerProfileSchema = new mongoose_1.Schema({
         required: true,
         unique: true,
     },
-    category: {
-        type: String,
-        enum: ["PC", "Mobile"],
-        required: true,
-    },
-    game: {
-        type: String,
-        required: true,
-    },
-    roles: {
-        type: [String],
-        required: true,
-    },
-    realName: {
+    verificationCode: {
         type: String,
         trim: true,
     },
-    inGameName: {
+    verificationCodeExpiresAt: {
+        type: Date,
+    },
+    verificationStatus: {
         type: String,
-        required: true,
+        enum: ["UNVERIFIED", "PENDING", "VERIFIED", "REJECTED"],
+        default: "UNVERIFIED",
     },
-    standoff2Id: {
-        type: String,
-        trim: true,
-        maxlength: 50,
-    },
-    mlbbId: {
-        type: String,
-        trim: true,
-        maxlength: 20,
-    },
-    rank: {
-        type: String,
-        default: "Unranked",
-    },
-    rankStars: {
-        type: Number,
-        min: 0,
-        default: 0,
-    },
-    experience: {
-        type: String,
-        default: "New Player",
-    },
-    bio: {
-        type: String,
-        maxlength: 1000,
-        default: "",
-    },
-    avatar: {
-        type: String,
-    },
-    avatarPublicId: {
-        type: String,
-    },
-    socialLinks: {
-        twitter: String,
-        instagram: String,
-        youtube: String,
-        twitch: String,
-        discord: String,
-        website: String,
-    },
-    highlightVideo: String,
-    isLookingForTeam: {
-        type: Boolean,
-        default: true,
-    },
-    achievements: [String],
-    availability: {
-        weekdays: {
-            type: Boolean,
-            default: true,
-        },
-        weekends: {
-            type: Boolean,
-            default: true,
-        },
-        timezone: {
-            type: String,
-            default: "UTC+0",
-        },
-        preferredHours: {
-            type: String,
-            default: "18:00-22:00",
-        },
-    },
-    languages: {
-        type: [String],
-        default: ["English"],
-    },
-    elo: {
-        type: Number,
-        default: 1000,
-        min: 0,
-    },
-    wins: {
-        type: Number,
-        default: 0,
-        min: 0,
-    },
-    losses: {
-        type: Number,
-        default: 0,
-        min: 0,
-    },
-    kills: {
-        type: Number,
-        default: 0,
-        min: 0,
-    },
-    deaths: {
-        type: Number,
-        default: 0,
-        min: 0,
-    },
-    totalMatches: {
-        type: Number,
-        default: 0,
-        min: 0,
-    },
-    isOnline: {
+    isIdVerified: {
         type: Boolean,
         default: false,
     },
@@ -221,7 +112,7 @@ const generateUniqueId = async (inGameName, excludeId) => {
         uniqueId = `${baseId}-${randomSuffix}-${counter}`;
         counter++;
     }
-    return uniqueId;
+    return uniqueId;https://github.com/osohbayr1016/standoff2/pull/1/conflict?name=backend%252Fdist%252Fconfig%252Fsocket.js&ancestor_oid=ad9f4b8dcb6e1e9d20dddc56a7701866e5b51a2c&base_oid=6d7810ebffaa55aaf947ff16401fcecd49d97913&head_oid=5439e2b7e39489c4420e6aa1737d00944a0dd72d
 };
 playerProfileSchema.pre("save", async function (next) {
     if (!this.uniqueId || this.uniqueId.trim() === "") {
@@ -251,5 +142,5 @@ playerProfileSchema.index({ isLookingForTeam: 1 });
 playerProfileSchema.index({ elo: -1 });
 playerProfileSchema.index({ isOnline: 1 });
 playerProfileSchema.index({ region: 1 });
-playerProfileSchema.index({ uniqueId: 1 });
+playerProfileSchema.index({ region: 1 });
 exports.default = mongoose_1.default.model("PlayerProfile", playerProfileSchema);

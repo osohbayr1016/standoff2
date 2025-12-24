@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 async function testVerification() {
-    const testId = "14300000"; // Sample ID (using a realistic-looking one)
-    const expectedNickname = "Vraestoren"; // Assuming this is the owner of the repo or a known nickname
+    const testId = "53898875"; // User's real ID
+    const expectedNickname = "Twissu"; // User's real nickname
 
     console.log(`Starting verification test for ID: ${testId}...`);
     console.log(`Expecting Nickname: ${expectedNickname}`);

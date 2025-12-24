@@ -44,6 +44,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const socket_1 = __importDefault(require("./config/socket"));
 const queueService_1 = require("./services/queueService");
+const verificationRoutes_1 = __importDefault(require("./routes/verificationRoutes"));
 dotenv_1.default.config();
 const fastify = (0, fastify_1.default)({
     logger: false,
@@ -127,6 +128,7 @@ async function registerRoutes() {
     try {
         const { setupRateLimiting } = await Promise.resolve().then(() => __importStar(require("./config/rateLimit")));
         await setupRateLimiting(fastify);
+        fastify.register(verificationRoutes_1.default, { prefix: "/api/verification" });
         const authRoutes = await Promise.resolve().then(() => __importStar(require("./routes/authRoutes")));
         fastify.register(authRoutes.default, { prefix: "/api/auth" });
         const userRoutes = await Promise.resolve().then(() => __importStar(require("./routes/userRoutes")));
